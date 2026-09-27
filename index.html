@@ -269,10 +269,11 @@
       <label class="relative shrink-0">
         <span class="absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-acc"></span>
         <select id="modeSelect" class="appearance-none cursor-pointer rounded-full border border-line bg-card pl-5 pr-6 py-1.5 text-[10.5px] font-bold tracking-wide text-acc2 outline-none focus:border-acc">
-          <option value="cut20">CUTTING -20%</option>
-          <option value="cut15">CUTTING -15%</option>
+          <option value="cut_slow">CUT · 0.5%/WK</option>
+          <option value="cut">CUT · 0.75%/WK</option>
+          <option value="cut_fast">CUT · 1%/WK</option>
           <option value="maintain">MAINTENANCE</option>
-          <option value="bulk">LEAN BULK +10%</option>
+          <option value="bulk">LEAN BULK</option>
         </select>
         <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </label>
@@ -415,6 +416,34 @@
         <button id="btnWeigh" class="btn-p flex-1 rounded-2xl py-3 text-[13.5px] th flex items-center justify-center gap-2 active:scale-[.99] transition">บันทึกน้ำหนักวันนี้</button>
         <button id="btnGhost" class="px-2 text-[12px] th text-mute hover:text-txt transition">เทียบร่างแรก</button>
       </div>
+    </div>
+  </section>
+
+  <!-- ===================== QUEST (STREAK · POINTS · CHALLENGES) ===================== -->
+  <section id="secQuest" class="card mt-5 fade-in p-4 th">
+    <div class="flex items-start justify-between gap-3">
+      <div><div class="eyebrow !tracking-normal">Campfire Quest</div><div class="h-title mt-0.5">ภารกิจ &amp; แต้มสะสม</div></div>
+      <button id="btnRewards" class="shrink-0 rounded-full border border-acc/35 bg-acc/15 px-3 py-1.5 text-[12px] text-acc2 flex items-center gap-1.5 active:scale-95 transition"><span>🪵</span><span id="qPoints" class="num font-bold">0</span><span class="text-[11px]">แต้ม</span></button>
+    </div>
+    <div class="mt-3 grid grid-cols-[auto_1fr] gap-4 items-center">
+      <div class="w-[72px] text-center">
+        <div id="qFlame" class="text-[30px] leading-none">🔥</div>
+        <div id="qStreak" class="disp num text-[24px] mt-1">0</div>
+        <div class="text-[10.5px] text-mute">วันติดต่อกัน</div>
+      </div>
+      <div>
+        <div class="text-[11px] text-mute mb-1.5">วันนี้ <span id="qTodayPts" class="num text-acc2"></span></div>
+        <div id="qToday" class="flex flex-wrap gap-1.5"></div>
+        <div id="qBest" class="text-[10.5px] text-mute mt-2"></div>
+      </div>
+    </div>
+    <div class="mt-4">
+      <div class="flex items-center justify-between"><div class="text-[12.5px] font-semibold">ภารกิจสัปดาห์นี้</div><div id="qWeekLeft" class="text-[10.5px] text-mute"></div></div>
+      <div id="qChallenges" class="mt-2 space-y-2.5"></div>
+    </div>
+    <div class="mt-4 grid grid-cols-2 gap-2">
+      <button id="btnWeekSum" class="rounded-2xl border border-line py-2.5 text-[12.5px] hover:border-acc/50 active:scale-[.99] transition">📊 สรุปสัปดาห์</button>
+      <button id="btnRewards2" class="rounded-2xl border border-line py-2.5 text-[12.5px] hover:border-acc/50 active:scale-[.99] transition">🎁 แลกรางวัล</button>
     </div>
   </section>
 
@@ -596,26 +625,49 @@
         </select>
       </div>
       <div>
-        <label class="text-mute text-[11px]">เป้าหมาย (Goal)</label>
-        <div class="seg mt-1 grid grid-cols-2 gap-2" id="pGoal">
-          <button data-v="cut20" class="rounded-xl border border-line py-2 text-[12px]">Fat Loss −20%</button>
-          <button data-v="cut15" class="rounded-xl border border-line py-2 text-[12px]">Fat Loss −15%</button>
-          <button data-v="maintain" class="rounded-xl border border-line py-2 text-[12px]">Maintenance</button>
-          <button data-v="bulk" class="rounded-xl border border-line py-2 text-[12px]">Lean Bulk +10%</button>
+        <label class="text-mute text-[11px]">การออกกำลังกายหลัก (Training)</label>
+        <div class="seg mt-1 grid grid-cols-4 gap-1.5" id="pTrain">
+          <button data-v="none" class="rounded-xl border border-line py-2 text-[12px]">ไม่ได้ฝึก</button>
+          <button data-v="strength" class="rounded-xl border border-line py-2 text-[12px]">เวท</button>
+          <button data-v="endurance" class="rounded-xl border border-line py-2 text-[12px]">คาร์ดิโอ</button>
+          <button data-v="mixed" class="rounded-xl border border-line py-2 text-[12px]">ผสม</button>
         </div>
+      </div>
+      <div>
+        <label class="text-mute text-[11px]">เป้าหมาย &amp; ความเร็ว (Goal pace)</label>
+        <div class="seg mt-1 grid grid-cols-3 gap-1.5" id="pGoal">
+          <button data-v="cut_slow" class="rounded-xl border border-line py-2 text-[12px] leading-tight">ลดช้า<br><span class="num text-[10.5px] opacity-80">0.5%/wk</span></button>
+          <button data-v="cut" class="rounded-xl border border-line py-2 text-[12px] leading-tight">ลดปกติ<br><span class="num text-[10.5px] opacity-80">0.75%/wk</span></button>
+          <button data-v="cut_fast" class="rounded-xl border border-line py-2 text-[12px] leading-tight">ลดเร็ว<br><span class="num text-[10.5px] opacity-80">1%/wk</span></button>
+          <button data-v="maintain" class="rounded-xl border border-line py-2 text-[12px]">รักษาน้ำหนัก</button>
+          <button data-v="bulk" class="col-span-2 rounded-xl border border-line py-2 text-[12px]">เพิ่มกล้าม <span class="num text-[10.5px] opacity-80">+0.35%/wk</span></button>
+        </div>
+        <p id="pGoalNote" class="text-[11px] text-mute mt-1.5 leading-relaxed"></p>
+      </div>
+      <div>
+        <label class="text-mute text-[11px]">รูปแบบการกิน (Diet style)</label>
+        <div class="seg mt-1 grid grid-cols-3 gap-1.5" id="pDiet">
+          <button data-v="balanced" class="rounded-xl border border-line py-2 text-[12px]">สมดุล</button>
+          <button data-v="highcarb" class="rounded-xl border border-line py-2 text-[12px]">High-carb</button>
+          <button data-v="lowfat" class="rounded-xl border border-line py-2 text-[12px]">Low-fat</button>
+          <button data-v="lowcarb" class="rounded-xl border border-line py-2 text-[12px]">Low-carb</button>
+          <button data-v="keto" class="rounded-xl border border-line py-2 text-[12px]">คีโต</button>
+        </div>
+        <p id="pDietNote" class="text-[11px] text-mute mt-1.5 leading-relaxed"></p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-mute text-[11px]">โปรตีน (g/kg)</label>
-          <div class="seg mt-1 grid grid-cols-3 gap-1" id="pProt">
+          <div class="seg mt-1 grid grid-cols-4 gap-1" id="pProt">
+            <button data-v="1.6" class="rounded-lg border border-line py-2 text-[12px] num">1.6</button>
             <button data-v="2.0" class="rounded-lg border border-line py-2 text-[12px] num">2.0</button>
-            <button data-v="2.1" class="rounded-lg border border-line py-2 text-[12px] num">2.1</button>
             <button data-v="2.2" class="rounded-lg border border-line py-2 text-[12px] num">2.2</button>
+            <button data-v="2.4" class="rounded-lg border border-line py-2 text-[12px] num">2.4</button>
           </div>
         </div>
-        <div>
+        <div id="pFatBox">
           <label class="text-mute text-[11px]">ไขมัน <span id="pFatLbl" class="num text-txt">25%</span> ของแคลอรี่</label>
-          <input id="pFat" type="range" min="20" max="25" step="1" class="w-full mt-3" />
+          <input id="pFat" type="range" min="20" max="35" step="1" class="w-full mt-3" />
         </div>
       </div>
       <div class="rounded-2xl border border-acc/40 bg-acc/[.08] p-3">
@@ -631,7 +683,20 @@
           <div><span class="text-mute">C</span> <span id="cvC"></span></div>
           <div><span class="text-mute">Fb</span> <span id="cvFb"></span></div>
         </div>
-        <p id="cvWarn" class="th mt-2 text-[11px] text-warm"></p>
+        <p id="cvDelta" class="num mt-2 text-[11px] text-soft"></p>
+        <p id="cvWarn" class="th mt-1 text-[11px] text-warm"></p>
+      </div>
+      <div class="rounded-2xl border border-line bg-ink/40 p-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="eyebrow">Evidence-based · คำแนะนำ</div>
+          <button id="pApplyRec" class="shrink-0 rounded-full border border-acc/40 bg-acc/15 px-3 py-1 text-[11px] text-acc2 active:scale-95 transition">ใช้ค่าแนะนำ</button>
+        </div>
+        <div id="pRecSummary" class="mt-2 text-[12px] text-txt leading-relaxed"></div>
+        <ul id="pRecTips" class="mt-2 space-y-2 text-[11.5px] text-soft leading-relaxed"></ul>
+        <details class="mt-3">
+          <summary class="text-[11px] text-mute cursor-pointer select-none">แหล่งอ้างอิงงานวิจัย (<span id="pRefN"></span>)</summary>
+          <ol id="pRefs" class="mt-2 space-y-1.5 text-[10.5px] text-mute list-decimal pl-4 leading-relaxed"></ol>
+        </details>
       </div>
       <button id="pSave" class="btn-p w-full rounded-2xl py-3.5 active:scale-[.99] transition">บันทึกโปรไฟล์</button>
     </div>
@@ -665,6 +730,66 @@
           <label class="rounded-xl border border-line py-3 text-[12px] hover:border-acc text-center cursor-pointer">Import JSON<input id="sImport" type="file" accept="application/json" class="hidden" /></label>
           <button id="sReset" class="rounded-xl border border-bad/50 text-bad py-3 text-[12px] hover:bg-bad/10">ล้างข้อมูลทั้งหมด</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: WEEKLY SUMMARY ===================== -->
+<div id="mWeek" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">Weekly Review</div>
+        <div id="wkTitle" class="th text-[15px] font-semibold mt-0.5">สรุปสัปดาห์</div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button id="wkPrev" aria-label="สัปดาห์ก่อน" class="h-8 w-8 rounded-full border border-line grid place-items-center text-soft hover:text-txt">‹</button>
+        <button id="wkNext" aria-label="สัปดาห์ถัดไป" class="h-8 w-8 rounded-full border border-line grid place-items-center text-soft hover:text-txt">›</button>
+        <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
+      </div>
+    </div>
+    <div id="wkBody" class="px-5 py-4 space-y-4 th"></div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: REWARDS ===================== -->
+<div id="mReward" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">Rewards</div>
+        <div class="th text-[15px] font-semibold mt-0.5">แลกรางวัลที่ตั้งเอง</div>
+      </div>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
+    </div>
+    <div class="px-5 py-4 space-y-4 th text-[13px]">
+      <div class="rounded-2xl border border-acc/30 bg-acc/[.08] p-3 flex items-center justify-between">
+        <div><div class="text-[11px] text-mute">แต้มคงเหลือ 🪵</div><div id="rwBal" class="disp num text-[30px] text-acc2 leading-tight">0</div></div>
+        <div id="rwEarn" class="text-right text-[10.5px] text-mute leading-relaxed"></div>
+      </div>
+      <div>
+        <div class="eyebrow mb-2">รางวัลของฉัน</div>
+        <div id="rwList" class="space-y-2"></div>
+      </div>
+      <div class="rounded-2xl border border-line p-3 space-y-2">
+        <div class="text-[12.5px] font-semibold">ตั้งรางวัลเอง</div>
+        <div class="grid grid-cols-[52px_1fr_78px] gap-2">
+          <input id="rwEmoji" class="field text-center !px-1" maxlength="4" placeholder="🎁" aria-label="อีโมจิ" />
+          <input id="rwName" class="field" maxlength="40" placeholder="เช่น ชานมไข่มุก 1 แก้ว" aria-label="ชื่อรางวัล" />
+          <input id="rwCost" type="number" inputmode="numeric" min="10" max="100000" class="field num" placeholder="แต้ม" aria-label="แต้มที่ใช้" />
+        </div>
+        <button id="rwAdd" class="btn-p w-full rounded-xl py-2.5 text-[13px]">เพิ่มรางวัล</button>
+        <div class="text-[10.5px] text-mute pt-1">ไอเดีย แตะเพื่อเพิ่ม</div>
+        <div id="rwIdeas" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <div class="rounded-2xl border border-line p-3">
+        <div class="text-[12.5px] font-semibold mb-1.5">วิธีเก็บแต้ม</div>
+        <ul id="rwHow" class="text-[11.5px] text-soft space-y-1"></ul>
+      </div>
+      <div>
+        <div class="eyebrow mb-1">ประวัติการแลก</div>
+        <div id="rwHist" class="text-[11.5px] text-soft space-y-1.5"></div>
       </div>
     </div>
   </div>
@@ -835,23 +960,57 @@
   const KEYS = {
     profile: 'nj.profile.v1', meals: 'nj.meals.v1', burn: 'nj.burn.v1', weights: 'nj.weights.v1', sampleW: 'nj.sampleWeightDates',
     apiKey: 'nj.geminiKey', model: 'nj.geminiModel', range: 'nj.range', wRange: 'nj.wRange', logFilter: 'nj.logFilter',
-    theme: 'nj.theme', ghost: 'nj.ghost',
+    theme: 'nj.theme', ghost: 'nj.ghost', rewards: 'nj.rewards.v1', redeems: 'nj.redeems.v1', weekSeen: 'nj.weekSeen',
   };
   const load = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
   const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { toast('พื้นที่จัดเก็บเต็ม ลองลบประวัติเก่า', 'bad'); return false; } };
 
   // ---------- Constants ----------
+  // Goal = target rate of change in % bodyweight per week (Garthe 2011; Helms 2014; Iraki 2019)
   const GOALS = {
-    cut20:    { pct: 0.20,  badge: 'ลดไขมัน 20%', th: 'ลดไขมัน −20%', tone: 'acc2' },
-    cut15:    { pct: 0.15,  badge: 'ลดไขมัน 15%', th: 'ลดไขมัน −15%', tone: 'acc2' },
-    maintain: { pct: 0,     badge: 'รักษาน้ำหนัก', th: 'รักษาน้ำหนัก', tone: 'info' },
-    bulk:     { pct: -0.10, badge: 'เพิ่มกล้าม 10%', th: 'เพิ่มกล้าม +10%', tone: 'good' },
+    cut_slow: { rate: -0.005,  badge: 'ลด 0.5%/สัปดาห์',  tone: 'acc2' },
+    cut:      { rate: -0.0075, badge: 'ลด 0.75%/สัปดาห์', tone: 'acc2' },
+    cut_fast: { rate: -0.01,   badge: 'ลด 1%/สัปดาห์',    tone: 'warm' },
+    maintain: { rate: 0,       badge: 'รักษาน้ำหนัก',       tone: 'info' },
+    bulk:     { rate: 0.0035,  badge: 'เพิ่ม 0.35%/สัปดาห์', tone: 'good' },
   };
+  const LEGACY_GOAL = { cut20: 'cut', cut15: 'cut_slow' };
+  const KCAL_PER_KG = 7700; // static rule of thumb; real loss slows as expenditure adapts (Hall 2011)
+  // Diet styles. Carb caps: keto < 50 g, low-carb < 130 g (below the carb RDA); high-carb uses ACSM g/kg bands
+  const DIETS = {
+    balanced: { th: 'สมดุล', note: 'ไขมัน 20–35% ตามช่วง AMDR คาร์บเป็นส่วนที่เหลือ — เหมาะกับคนส่วนใหญ่' },
+    highcarb: { th: 'High-carb', note: 'คาร์บตามปริมาณการซ้อม 5–7 g/kg (ACSM) ไขมันขั้นต่ำ 20% — เหมาะกับคาร์ดิโอ/กีฬาความทนทาน' },
+    lowfat:   { th: 'Low-fat', note: 'ไขมัน 20% คาร์บสูงขึ้น — DIETFITS 12 เดือน ลดได้ไม่ต่างจาก Low-carb' },
+    lowcarb:  { th: 'Low-carb', carbG: 100, note: 'คาร์บ ~100 g/วัน (ต่ำกว่า 130 g) ไขมันเป็นส่วนที่เหลือ — ได้ผลพอๆ กับ Low-fat ถ้ากินได้ต่อเนื่อง' },
+    keto:     { th: 'คีโต', carbG: 30, note: 'คาร์บ < 50 g/วัน อาจลดเพิ่ม ~1.5 kg (หลักฐานความมั่นใจต่ำ) · ควรเช็ก LDL และไม่เหมาะกับการซ้อมหนักความเข้มสูง' },
+  };
+  const TRAIN = { none: 'ไม่ได้ฝึก', strength: 'เวทเทรนนิ่ง', endurance: 'คาร์ดิโอ/ความทนทาน', mixed: 'เวท + คาร์ดิโอ' };
+  // Research the recommendations are built from (Profile → แหล่งอ้างอิง)
+  const REFS = {
+    mifflin:  { s: 'Frankenfield 2005, J Am Diet Assoc', t: 'Mifflin-St Jeor แม่นที่สุดในสูตร BMR ที่ใช้กันทั่วไป (±10%)', u: 'https://pubmed.ncbi.nlm.nih.gov/15883556/' },
+    hall:     { s: 'Hall 2011, Lancet', t: 'น้ำหนักตอบสนองต่อ Deficit ช้าลงเรื่อยๆ เพราะร่างกายปรับการใช้พลังงาน', u: 'https://pubmed.ncbi.nlm.nih.gov/21872751/' },
+    garthe:   { s: 'Garthe 2011, IJSNEM', t: 'ลด 0.7%/สัปดาห์ รักษากล้าม/พลังได้ดีกว่าลด 1.4%/สัปดาห์', u: 'https://pubmed.ncbi.nlm.nih.gov/21558571/' },
+    jensen:   { s: 'AHA/ACC/TOS 2013 Guideline', t: 'Deficit ~500–750 kcal/วัน · ขั้นต่ำ 1,200 (หญิง) / 1,500 (ชาย) kcal', u: 'https://pubmed.ncbi.nlm.nih.gov/?term=2013+AHA%2FACC%2FTOS+guideline+management+of+overweight+and+obesity+in+adults' },
+    morton:   { s: 'Morton 2018, BJSM', t: 'Meta-analysis 49 RCTs: โปรตีน ~1.6 g/kg ขึ้นไปไม่เพิ่มกล้ามเพิ่ม (ช่วงไม่ได้ลดแคล)', u: 'https://pubmed.ncbi.nlm.nih.gov/28698222/' },
+    prot2025: { s: 'Strength & Cond J 2025 (meta-regression)', t: 'ช่วงลดแคล + เวท: โปรตีนยิ่งสูง ยิ่งรักษามวลไร้ไขมันได้มาก (สัมพันธ์เชิงเส้น)', u: 'https://journals.lww.com/nsca-scj/fulltext/9900/effect_of_dietary_protein_on_fat_free_mass_in.179.aspx' },
+    espen2024:{ s: 'Clin Nutr ESPEN 2024 (meta-analysis)', t: 'คนน้ำหนักเกิน: โปรตีนสูงขึ้นช่วยรักษากล้ามและความแข็งแรงระหว่างลดน้ำหนัก', u: 'https://www.clinicalnutritionespen.com/article/S2405-4577(24)00176-1/abstract' },
+    dietfits: { s: 'DIETFITS 2018, JAMA', t: 'RCT 609 คน 12 เดือน: Low-fat vs Low-carb ลดน้ำหนักไม่ต่างกัน', u: 'https://jamanetwork.com/journals/jama/fullarticle/2673150' },
+    keto2025: { s: 'Systematic review & meta-analysis 2025', t: 'แคลเท่ากัน คีโตลดเพิ่ม ~1.5 kg แต่ความมั่นใจของหลักฐานต่ำ', u: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC13468603/' },
+    ketoLdl:  { s: 'Meta-analysis 2024 (lipids)', t: 'คีโตในคนน้ำหนักเกินสัมพันธ์กับ LDL-C ที่สูงขึ้น', u: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11081528/' },
+    acsm2016: { s: 'AND/DC/ACSM 2016 Position', t: 'คาร์บ 3–5 g/kg (เบา) · 5–7 (ปานกลาง) · 6–10 (หนัก) ตามปริมาณการซ้อม', u: 'https://pubmed.ncbi.nlm.nih.gov/26891166/' },
+    liu2022:  { s: 'Liu 2022, NEJM', t: 'Time-restricted eating + คุมแคล ไม่ต่างจากคุมแคลอย่างเดียวใน 12 เดือน', u: 'https://www.nejm.org/doi/full/10.1056/NEJMoa2114833' },
+    icecap:   { s: 'Peos 2021 (ICECAP)', t: 'Diet break 1 สัปดาห์ ช่วยความทนทานของกล้ามเนื้อระหว่างลดแบบเป็นช่วง', u: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7906362/' },
+    selfmon:  { s: 'Self-monitoring thresholds 2024', t: 'บันทึกอาหาร ≥3 วัน/สัปดาห์ช่วยคุมน้ำหนัก และได้ผลมากขึ้นที่ ≥5 วัน/สัปดาห์', u: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10972539/' },
+    gamify:   { s: 'eClinicalMedicine 2024 (36 RCTs)', t: 'แอปที่มีเกม (แต้ม/สตรีค/ภารกิจ) เพิ่มการใช้งานและกิจกรรมทางกาย', u: 'https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(24)00377-8/fulltext' },
+    mlife:    { s: 'mLIFE RCT', t: 'ระบบแต้มลดการเลิกใช้ (22% vs 41%) และเพิ่มความสม่ำเสมอ (61% vs 42%)', u: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC13445473/' },
+  };
+  const REF_ORDER = Object.keys(REFS);
+  const cite = (...ids) => ids.map((id) => `<a href="${REFS[id].u}" target="_blank" rel="noopener" class="num text-acc2 hover:underline" title="${esc(REFS[id].s)}">[${REF_ORDER.indexOf(id) + 1}]</a>`).join('');
   const SODIUM_LIMIT = 2000;
   const MPS_PROTEIN_G = 25;
   const DEFAULT_MODEL = 'gemini-3.8-flash';
   const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
-  const DEFAULT_PROFILE = { name: '', sex: 'male', age: 28, height: 175, weight: 75, startWeight: null, goalWeight: null, activity: 1.55, goal: 'cut20', proteinPerKg: 2.2, fatPct: 25 };
+  const DEFAULT_PROFILE = { name: '', sex: 'male', age: 28, height: 175, weight: 75, startWeight: null, goalWeight: null, activity: 1.55, goal: 'cut', proteinPerKg: 2.2, fatPct: 25, diet: 'balanced', training: 'strength' };
   const TIERS = [
     { en: 'Rookie Camper', th: 'นักตั้งแคมป์มือใหม่ · เริ่มต้นการเดินทาง' },
     { en: 'Trail Walker', th: 'นักเดินป่า · ปลดล็อกไม้เท้าเดินป่า' },
@@ -901,6 +1060,10 @@
 
   // ---------- State ----------
   let profile = { ...DEFAULT_PROFILE, ...load(KEYS.profile, {}) };
+  if (LEGACY_GOAL[profile.goal]) profile.goal = LEGACY_GOAL[profile.goal];
+  if (!GOALS[profile.goal]) profile.goal = 'cut';
+  let rewards = load(KEYS.rewards, []);
+  let redeems = load(KEYS.redeems, []);
   let meals = load(KEYS.meals, []);
   let burn = load(KEYS.burn, {});
   let weights = load(KEYS.weights, {});
@@ -917,13 +1080,60 @@
     const w = num(p.weight), h = num(p.height), a = num(p.age);
     const bmr = 10 * w + 6.25 * h - 5 * a + (p.sex === 'female' ? -161 : 5); // Mifflin-St Jeor
     const tdee = bmr * num(p.activity, 1.2);
-    const pct = (GOALS[p.goal] || GOALS.cut20).pct;
-    const target = tdee * (1 - pct);
-    const protein = w * num(p.proteinPerKg, 2.2);                    // 2.0–2.2 g/kg
-    const fat = (target * (num(p.fatPct, 25) / 100)) / 9;             // 20–25% kcal
-    const carbs = Math.max(0, (target - protein * 4 - fat * 9) / 4);  // remainder
+    const g = GOALS[p.goal] || GOALS.cut;
+    const floor = p.sex === 'female' ? 1200 : 1500;                   // AHA/ACC/TOS minimum
+    const raw = tdee + (g.rate * w * KCAL_PER_KG) / 7;                // %BW/week → kcal/day
+    const target = g.rate < 0 ? Math.max(raw, Math.min(floor, tdee)) : raw;
+    const delta = target - tdee, pct = tdee > 0 ? -delta / tdee : 0, floorHit = raw < target - 1;
+    const protein = w * num(p.proteinPerKg, 2.2);
+    const pK = protein * 4, dietKey = DIETS[p.diet] ? p.diet : 'balanced', D = DIETS[dietKey];
+    let fat, carbs;
+    if (dietKey === 'keto' || dietKey === 'lowcarb') {
+      carbs = Math.min(D.carbG, Math.max(0, (target - pK) / 4));
+      fat = Math.max(0, (target - pK - carbs * 4) / 9);
+    } else if (dietKey === 'highcarb') {
+      const gkg = num(p.activity) >= 1.725 ? 7 : num(p.activity) >= 1.55 ? 6 : 5; // ACSM 2016 bands
+      const fatMin = (target * 0.2) / 9;
+      carbs = Math.min(gkg * w, Math.max(0, (target - pK - fatMin * 9) / 4));
+      fat = Math.max(fatMin, (target - pK - carbs * 4) / 9);
+    } else {
+      const fp = dietKey === 'lowfat' ? 20 : clamp(num(p.fatPct, 25), 20, 35);
+      fat = (target * (fp / 100)) / 9;
+      carbs = Math.max(0, (target - pK - fat * 9) / 4);
+    }
     const fiber = (target / 1000) * 14;                               // 14 g / 1,000 kcal
-    return { bmr, tdee, pct, target, protein, fat, carbs, fiber, sodium: SODIUM_LIMIT };
+    return { bmr, tdee, pct, delta, floorHit, target, protein, fat, carbs, fiber, sodium: SODIUM_LIMIT, diet: dietKey };
+  }
+
+  // ---------- Evidence-based recommendation ----------
+  function recommend(p) {
+    const w = num(p.weight), hm = num(p.height) / 100, bmi = hm > 0 ? w / (hm * hm) : 22;
+    const gw = num(p.goalWeight) > 0 ? num(p.goalWeight) : null, lift = p.training === 'strength' || p.training === 'mixed';
+    const tips = [];
+    let goal;
+    if (bmi < 18.5) { goal = gw && gw > w + 0.5 ? 'bulk' : 'maintain'; tips.push(`BMI ${fmt(bmi, 1)} ต่ำกว่าเกณฑ์ — ไม่แนะนำให้ลดน้ำหนัก`); }
+    else if (gw && gw > w + 0.5) goal = 'bulk';
+    else if (gw && Math.abs(gw - w) <= 0.5) goal = 'maintain';
+    else goal = bmi >= 30 ? 'cut_fast' : bmi >= 25 ? 'cut' : 'cut_slow';
+    const cutting = goal.startsWith('cut');
+    const protein = cutting ? (lift ? 2.2 : 2.0) : 1.6;
+    const diet = p.training === 'endurance' || p.training === 'mixed' ? 'highcarb' : 'balanced';
+    if (cutting) {
+      tips.push(`ความเร็ว: ${GOALS[goal].badge} — ${bmi >= 30 ? 'ไขมันสะสมมากลดเร็วได้' : bmi >= 25 ? 'ลดระดับกลาง' : 'ยิ่งไขมันน้อยยิ่งควรลดช้า'} เพื่อเก็บกล้ามไว้ ${cite('garthe', 'jensen')}`);
+      tips.push(`โปรตีน ${protein} g/kg — ช่วงลดแคลยิ่งโปรตีนสูงยิ่งรักษามวลกล้ามได้ดี ${cite('prot2025', 'espen2024')}`);
+      if (!lift) tips.push(`เพิ่มเวทเทรนนิ่ง 2–3 ครั้ง/สัปดาห์ — งานวิจัยโปรตีนที่ช่วยเก็บกล้ามทำในคนที่ฝึกเวทควบคู่ ${cite('prot2025')}`);
+    } else if (goal === 'bulk') {
+      tips.push(`เพิ่ม ~0.25–0.5% ต่อสัปดาห์ · โปรตีน ~1.6 g/kg ก็พอ เกินนี้ไม่เพิ่มกล้ามเพิ่ม ${cite('morton')}`);
+    } else {
+      tips.push(`รักษาน้ำหนัก · โปรตีน ~1.6 g/kg เพียงพอสำหรับคนที่ฝึกเวท ${cite('morton')}`);
+    }
+    tips.push(diet === 'highcarb'
+      ? `ซ้อมคาร์ดิโอ/ความทนทาน → High-carb 5–7 g/kg ตามปริมาณการซ้อม ${cite('acsm2016')}`
+      : `รูปแบบการกิน: Low-fat กับ Low-carb ได้ผลไม่ต่างกันใน 12 เดือน เลือกแบบที่ทำได้นาน ${cite('dietfits')} · คีโตอาจลดเพิ่มเล็กน้อยแต่หลักฐานไม่แน่น และ LDL อาจสูงขึ้น ${cite('keto2025', 'ketoLdl')}`);
+    tips.push(`จำกัดช่วงเวลากิน (IF/TRE) ไม่จำเป็น — ผลรวมแคลอรี่คือสิ่งที่ตัดสิน ${cite('liu2022')}`);
+    if (cutting) tips.push(`ถ้าลดยาวเกิน 8–12 สัปดาห์ พัก Diet break 1 สัปดาห์ที่แคลคงที่ได้ ${cite('icecap')}`);
+    tips.push(`บันทึกอาหารให้ได้ ≥5 วัน/สัปดาห์ และดูแนวโน้มน้ำหนัก 7 วัน ${cite('selfmon', 'hall')}`);
+    return { goal, protein, diet, fatPct: 25, bmi, tips };
   }
   const mealsOn = (key) => meals.filter((m) => dayKey(m.ts) === key);
   function totals(list) {
@@ -1267,7 +1477,7 @@
   // RENDER
   // =========================================================================
   function renderAll() {
-    renderHeader(); renderHero(); renderMain(); renderCalChart(); renderWeight(); renderAlloc(); renderMeals(); renderStatus();
+    renderHeader(); renderHero(); renderMain(); renderCalChart(); renderWeight(); renderAlloc(); renderMeals(); renderStatus(); renderQuest();
   }
   function renderHeader() {
     $('#modeSelect').value = profile.goal;
@@ -1339,7 +1549,7 @@
     const left = budget > 0 ? (remaining / budget) * 100 : 0, rp = $('#remainingPct');
     rp.textContent = remaining < 0 ? `เกินมา ${fmt(Math.abs(left))}%` : `เหลือ ${fmt(left)}%`;
     rp.style.color = remaining < 0 ? C('bad') : C('good');
-    const g = GOALS[profile.goal] || GOALS.cut20, db = $('#deficitBadge');
+    const g = GOALS[profile.goal] || GOALS.cut, db = $('#deficitBadge');
     db.textContent = g.badge; db.style.color = C(g.tone); db.style.background = C(g.tone, 0.1); db.style.borderColor = C(g.tone, 0.4);
     $('#tdeeLine').textContent = `BMR ${fmt(c.bmr)} · TDEE ${fmt(c.tdee)} kcal`;
     const bf = $('#budgetFill');
@@ -1582,7 +1792,7 @@
   function segBind(id, key, parse = (x) => x) {
     $('#' + id).addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (!b) return; draft[key] = parse(b.dataset.v); syncProfileForm(); });
   }
-  segBind('pSex', 'sex'); segBind('pGoal', 'goal'); segBind('pProt', 'proteinPerKg', Number);
+  segBind('pSex', 'sex'); segBind('pGoal', 'goal'); segBind('pProt', 'proteinPerKg', Number); segBind('pDiet', 'diet'); segBind('pTrain', 'training');
   function syncProfileForm(fill = false) {
     if (fill) {
       $('#pName').value = draft.name || ''; $('#pAge').value = draft.age; $('#pHeight').value = draft.height; $('#pWeight').value = draft.weight;
@@ -1592,13 +1802,30 @@
     $$('#pSex [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.sex));
     $$('#pGoal [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.goal));
     $$('#pProt [data-v]').forEach((b) => b.classList.toggle('on', Number(b.dataset.v) === Number(draft.proteinPerKg)));
+    $$('#pDiet [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.diet));
+    $$('#pTrain [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.training));
     $('#pFatLbl').textContent = draft.fatPct + '%';
     const c = calc(draft);
+    const freeFat = c.diet === 'balanced';
+    $('#pFat').disabled = !freeFat; $('#pFatBox').style.opacity = freeFat ? '' : '.45';
+    if (!freeFat) $('#pFatLbl').textContent = fmt((c.fat * 9 / Math.max(1, c.target)) * 100) + '%';
+    $('#pDietNote').innerHTML = esc(DIETS[c.diet].note) + ' ' + cite(...({ balanced: ['dietfits'], highcarb: ['acsm2016'], lowfat: ['dietfits'], lowcarb: ['dietfits'], keto: ['keto2025', 'ketoLdl'] })[c.diet]);
+    const gg = GOALS[draft.goal] || GOALS.cut;
+    $('#pGoalNote').innerHTML = gg.rate < 0
+      ? `≈ ${fmt(Math.abs(gg.rate) * num(draft.weight), 2)} kg/สัปดาห์ · โซนที่งานวิจัยแนะนำคือ 0.5–1%/สัปดาห์ ${cite('garthe')}`
+      : gg.rate > 0 ? `≈ +${fmt(gg.rate * num(draft.weight), 2)} kg/สัปดาห์ · ส่วนเกินเล็กน้อยช่วยให้ได้กล้ามโดยไขมันไม่พอกเกิน` : 'กิน = TDEE';
+    $('#cvDelta').textContent = `${c.delta < 0 ? 'Deficit' : c.delta > 0 ? 'Surplus' : 'Balance'} ${c.delta < 0 ? '−' : '+'}${fmt(Math.abs(c.delta))} kcal/วัน (${fmt(Math.abs(c.pct) * 100)}% TDEE)`;
+    const rec = recommend(draft);
+    $('#pRecSummary').innerHTML = `BMI <b class="num">${fmt(rec.bmi, 1)}</b> · แนะนำ <b>${GOALS[rec.goal].badge}</b> · โปรตีน <b class="num">${rec.protein}</b> g/kg · กินแบบ<b>${DIETS[rec.diet].th}</b>`;
+    $('#pRecTips').innerHTML = rec.tips.map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t}</span></li>`).join('');
+    const same = draft.goal === rec.goal && Number(draft.proteinPerKg) === rec.protein && draft.diet === rec.diet;
+    $('#pApplyRec').textContent = same ? '✓ ใช้ค่าแนะนำอยู่' : 'ใช้ค่าแนะนำ';
     $('#cvBmr').textContent = fmt(c.bmr); $('#cvTdee').textContent = fmt(c.tdee); $('#cvTarget').textContent = fmt(c.target);
     $('#cvP').textContent = fmt(c.protein) + 'g'; $('#cvF').textContent = fmt(c.fat) + 'g'; $('#cvC').textContent = fmt(c.carbs) + 'g'; $('#cvFb').textContent = fmt(c.fiber) + 'g';
     const warns = [];
-    if (c.carbs < 100) warns.push('คาร์บต่ำกว่า 100g อาจกระทบประสิทธิภาพการซ้อม ลองลด Deficit หรือเพิ่มระดับกิจกรรม');
-    if (draft.sex === 'female' ? c.target < 1200 : c.target < 1500) warns.push('Target ต่ำกว่าค่าขั้นต่ำที่แนะนำ ควรปรึกษาผู้เชี่ยวชาญ');
+    if (c.floorHit) warns.push(`Target ถูกยกขึ้นเป็นขั้นต่ำ ${fmt(c.target)} kcal ตามแนวทาง AHA/ACC/TOS`);
+    else if (draft.sex === 'female' ? c.target < 1200 : c.target < 1500) warns.push('Target ต่ำกว่าค่าขั้นต่ำที่แนะนำ ควรปรึกษาผู้เชี่ยวชาญ');
+    if (c.diet !== 'keto' && c.diet !== 'lowcarb' && c.carbs < 100) warns.push('คาร์บต่ำกว่า 100g อาจกระทบประสิทธิภาพการซ้อม');
     $('#cvWarn').textContent = warns.join(' · ');
     const pb = bodyParams(draft, num(draft.weight, 70));
     $('#pPreview').setAttribute('src', heroImg(draft.sex, pb.f));
@@ -1611,6 +1838,14 @@
       draft.activity = Number($('#pActivity').value); draft.fatPct = Number($('#pFat').value);
       syncProfileForm();
     });
+  });
+  $('#pRefN').textContent = REF_ORDER.length;
+  $('#pRefs').innerHTML = REF_ORDER.map((id) => `<li><a href="${REFS[id].u}" target="_blank" rel="noopener" class="text-soft hover:text-acc2 underline decoration-line underline-offset-2">${esc(REFS[id].s)}</a> — ${esc(REFS[id].t)}</li>`).join('');
+  $('#pApplyRec').addEventListener('click', () => {
+    const rec = recommend(draft);
+    Object.assign(draft, { goal: rec.goal, proteinPerKg: rec.protein, diet: rec.diet });
+    if (rec.diet === 'balanced') { draft.fatPct = rec.fatPct; $('#pFat').value = rec.fatPct; }
+    syncProfileForm(); buzz(6); toast('ใช้ค่าแนะนำแล้ว · กดบันทึกเพื่อยืนยัน', 'acc');
   });
   function openProfile() { draft = { ...profile, weight: currentWeight() }; syncProfileForm(true); openModal('mProfile'); }
   $('#btnProfile').addEventListener('click', openProfile);
@@ -1625,6 +1860,218 @@
   $('#modeSelect').addEventListener('change', (e) => {
     profile.goal = e.target.value; save(KEYS.profile, profile); renderAll();
     toast('เปลี่ยนโหมดเป็น ' + e.target.options[e.target.selectedIndex].text, 'acc');
+  });
+
+
+  // =========================================================================
+  // QUEST: streak · points · weekly challenges · rewards · weekly review
+  // Points and streaks are derived from the log itself, so editing a meal re-scores the day.
+  // =========================================================================
+  const DAY_CHECKS = [
+    { k: 'logged', label: 'บันทึกอาหาร', pts: 10 },
+    { k: 'weighed', label: 'ชั่งน้ำหนัก', pts: 5 },
+    { k: 'protein', label: 'โปรตีนถึงเป้า', pts: 15 },
+    { k: 'inRange', label: 'แคลในกรอบ ±10%', pts: 15 },
+    { k: 'fiber', label: 'ไฟเบอร์ถึงเป้า', pts: 5 },
+  ];
+  const DAY_MAX = DAY_CHECKS.reduce((a, d) => a + d.pts, 0);
+  const STREAK_BONUS = 50; // every 7 consecutive logged days
+  const CHALLENGES = [
+    { id: 'log6', k: 'logged', need: 6, pts: 50, t: 'บันทึกอาหารให้ครบ 6 วัน' },
+    { id: 'p5', k: 'protein', need: 5, pts: 60, t: 'โปรตีนถึงเป้า 5 วัน' },
+    { id: 'r5', k: 'inRange', need: 5, pts: 60, t: 'แคลอยู่ในกรอบ ±10% 5 วัน' },
+    { id: 'w4', k: 'weighed', need: 4, pts: 40, t: 'ชั่งน้ำหนัก 4 วัน' },
+    { id: 'f3', k: 'fiber', need: 3, pts: 40, t: 'ไฟเบอร์ถึงเป้า 3 วัน' },
+    { id: 's5', k: 'sodium', need: 5, pts: 40, t: 'โซเดียมไม่เกิน 2,000 mg 5 วัน' },
+  ];
+  const REWARD_IDEAS = [['☕', 'กาแฟร้านโปรด', 150], ['🧋', 'ชานมไข่มุก', 200], ['🍕', 'มื้อพิเศษนอกแผน', 400], ['🎬', 'ดูหนัง 1 เรื่อง', 300], ['💆', 'นวดผ่อนคลาย', 700], ['👟', 'รองเท้าวิ่งคู่ใหม่', 3000]];
+  const TH_DOW = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+  const weekStart = (d = new Date()) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  const weekKeyOf = (k) => dayKey(weekStart(new Date(k + 'T00:00:00')));
+  const weekDays = (wk) => Array.from({ length: 7 }, (_, i) => dayKey(addDays(new Date(wk + 'T00:00:00'), i)));
+  const hash = (str) => { let h = 2166136261; for (const ch of str) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
+  // self-monitoring is always one of the three (it is what the evidence ties most closely to success)
+  function weekChallenges(wk) {
+    const rest = CHALLENGES.slice(1).sort((a, b) => hash(wk + a.id) - hash(wk + b.id));
+    return [CHALLENGES[0], rest[0], rest[1]];
+  }
+  function dayIndex() {
+    const m = new Map();
+    meals.forEach((x) => { const k = dayKey(x.ts); if (!m.has(k)) m.set(k, []); m.get(k).push(x); });
+    return m;
+  }
+  function dayStat(key, idx, c) {
+    const list = idx.get(key) || [], t = totals(list), logged = list.length > 0, budget = c.target + num(burn[key]);
+    const s = {
+      key, logged, t, budget, weighed: num(weights[key]) > 0,
+      protein: logged && t.p >= c.protein * 0.9,
+      inRange: logged && budget > 0 && Math.abs(t.kcal - budget) <= budget * 0.1,
+      fiber: logged && t.fiber >= c.fiber * 0.9,
+      sodium: logged && t.sodium <= SODIUM_LIMIT,
+    };
+    s.pts = DAY_CHECKS.reduce((a, d) => a + (s[d.k] ? d.pts : 0), 0);
+    return s;
+  }
+  const weekCount = (wk, k, idx, c) => weekDays(wk).filter((d) => dayStat(d, idx, c)[k]).length;
+  const challengePts = (wk, idx, c) => weekChallenges(wk).reduce((a, ch) => a + (weekCount(wk, ch.k, idx, c) >= ch.need ? ch.pts : 0), 0);
+  let lastQuest = null;
+  function quest() {
+    const c = calc(profile), idx = dayIndex(), today = dayKey();
+    const keys = [...new Set([...idx.keys(), ...Object.keys(weights).filter((k) => num(weights[k]) > 0)])].filter((k) => k <= today);
+    const dayPts = keys.reduce((a, k) => a + dayStat(k, idx, c).pts, 0);
+    const logged = [...idx.keys()].filter((k) => k <= today).sort();
+    let best = 0, run = 0, prev = null, bonus = 0;
+    logged.forEach((k) => {
+      run = prev && Math.round((keyTime(k) - keyTime(prev)) / 864e5) === 1 ? run + 1 : 1;
+      if (run % 7 === 0) bonus += STREAK_BONUS;
+      best = Math.max(best, run); prev = k;
+    });
+    const todayLogged = idx.has(today);
+    let streak = 0, d = todayLogged ? new Date() : addDays(new Date(), -1);
+    while (idx.has(dayKey(d))) { streak++; d = addDays(d, -1); }
+    const chPts = [...new Set(keys.map(weekKeyOf))].reduce((a, wk) => a + challengePts(wk, idx, c), 0);
+    const earned = dayPts + bonus + chPts, spent = redeems.reduce((a, r) => a + num(r.cost), 0);
+    lastQuest = { c, idx, earned, spent, balance: earned - spent, streak, best, todayLogged, dayPts, bonus, chPts };
+    return lastQuest;
+  }
+  const pill = (on, label, pts) => `<span class="rounded-full border px-2 py-0.5 text-[10.5px] ${on ? 'border-good/40 bg-good/10 text-good' : 'border-line text-mute'}">${on ? '✓' : '○'} ${label} <span class="num opacity-70">+${pts}</span></span>`;
+  function challengeRow(ch, n) {
+    const done = n >= ch.need, pct = clamp((n / ch.need) * 100, 0, 100);
+    return `<div><div class="flex items-center justify-between gap-2 text-[12px]"><span class="${done ? 'text-good' : 'text-soft'}">${done ? '✓ ' : ''}${ch.t}</span><span class="num text-[11px] shrink-0 ${done ? 'text-good' : 'text-acc2'}">${Math.min(n, ch.need)}/${ch.need} · +${ch.pts}</span></div>
+      <div class="track mt-1"><div class="fill" style="width:${pct}%;background:${done ? C('good') : C('acc', 0.8)}"></div></div></div>`;
+  }
+  function renderQuest() {
+    const q = quest(), today = dayStat(dayKey(), q.idx, q.c), wk = dayKey(weekStart());
+    tween($('#qPoints'), q.balance);
+    $('#qStreak').textContent = q.streak;
+    $('#qFlame').style.filter = q.streak ? '' : 'grayscale(1) opacity(.45)';
+    $('#qBest').textContent = `สถิติดีสุด ${q.best} วัน · ครบทุก 7 วันติด +${STREAK_BONUS}` + (q.streak && !q.todayLogged ? ' · บันทึกวันนี้เพื่อต่อไฟ 🔥' : '');
+    $('#qTodayPts').textContent = `+${today.pts}/${DAY_MAX}`;
+    $('#qToday').innerHTML = DAY_CHECKS.map((d) => pill(today[d.k], d.label, d.pts)).join('');
+    const left = 6 - ((new Date().getDay() + 6) % 7);
+    $('#qWeekLeft').textContent = left ? `เหลือ ${left} วัน` : 'วันสุดท้าย!';
+    $('#qChallenges').innerHTML = weekChallenges(wk).map((ch) => challengeRow(ch, weekCount(wk, ch.k, q.idx, q.c))).join('');
+    if ($('#mReward') && !$('#mReward').classList.contains('hidden-sheet')) renderRewards();
+  }
+
+  // ---------- Weekly review ----------
+  let wkView = dayKey(weekStart());
+  function weekInsights(stats, elapsed, wRate, c) {
+    const out = [], logged = stats.filter((s) => s.logged), n = logged.length;
+    const cutting = (GOALS[profile.goal] || GOALS.cut).rate < 0;
+    if (!n) return [`ยังไม่มีบันทึกในสัปดาห์นี้ — เริ่มจากถ่ายรูปมื้อเดียวก็นับแล้ว ${cite('selfmon')}`];
+    if (n < Math.min(5, elapsed)) out.push(`บันทึกได้ ${n}/${elapsed} วัน — การบันทึก ≥5 วัน/สัปดาห์สัมพันธ์กับการคุมน้ำหนักระยะยาวที่ดีกว่า ${cite('selfmon')}`);
+    const pDays = logged.filter((s) => s.protein).length;
+    if (pDays < Math.ceil(n * 0.6)) out.push(`โปรตีนถึงเป้า ${pDays}/${n} วันที่บันทึก — เพิ่มโปรตีนทุกมื้อช่วยรักษากล้ามระหว่างลดแคล ${cite('prot2025', 'espen2024')}`);
+    if (wRate != null) {
+      if (cutting && wRate < -1) out.push(`น้ำหนักเฉลี่ยลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ — เร็วเกิน 1% เสี่ยงเสียกล้าม ลองเพิ่ม 100–200 kcal ${cite('garthe')}`);
+      else if (cutting && wRate <= -0.5) out.push(`ลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ — อยู่ในโซน 0.5–1% ที่งานวิจัยแนะนำ 👍 ${cite('garthe')}`);
+      else if (cutting && wRate > 0.1) out.push(`น้ำหนักเฉลี่ยขึ้น ${fmt(wRate, 2)}% — น้ำ/โซเดียม/ไกลโคเจนทำให้แกว่งได้ ดูแนวโน้ม 2 สัปดาห์ก่อนปรับ และเช็กน้ำมันแฝง`);
+      else if (cutting && logged.filter((s) => s.inRange).length >= 5) out.push(`น้ำหนักนิ่งทั้งที่คุมได้ — ร่างกายใช้พลังงานน้อยลงเมื่อตัวเบาลง ถ้านิ่งต่อ 2 สัปดาห์ ลด 100–150 kcal ${cite('hall')}`);
+      else if (profile.goal === 'bulk' && wRate > 0.5) out.push(`ขึ้น ${fmt(wRate, 2)}%/สัปดาห์ — เร็วกว่า 0.5% ส่วนเกินมักเป็นไขมัน ${cite('morton')}`);
+    }
+    const hiNa = logged.filter((s) => !s.sodium).length;
+    if (hiNa >= 3) out.push(`โซเดียมเกิน 2,000 mg ${hiNa} วัน — ลดน้ำจิ้ม/ซุป/ของหมักดอง น้ำหนักจะแกว่งน้อยลงด้วย`);
+    if (!out.length) out.push('สัปดาห์นี้ทำได้ดีมาก รักษาจังหวะนี้ไว้ 🔥');
+    return out;
+  }
+  function renderWeek() {
+    const q = lastQuest || quest(), c = q.c, days = weekDays(wkView), stats = days.map((d) => dayStat(d, q.idx, c));
+    const cur = dayKey(weekStart()), isCur = wkView === cur;
+    const elapsed = isCur ? ((new Date().getDay() + 6) % 7) + 1 : 7;
+    $('#wkTitle').textContent = `${dateStr(keyTime(days[0]))} – ${dateStr(keyTime(days[6]))}${isCur ? ' · สัปดาห์นี้' : ''}`;
+    $('#wkNext').style.opacity = isCur ? '.35' : '';
+    const logged = stats.filter((s) => s.logged), n = logged.length, avg = (f) => (n ? logged.reduce((a, s) => a + f(s), 0) / n : 0);
+    const avgK = avg((s) => s.t.kcal), avgB = n ? avg((s) => s.budget) : c.target, avgP = avg((s) => s.t.p);
+    const pDays = stats.filter((s) => s.protein).length, rDays = stats.filter((s) => s.inRange).length;
+    const wAvg = (ds) => { const v = ds.map((d) => num(weights[d])).filter((x) => x > 0); return v.length ? v.reduce((a, b) => a + b) / v.length : null; };
+    const w1 = wAvg(days), w0 = wAvg(weekDays(dayKey(addDays(new Date(wkView + 'T00:00:00'), -7))));
+    const wRate = w1 && w0 ? ((w1 - w0) / w0) * 100 : null;
+    const pts = stats.reduce((a, s) => a + s.pts, 0) + challengePts(wkView, q.idx, c);
+    const score = elapsed ? (n / elapsed) * 0.4 + (pDays / elapsed) * 0.3 + (rDays / elapsed) * 0.3 : 0;
+    const grade = score >= 0.8 ? ['A', 'good'] : score >= 0.6 ? ['B', 'acc2'] : score >= 0.4 ? ['C', 'warm'] : ['D', 'bad'];
+    const bars = stats.map((s, i) => {
+      const future = s.key > dayKey(), r = s.budget > 0 ? s.t.kcal / s.budget : 0, h = s.logged ? clamp(r, 0.06, 1.25) / 1.25 * 100 : 0;
+      const col = !s.logged ? C('line') : s.inRange ? C('good') : r > 1 ? C('bad', 0.8) : C('info', 0.8);
+      return `<div class="flex flex-col items-center gap-1"><div class="relative h-16 w-full rounded-lg bg-ink/50 overflow-hidden ${future ? 'opacity-40' : ''}">
+        <div class="absolute inset-x-0 border-t border-dashed" style="bottom:${100 / 1.25}%;border-color:${C('cream', 0.25)}"></div>
+        <div class="absolute bottom-0 inset-x-1 rounded-md" style="height:${h}%;background:${col}"></div></div>
+        <div class="text-[10px] ${s.key === dayKey() ? 'text-acc2 font-bold' : 'text-mute'}">${TH_DOW[i]}</div>
+        <div class="h-1.5 w-1.5 rounded-full" style="background:${s.protein ? C('good') : C('line')}" title="โปรตีน"></div></div>`;
+    }).join('');
+    const tile = (label, val, sub = '') => `<div class="rounded-2xl border border-line bg-ink/30 p-3"><div class="text-[10.5px] text-mute">${label}</div><div class="num text-[17px] font-semibold mt-0.5">${val}</div>${sub ? `<div class="text-[10.5px] text-mute mt-0.5">${sub}</div>` : ''}</div>`;
+    $('#wkBody').innerHTML = `
+      <div class="flex items-center gap-4">
+        <div class="h-16 w-16 shrink-0 rounded-2xl grid place-items-center disp text-[34px]" style="color:${C(grade[1])};background:${C(grade[1], 0.1)};border:1px solid ${C(grade[1], 0.35)}">${grade[0]}</div>
+        <div class="text-[12.5px] text-soft leading-relaxed">ได้ <b class="num text-acc2">+${fmt(pts)}</b> แต้ม · บันทึก <b class="num text-txt">${n}/${elapsed}</b> วัน<br>สตรีคตอนนี้ <b class="num text-txt">${q.streak}</b> วัน 🔥</div>
+      </div>
+      <div><div class="grid grid-cols-7 gap-1.5">${bars}</div>
+        <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-mute"><span><i class="inline-block h-2 w-2 rounded-sm align-middle" style="background:${C('good')}"></i> ในกรอบ ±10%</span><span><i class="inline-block h-2 w-2 rounded-sm align-middle" style="background:${C('info', 0.8)}"></i> ต่ำกว่า</span><span><i class="inline-block h-2 w-2 rounded-sm align-middle" style="background:${C('bad', 0.8)}"></i> เกิน</span><span>● โปรตีนถึงเป้า</span></div></div>
+      <div class="grid grid-cols-2 gap-2">
+        ${tile('แคลเฉลี่ย/วัน', n ? fmt(avgK) : '—', n ? `เป้า ${fmt(avgB)} kcal` : '')}
+        ${tile('โปรตีนเฉลี่ย', n ? fmt(avgP) + ' g' : '—', `ถึงเป้า ${pDays} วัน`)}
+        ${tile('อยู่ในกรอบแคล', `${rDays}/${elapsed}`, 'วัน')}
+        ${tile('น้ำหนักเฉลี่ย', w1 ? fmt(w1, 1) + ' kg' : '—', wRate != null ? `${wRate > 0 ? '+' : ''}${fmt(wRate, 2)}% จากสัปดาห์ก่อน` : 'ชั่ง 2 สัปดาห์เพื่อเทียบ')}
+      </div>
+      <div><div class="text-[12.5px] font-semibold mb-2">ภารกิจ</div><div class="space-y-2.5">${weekChallenges(wkView).map((ch) => challengeRow(ch, weekCount(wkView, ch.k, q.idx, c))).join('')}</div></div>
+      <div class="rounded-2xl border border-acc/25 bg-acc/[.06] p-3"><div class="text-[12.5px] font-semibold mb-1.5">คำแนะนำสัปดาห์นี้</div>
+        <ul class="space-y-1.5 text-[11.5px] text-soft leading-relaxed">${weekInsights(stats, elapsed, wRate, c).map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t}</span></li>`).join('')}</ul></div>`;
+  }
+  function openWeek(wk = dayKey(weekStart())) { wkView = wk; renderWeek(); openModal('mWeek'); }
+  $('#btnWeekSum').addEventListener('click', () => openWeek());
+  $('#wkPrev').addEventListener('click', () => { wkView = dayKey(addDays(new Date(wkView + 'T00:00:00'), -7)); renderWeek(); buzz(4); });
+  $('#wkNext').addEventListener('click', () => {
+    if (wkView >= dayKey(weekStart())) return toast('นี่คือสัปดาห์ปัจจุบันแล้ว', 'info');
+    wkView = dayKey(addDays(new Date(wkView + 'T00:00:00'), 7)); renderWeek(); buzz(4);
+  });
+
+  // ---------- Rewards ----------
+  let redeemArm = { id: null, t: 0 };
+  function renderRewards() {
+    const q = lastQuest || quest();
+    $('#rwBal').textContent = fmt(q.balance);
+    $('#rwEarn').innerHTML = `ได้รับทั้งหมด <b class="num text-soft">${fmt(q.earned)}</b><br>ใช้ไปแล้ว <span class="num">${fmt(q.spent)}</span>`;
+    $('#rwList').innerHTML = rewards.length ? rewards.map((r) => {
+      const ok = q.balance >= r.cost, pct = clamp((q.balance / r.cost) * 100, 0, 100), armed = redeemArm.id === r.id && Date.now() - redeemArm.t < 3500;
+      return `<div class="rounded-2xl border ${ok ? 'border-acc/35' : 'border-line'} p-3">
+        <div class="flex items-center gap-3"><div class="text-[24px] leading-none">${esc(r.emoji || '🎁')}</div>
+          <div class="min-w-0 flex-1"><div class="text-[13px] truncate">${esc(r.name)}</div><div class="num text-[11px] text-mute">${fmt(r.cost)} แต้ม${ok ? '' : ` · ขาดอีก ${fmt(r.cost - q.balance)}`}</div></div>
+          <button data-redeem="${esc(r.id)}" class="rounded-full border px-3 py-1.5 text-[12px] ${ok ? 'border-acc/45 bg-acc/20 text-acc2' : 'border-line text-mute'} active:scale-95 transition">${armed ? 'ยืนยัน?' : 'แลก'}</button>
+          <button data-rdel="${esc(r.id)}" aria-label="ลบรางวัล" class="h-7 w-7 rounded-full text-mute hover:text-bad">✕</button></div>
+        <div class="track mt-2"><div class="fill" style="width:${pct}%;background:${C('acc', 0.75)}"></div></div></div>`;
+    }).join('') : '<div class="rounded-2xl border border-dashed border-line p-4 text-center text-[12px] text-mute">ยังไม่มีรางวัล — ตั้งของที่อยากได้ แล้วเก็บแต้มไปแลก</div>';
+    $('#rwIdeas').innerHTML = REWARD_IDEAS.map((x, i) => `<button data-idea="${i}" class="rounded-full border border-line px-2.5 py-1 text-[11px] text-soft hover:border-acc/50">${x[0]} ${x[1]} <span class="num text-mute">${x[2]}</span></button>`).join('');
+    $('#rwHow').innerHTML = DAY_CHECKS.map((d) => `<li class="flex justify-between"><span>${d.label}</span><span class="num text-acc2">+${d.pts}/วัน</span></li>`).join('')
+      + `<li class="flex justify-between"><span>ไฟติดต่อกันครบทุก 7 วัน</span><span class="num text-acc2">+${STREAK_BONUS}</span></li><li class="flex justify-between"><span>ภารกิจประจำสัปดาห์</span><span class="num text-acc2">+40–60</span></li>`
+      + `<li class="pt-1 text-[10.5px] text-mute">ทำไมต้องมีเกม: แต้ม/สตรีค/ภารกิจช่วยให้ใช้แอปต่อเนื่องขึ้น ${cite('gamify', 'mlife')}</li>`;
+    $('#rwHist').innerHTML = redeems.length ? redeems.slice(-8).reverse().map((x) => `<div class="flex justify-between gap-2"><span class="truncate">${esc(x.emoji || '🎁')} ${esc(x.name)}</span><span class="num text-mute shrink-0">−${fmt(x.cost)} · ${esc(dateStr(x.ts))}</span></div>`).join('') : '<div class="text-mute">ยังไม่เคยแลก</div>';
+  }
+  function openRewards() { quest(); renderRewards(); openModal('mReward'); }
+  $('#btnRewards').addEventListener('click', openRewards);
+  $('#btnRewards2').addEventListener('click', openRewards);
+  function addReward(emoji, name, cost) {
+    rewards.push({ id: uid(), emoji: emoji || '🎁', name, cost }); save(KEYS.rewards, rewards); renderRewards(); buzz(6);
+    toast(`เพิ่มรางวัล “${name}” แล้ว`, 'acc');
+  }
+  $('#rwAdd').addEventListener('click', () => {
+    const name = $('#rwName').value.trim(), cost = Math.round(num($('#rwCost').value));
+    if (!name) return toast('ตั้งชื่อรางวัลก่อน', 'bad');
+    if (!(cost >= 10 && cost <= 100000)) return toast('แต้มต้องอยู่ระหว่าง 10–100,000', 'bad');
+    addReward($('#rwEmoji').value.trim(), name, cost);
+    $('#rwName').value = ''; $('#rwCost').value = ''; $('#rwEmoji').value = '';
+  });
+  $('#rwIdeas').addEventListener('click', (e) => { const b = e.target.closest('[data-idea]'); if (!b) return; const x = REWARD_IDEAS[+b.dataset.idea]; addReward(x[0], x[1], x[2]); });
+  $('#rwList').addEventListener('click', (e) => {
+    const del = e.target.closest('[data-rdel]');
+    if (del) { const r = rewards.find((x) => x.id === del.dataset.rdel); rewards = rewards.filter((x) => x.id !== del.dataset.rdel); save(KEYS.rewards, rewards); renderRewards(); return toast(`ลบ “${r ? r.name : ''}” แล้ว`, 'bad'); }
+    const b = e.target.closest('[data-redeem]'); if (!b) return;
+    const r = rewards.find((x) => x.id === b.dataset.redeem), q = quest(); if (!r) return;
+    if (q.balance < r.cost) { buzz(12); return toast(`ขาดอีก ${fmt(r.cost - q.balance)} แต้ม — สู้ต่อ! 🔥`, 'warm'); }
+    if (redeemArm.id !== r.id || Date.now() - redeemArm.t > 3500) { redeemArm = { id: r.id, t: Date.now() }; renderRewards(); setTimeout(() => { if (redeemArm.id === r.id && Date.now() - redeemArm.t >= 3500) renderRewards(); }, 3600); return; }
+    redeemArm = { id: null, t: 0 };
+    redeems.push({ id: uid(), rid: r.id, emoji: r.emoji, name: r.name, cost: r.cost, ts: Date.now() }); save(KEYS.redeems, redeems);
+    renderQuest(); renderRewards(); burst(); buzz([10, 40, 10]);
+    toast(`แลก “${r.name}” แล้ว! ให้รางวัลตัวเองได้เลย 🎉`, 'good');
   });
 
   // =========================================================================
@@ -1693,7 +2140,7 @@
     openModal('mSettings');
   });
   $('#sExport').addEventListener('click', async () => {
-    const json = JSON.stringify({ app: 'cal', v: 2, profile, meals, burn, weights }, null, 2), filename = `cal-${dayKey()}.json`;
+    const json = JSON.stringify({ app: 'cal', v: 3, profile, meals, burn, weights, rewards, redeems }, null, 2), filename = `cal-${dayKey()}.json`;
     const dl = window.claude && window.claude.use ? await window.claude.use('downloads').catch(() => null) : null;
     if (dl) {
       try { const r = await dl.save({ filename, data: json }); if (r && r.status === 'saved') toast('บันทึกไฟล์แล้ว'); }
@@ -1710,7 +2157,10 @@
       const d = JSON.parse(await f.text());
       if (!Array.isArray(d.meals)) throw new Error('bad');
       profile = { ...DEFAULT_PROFILE, ...(d.profile || {}) }; meals = d.meals; burn = d.burn || {}; weights = d.weights || {};
-      save(KEYS.profile, profile); save(KEYS.meals, meals); save(KEYS.burn, burn); save(KEYS.weights, weights);
+      if (LEGACY_GOAL[profile.goal]) profile.goal = LEGACY_GOAL[profile.goal];
+      if (!GOALS[profile.goal]) profile.goal = 'cut';
+      rewards = Array.isArray(d.rewards) ? d.rewards : rewards; redeems = Array.isArray(d.redeems) ? d.redeems : redeems;
+      save(KEYS.profile, profile); save(KEYS.meals, meals); save(KEYS.burn, burn); save(KEYS.weights, weights); save(KEYS.rewards, rewards); save(KEYS.redeems, redeems);
       heroSig = ''; renderAll(); closeModal('mSettings'); toast(`นำเข้า ${meals.length} มื้อ · ${Object.keys(weights).length} น้ำหนัก`);
     } catch { toast('ไฟล์ไม่ถูกต้อง', 'bad'); }
     e.target.value = '';
@@ -1724,8 +2174,8 @@
       return;
     }
     resetArmed = 0; btn.textContent = 'ล้างข้อมูลทั้งหมด';
-    meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE };
-    [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
+    meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE }; rewards = []; redeems = [];
+    [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW, KEYS.rewards, KEYS.redeems].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
     heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bad');
   });
   $('#sSample').addEventListener('click', () => {
@@ -2151,8 +2601,11 @@ ANALYSIS RULES:
       <div class="th text-[12.5px] text-soft mt-1">${TIERS[tier].th}</div>
       <button class="btn-p mt-5 w-full rounded-2xl py-3 th" data-lvl-close>ไปต่อ 🚀</button></div>`;
     el.classList.remove('hide');
+    burst();
+  }
+  function burst() {
     if (reduceMotion) return;
-    const colors = ['#8b5cf6', '#a78bfa', '#38bdf8', '#10b981', '#f5b544', '#f472b6', '#ffffff'];
+    const colors = theme === 'campfire' ? ['#d6a480', '#eaccb0', '#92c4a4', '#eece8c', '#9ea6e2', '#e8e2d4'] : ['#8b5cf6', '#a78bfa', '#38bdf8', '#10b981', '#f5b544', '#f472b6', '#ffffff'];
     $('#confetti').innerHTML = Array.from({ length: 70 }, () => `<span class="confetti" style="left:${(Math.random() * 100).toFixed(1)}%;background:${colors[Math.floor(Math.random() * colors.length)]};--x:${(Math.random() * 180 - 90).toFixed(0)}px;--r:${(Math.random() * 900 - 450).toFixed(0)}deg;--dur:${(Math.random() * 1.4 + 1.8).toFixed(2)}s;--delay:${(Math.random() * 0.5).toFixed(2)}s;width:${(Math.random() * 5 + 5).toFixed(0)}px;height:${(Math.random() * 6 + 8).toFixed(0)}px"></span>`).join('');
     setTimeout(() => { $('#confetti').innerHTML = ''; }, 4200);
   }
@@ -2190,7 +2643,7 @@ ANALYSIS RULES:
     const el = $('#' + b.dataset.nav), y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + scroller.scrollTop - 70;
     scroller.scrollTo({ top: Math.min(y, scroller.scrollHeight - scroller.clientHeight), behavior: 'smooth' }); setNav(b.dataset.nav); buzz(6);
   }));
-  const navMap = { secHome: 'secHome', secHero: 'secHome', secStats: 'secStats', secWeight: 'secWeight', secAlloc: 'secStats', secLog: 'secLog' };
+  const navMap = { secHome: 'secHome', secHero: 'secHome', secQuest: 'secHome', secStats: 'secStats', secWeight: 'secWeight', secAlloc: 'secStats', secLog: 'secLog' };
   const io = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) setNav(navMap[en.target.id]); }), { rootMargin: '-45% 0px -50% 0px' });
   Object.keys(navMap).forEach((id) => io.observe($('#' + id)));
   setNav('secHome');
@@ -2211,6 +2664,12 @@ ANALYSIS RULES:
   booted = true;
   requestAnimationFrame(() => setNav('secHome'));
   if (!firstRun) setTimeout(() => { replay($('#charBox'), 'ch-jump'); say(charLine()); }, 1300);
+  // new week → offer last week's review once
+  const thisWk = dayKey(weekStart()), prevWk = dayKey(addDays(weekStart(), -7));
+  if (load(KEYS.weekSeen, null) !== thisWk) {
+    save(KEYS.weekSeen, thisWk);
+    if (!firstRun && weekDays(prevWk).some((d) => lastQuest && lastQuest.idx.has(d))) setTimeout(() => { openWeek(prevWk); toast('สรุปสัปดาห์ที่แล้วมาแล้ว 📊', 'acc'); }, 1800);
+  }
   if (firstRun) setTimeout(() => { openProfile(); toast('ตั้งค่าโปรไฟล์เพื่อสร้างตัวละครและเป้าหมายของคุณ', 'acc'); }, 450);
 })();
 </script>
