@@ -66,10 +66,10 @@
   [data-theme="campfire"] {
     --ink: 17 24 42; --card: 26 35 60; --card2: 32 42 70; --line: 46 58 92;
     --txt: 232 226 212; --mute: 148 160 186; --soft: 186 194 214;
-    --acc: 226 160 110; --acc2: 238 196 156; --onacc: 40 26 14;
+    --acc: 214 164 128; --acc2: 234 204 176; --onacc: 40 26 14;
     --good: 146 196 164; --bad: 214 140 112; --warm: 238 206 140; --info: 158 166 226; --cream: 232 226 212;
     --card-a: 1; --line-a: .5; --radius: 24px;
-    --ring1: rgb(226 160 110 / .22); --ring2: rgb(226 160 110 / 0);
+    --ring1: rgb(214 164 128 / .16); --ring2: rgb(214 164 128 / 0);
     --font-display: 'Nunito', 'IBM Plex Sans Thai', system-ui, sans-serif;
     --eb-ls: .08em; --eb-col: var(--mute);
     --sky1: #0A1122; --sky2: #15213F; --mtn1: #14132a; --mtn2: #201c3e; --pine: #0a0a12; --pine2: #131229;
@@ -110,6 +110,13 @@
   .btn-p { background: rgb(var(--acc)); color: rgb(var(--onacc)); font-weight: 700; }
   .chip { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 8px; border: 1px solid rgb(var(--line)); }
   .seg button { transition: all .2s; }
+  [data-theme="campfire"] .btn-p { background: rgb(var(--acc) / .18); color: rgb(var(--acc2)); border: 1px solid rgb(var(--acc) / .34); font-weight: 600; }
+  [data-theme="campfire"] .btn-p:active { background: rgb(var(--acc) / .26); }
+  [data-theme="campfire"] .seg button.on { background: rgb(var(--acc) / .18); color: rgb(var(--acc2)); border-color: rgb(var(--acc) / .4); font-weight: 600; }
+  [data-theme="campfire"] .ringbtn { background: rgb(var(--acc) / .82); }
+  [data-theme="campfire"] #btnSettings { background: rgb(var(--acc) / .2); color: rgb(var(--acc2)); border: 1px solid rgb(var(--acc) / .34); }
+  #scroller { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  #scroller.locked { overflow: hidden; }
   .seg button.on { background: rgb(var(--acc)); color: rgb(var(--onacc)); border-color: rgb(var(--acc)); font-weight: 700; }
   .rng button { border-radius: 999px !important; border-color: transparent !important; }
   .rng button.on { background: rgb(var(--acc) / .16); color: rgb(var(--acc2)); border-color: rgb(var(--acc) / .5); }
@@ -234,7 +241,7 @@
   [data-theme="obsidian"] #bgScene .obs { display: block; }
 </style>
 </head>
-<body class="min-h-screen">
+<body class="h-full overflow-hidden">
 
 <!-- ===================== BACKGROUND SCENERY ===================== -->
 <div id="bgScene" class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
@@ -244,6 +251,7 @@
   <div id="bgSnow" class="absolute inset-0"></div>
 </div>
 
+<div id="scroller">
 <div id="app" class="relative z-10 mx-auto w-full max-w-md px-4 pb-36" style="padding-top: max(10px, env(safe-area-inset-top));">
 
   <!-- ===================== HEADER ===================== -->
@@ -512,6 +520,7 @@
   </section>
 
   <p class="text-center text-[11px] text-mute/70 mt-8 th">ข้อมูลเก็บในเครื่องของคุณ · ค่าที่ได้เป็นการประมาณ ไม่ใช่คำแนะนำทางการแพทย์</p>
+</div>
 </div>
 
 <!-- ===================== FLOATING BOTTOM NAV ===================== -->
@@ -974,10 +983,10 @@
   }
 
   // ---------- Modals ----------
-  function openModal(id) { $('#' + id).classList.remove('hidden-sheet'); document.body.style.overflow = 'hidden'; buzz(6); }
+  function openModal(id) { $('#' + id).classList.remove('hidden-sheet'); $('#scroller').classList.add('locked'); buzz(6); }
   function closeModal(id) {
     $('#' + id).classList.add('hidden-sheet');
-    if (!$$('.sheet-wrap').some((x) => !x.classList.contains('hidden-sheet'))) document.body.style.overflow = '';
+    if (!$$('.sheet-wrap').some((x) => !x.classList.contains('hidden-sheet'))) $('#scroller').classList.remove('locked');
   }
   $$('.sheet-wrap').forEach((w) => w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-close]')) closeModal(w.id); }));
   $$('.sheet').forEach((sh) => {
@@ -2175,10 +2184,11 @@ ANALYSIS RULES:
     const ind = $('#navInd'); if (act && ind) { ind.style.width = act.offsetWidth - 6 + 'px'; ind.style.transform = `translateX(${act.offsetLeft + 3}px)`; }
   };
   window.addEventListener('resize', () => { setNav(navCur); fitStage(); });
-  window.addEventListener('scroll', () => $('#hdr').classList.toggle('scrolled', window.scrollY > 8), { passive: true });
+  const scroller = $('#scroller');
+  scroller.addEventListener('scroll', () => $('#hdr').classList.toggle('scrolled', scroller.scrollTop > 8), { passive: true });
   navBtns.forEach((b) => b.addEventListener('click', () => {
-    const el = $('#' + b.dataset.nav), y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + window.scrollY - 70;
-    window.scrollTo({ top: y, behavior: 'smooth' }); setNav(b.dataset.nav); buzz(6);
+    const el = $('#' + b.dataset.nav), y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + scroller.scrollTop - 70;
+    scroller.scrollTo({ top: Math.min(y, scroller.scrollHeight - scroller.clientHeight), behavior: 'smooth' }); setNav(b.dataset.nav); buzz(6);
   }));
   const navMap = { secHome: 'secHome', secHero: 'secHome', secStats: 'secStats', secWeight: 'secWeight', secAlloc: 'secStats', secLog: 'secLog' };
   const io = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) setNav(navMap[en.target.id]); }), { rootMargin: '-45% 0px -50% 0px' });
