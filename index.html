@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="obsidian">
+<html lang="th" data-theme="campfire">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0c0d12" />
+<meta name="theme-color" content="#0B1224" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Nutri Journal — AI Calorie &amp; Macro Tracker</title>
+<title>Cal — AI Calorie &amp; Macro Tracker</title>
 <script>
   // apply saved theme before paint (no flash)
   try { var t = JSON.parse(localStorage.getItem('nj.theme')); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   const v = (n) => `rgb(var(--${n}) / <alpha-value>)`;
@@ -63,6 +63,21 @@
     --snow: #1d1c31; --snowsh: #2d2a4f; --bgpine: #0e0e16; --moon: #e6e0ff; --moon-o: .85; --aurora-o: .35; --rim: rgb(167 139 250 / .55);
   }
 
+  [data-theme="campfire"] {
+    --ink: 11 18 36; --card: 20 31 57; --card2: 27 40 72; --line: 38 52 90;
+    --txt: 237 230 211; --mute: 143 160 194; --soft: 183 195 221;
+    --acc: 242 144 58; --acc2: 245 192 138; --onacc: 26 18 6;
+    --good: 124 201 154; --bad: 224 104 58; --warm: 255 211 107; --info: 140 147 240; --cream: 237 230 211;
+    --card-a: 1; --line-a: .5; --radius: 24px;
+    --ring1: rgb(242 144 58 / .28); --ring2: rgb(242 144 58 / 0);
+    --font-display: 'Nunito', 'IBM Plex Sans Thai', system-ui, sans-serif;
+    --eb-ls: .08em; --eb-col: var(--mute);
+    --sky1: #0A1122; --sky2: #15213F; --mtn1: #14132a; --mtn2: #201c3e; --pine: #0a0a12; --pine2: #131229;
+    --snow: #1d1c31; --snowsh: #2d2a4f; --bgpine: #0b1122; --moon: #EDE6D3; --moon-o: .8; --aurora-o: 0; --rim: rgb(242 144 58 / .4);
+  }
+  [data-theme="campfire"] .disp { letter-spacing: -0.03em; font-weight: 900; }
+  [data-theme="campfire"] #bgSnow, [data-theme="campfire"] #bgScene .trav, [data-theme="campfire"] #bgScene .obs { display: none; }
+  [data-theme="campfire"] .bubble::after { display: none; }
   html, body { background: rgb(var(--ink)); }
   body {
     font-family: var(--font-ui); color: rgb(var(--txt));
@@ -84,6 +99,8 @@
   [data-theme="obsidian"] #bgSnow { display: none; }
   .brand1 { font-size: 15px; font-weight: 800; line-height: 1; }
   .brand2 { font-size: 12px; font-weight: 700; line-height: 1; color: rgb(var(--acc2)); }
+  [data-theme="campfire"] .brand1 { font-family: 'Nunito', sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+  [data-theme="campfire"] .brand2 { display: none; }
   [data-theme="obsidian"] .brand1 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
   [data-theme="obsidian"] .brand2 { font-size: 9px; letter-spacing: .32em; text-transform: uppercase; }
   .track { height: 5px; background: rgb(var(--ink) / .7); border-radius: 99px; overflow: hidden; }
@@ -182,6 +199,35 @@
   @keyframes aur { from { transform: translateX(-5%) skewX(-8deg); } to { transform: translateX(5%) skewX(8deg); } }
   .pane-in { animation: fi .35s var(--ease-out) both; }
 
+  /* ---- campfire scene ---- */
+  .c-flA{transform-box:fill-box;transform-origin:50% 100%;animation:cflA 1.9s ease-in-out infinite alternate}
+  .c-flB{transform-box:fill-box;transform-origin:50% 100%;animation:cflB 1.3s ease-in-out infinite alternate}
+  .c-flC{transform-box:fill-box;transform-origin:50% 100%;animation:cflB 1.6s ease-in-out infinite alternate-reverse}
+  .c-flD{transform-box:fill-box;transform-origin:50% 100%;animation:cflA 1s ease-in-out infinite alternate}
+  @keyframes cflA{0%{transform:scale(1,1) skewX(0deg)}40%{transform:scale(.95,1.08) skewX(-4deg)}100%{transform:scale(1.04,.93) skewX(3deg)}}
+  @keyframes cflB{0%{transform:scale(1,1) skewX(0deg)}50%{transform:scale(.88,1.14) skewX(5deg)}100%{transform:scale(1.06,.94) skewX(-2deg)}}
+  .c-glow{transform-box:fill-box;transform-origin:center;animation:cglow 2.2s ease-in-out infinite alternate}
+  @keyframes cglow{from{opacity:.72;transform:scale(.97)}to{opacity:1;transform:scale(1.04)}}
+  .c-spark{animation:cspark 3.4s ease-out infinite}
+  @keyframes cspark{0%{transform:translate(0,0);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),-140px);opacity:0}}
+  .c-smoke{transform-box:fill-box;transform-origin:center;animation:csmoke 7s ease-out infinite}
+  @keyframes csmoke{0%{transform:translate(0,0) scale(.6);opacity:0}25%{opacity:.22}100%{transform:translate(var(--dx),-90px) scale(1.9);opacity:0}}
+  .c-fly{animation:cfly 9s ease-in-out infinite}
+  @keyframes cfly{0%,100%{transform:translate(0,0)}25%{transform:translate(9px,-10px)}50%{transform:translate(-4px,-19px)}75%{transform:translate(-10px,-6px)}}
+  .c-flyGlow{animation:cblink 3s ease-in-out infinite} @keyframes cblink{0%,100%{opacity:.1}50%{opacity:1}}
+  .c-breathe{transform-origin:50% 100%;animation:cbreathe 4.2s ease-in-out infinite}
+  @keyframes cbreathe{0%,100%{transform:scale(1,1) rotate(0deg)}30%{transform:scale(1.006,1.016) rotate(.4deg)}60%{transform:scale(1,1.004) rotate(-.3deg)}}
+  .c-pug{transform-origin:50% 100%;animation:cpug 3.4s ease-in-out infinite} @keyframes cpug{0%,100%{transform:scale(1,1)}50%{transform:scale(1.012,1.055)}}
+  .c-fox{transform-origin:50% 100%;animation:cfox 5.2s ease-in-out infinite}
+  @keyframes cfox{0%,100%{transform:rotate(-1deg) scaleY(1)}45%{transform:rotate(1.4deg) scaleY(1.015)}70%{transform:rotate(.2deg) scaleY(1)}}
+  .c-zz{animation:czz 4.2s ease-out infinite} @keyframes czz{0%{transform:translate(0,0) scale(.6);opacity:0}25%{opacity:.85}100%{transform:translate(14px,-30px) scale(1.15);opacity:0}}
+  .c-steam{animation:csteam 3s ease-out infinite} @keyframes csteam{0%{transform:translateY(4px);opacity:0}30%{opacity:.75}100%{transform:translateY(-16px);opacity:0}}
+  .c-layer{transition:opacity .9s ease}
+  .c-stage{position:absolute;left:0;top:0;width:390px;height:520px;transform-origin:0 0;transform:scale(var(--k,1)) translateY(-60px)}
+  .c-lit{filter:brightness(.86) saturate(.92) drop-shadow(3px 0 4px rgba(242,144,58,.45))}
+  .c-ghost{filter:brightness(0) invert(.92)}
+  .c-stage img{max-width:none}
+
   /* background scenery */
   #bgScene .obs { display: none; }
   [data-theme="obsidian"] #bgScene .trav { display: none; }
@@ -208,8 +254,8 @@
           <path d="M5 34 L15 15 L21 25 L26 18 L35 34 Z"/><path d="M13 7 l2 3 M20 4 v4 M27 7 l-2 3"/>
         </svg>
         <div class="min-w-0">
-          <div class="brand1 whitespace-nowrap">Nutri</div>
-          <div class="brand2 whitespace-nowrap mt-1">Journal</div>
+          <div class="brand1 whitespace-nowrap">Cal</div>
+          <div class="brand2 whitespace-nowrap mt-1">Nutri Journal</div>
         </div>
       </div>
       <label class="relative shrink-0">
@@ -226,7 +272,7 @@
         <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <button id="btnProfile" aria-label="Profile" class="relative h-10 w-10 shrink-0 rounded-full border-2 border-acc2/60 bg-card2 overflow-hidden active:scale-95 transition">
-        <svg id="avatarSvg" class="h-full w-full" viewBox="60 26 80 80"></svg>
+        <img id="avatarImg" alt="" src="assets/cal/hero_m_0.png" style="width:100%;height:100%;object-fit:cover;object-position:52% 0;transform:scale(2.1);transform-origin:52% 8%">
       </button>
     </div>
   </header>
@@ -283,11 +329,86 @@
 
   <!-- ===================== TRAVELLER (CHARACTER) ===================== -->
   <section id="secHero" class="card mt-5 overflow-hidden fade-in">
-    <div class="relative h-[290px] overflow-hidden" id="heroScene">
-      <svg class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" id="sceneSvg" aria-hidden="true"></svg>
-      <div id="heroSnow" class="absolute inset-0 pointer-events-none"></div>
-      <div id="charBox" class="absolute bottom-[5%] left-[6%] h-[74%] aspect-[200/260] cursor-pointer" role="button" aria-label="แตะตัวละคร"></div>
-      <div id="charSay" class="say hide absolute left-[44%] top-[31%] max-w-[52%] rounded-2xl rounded-bl-sm bg-cream px-3 py-2 text-[12px] th font-medium text-[#171a2b] shadow-xl"></div>
+    <div class="relative overflow-hidden" id="heroScene" style="height: calc(var(--k, .92) * 440px);">
+      <div class="c-stage" id="stage" aria-hidden="true">
+        <img src="assets/cal/bg.jpg" alt="" style="position:absolute;left:-18px;top:-26px;width:430px;height:576px;display:block">
+        <div style="position:absolute;left:322px;top:386px;width:30px;height:55px">
+          <div style="position:absolute;left:2px;right:0;bottom:-3px;height:7px;border-radius:50%;background:rgba(5,8,15,.5);filter:blur(2px)"></div>
+          <img class="c-fox" src="assets/cal/fox.png" alt="" style="position:absolute;inset:0;width:30px;height:55px;filter:brightness(.78) saturate(.9) drop-shadow(-2px 0 3px rgba(242,144,58,.45))">
+        </div>
+        <div id="charBox" style="position:absolute;left:58px;top:304px;width:98px;height:156px;cursor:pointer">
+          <div style="position:absolute;left:4px;right:0;bottom:-5px;height:12px;border-radius:50%;background:rgba(5,8,15,.55);filter:blur(3px)"></div>
+          <div id="heroGhost" style="position:absolute;inset:0;transform-origin:50% 100%;opacity:.28">
+          <img data-k="s" class="c-layer c-ghost" alt="" src="assets/cal/hero_m_s.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:1">
+          <img data-k="0" class="c-layer c-ghost" alt="" src="assets/cal/hero_m_0.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+          <img data-k="1" class="c-layer c-ghost" alt="" src="assets/cal/hero_m_1.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+          <img data-k="2" class="c-layer c-ghost" alt="" src="assets/cal/hero_m_2.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+          </div>
+          <div id="heroBody" style="position:absolute;inset:0;transform-origin:50% 100%">
+            <div class="c-breathe" style="position:absolute;inset:0">
+          <img data-k="s" class="c-layer c-lit" alt="" src="assets/cal/hero_m_s.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:1">
+          <img data-k="0" class="c-layer c-lit" alt="" src="assets/cal/hero_m_0.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+          <img data-k="1" class="c-layer c-lit" alt="" src="assets/cal/hero_m_1.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+          <img data-k="2" class="c-layer c-lit" alt="" src="assets/cal/hero_m_2.png" style="position:absolute;inset:0;width:100%;height:100%;opacity:0">
+              <svg viewBox="0 0 98 156" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible">
+                <g id="steamG" transform="translate(72 0)">
+                  <path class="c-steam" d="M0 65 c-3 -4 3 -7 0 -11" stroke="#EDE6D3" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                  <path class="c-steam" d="M5 65 c-3 -4 3 -7 0 -11" stroke="#EDE6D3" stroke-width="1.3" fill="none" stroke-linecap="round" style="animation-delay:1.4s"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute;left:256px;top:452px;width:84px;height:42px">
+          <div style="position:absolute;left:4px;right:4px;bottom:-3px;height:8px;border-radius:50%;background:rgba(5,8,15,.55);filter:blur(2px)"></div>
+          <img class="c-pug" src="assets/cal/pug.png" alt="" style="position:absolute;inset:0;width:84px;height:42px;filter:brightness(.84) saturate(.92) drop-shadow(-3px -1px 4px rgba(242,144,58,.45))">
+          <svg viewBox="0 0 84 42" style="position:absolute;inset:0;width:84px;height:42px;overflow:visible">
+            <g fill="#EDE6D3" font-family="Nunito, sans-serif" font-weight="900">
+              <text class="c-zz" x="14" y="2" font-size="8">z</text><text class="c-zz" x="18" y="0" font-size="10" style="animation-delay:1.4s">z</text><text class="c-zz" x="22" y="-2" font-size="12" style="animation-delay:2.8s">z</text>
+            </g>
+          </svg>
+        </div>
+        <svg viewBox="0 0 390 520" width="390" height="520" style="position:absolute;left:0;top:0;pointer-events:none">
+          <defs>
+            <radialGradient id="cFireGlow"><stop offset="0" stop-color="#FFB347" stop-opacity=".65"/><stop offset=".45" stop-color="#F2903A" stop-opacity=".28"/><stop offset="1" stop-color="#F2903A" stop-opacity="0"/></radialGradient>
+            <radialGradient id="cGroundGlow"><stop offset="0" stop-color="#C4561F" stop-opacity=".6"/><stop offset="1" stop-color="#6B4A2E" stop-opacity="0"/></radialGradient>
+            <radialGradient id="cFlyG"><stop offset="0" stop-color="#FFE08A" stop-opacity=".9"/><stop offset="1" stop-color="#FFE08A" stop-opacity="0"/></radialGradient>
+            <radialGradient id="cVig" cx=".5" cy=".55" r=".75"><stop offset=".55" stop-color="#05080F" stop-opacity="0"/><stop offset="1" stop-color="#05080F" stop-opacity=".75"/></radialGradient>
+            <filter id="cSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+          </defs>
+          <ellipse id="groundGlow" class="c-glow" cx="196" cy="448" rx="170" ry="60" fill="url(#cGroundGlow)" style="mix-blend-mode:screen"/>
+          <g class="c-smoke" style="--dx:-14px"><ellipse cx="196" cy="360" rx="10" ry="7" fill="#8C97B5" filter="url(#cSoft)"/></g>
+          <g class="c-smoke" style="--dx:10px;animation-delay:2.4s"><ellipse cx="200" cy="362" rx="9" ry="6" fill="#8C97B5" filter="url(#cSoft)"/></g>
+          <g transform="translate(196 442)">
+            <circle id="fireGlowC" class="c-glow" cx="0" cy="-24" r="112" fill="url(#cFireGlow)"/>
+            <g id="flameG">
+              <path class="c-flA" d="M0 0 C-26 -2 -30 -34 -14 -58 C-12 -42 -2 -42 -4 -76 C18 -56 30 -22 0 0 Z" fill="#E8672A"/>
+              <path class="c-flB" d="M-6 0 C-24 -6 -22 -28 -12 -40 C-10 -30 -4 -30 -6 -48 C6 -34 10 -14 -6 0 Z" fill="#F2903A"/>
+              <path class="c-flC" d="M8 0 C26 -6 24 -26 14 -38 C13 -29 7 -29 9 -44 C-4 -32 -8 -12 8 0 Z" fill="#F2903A"/>
+              <path class="c-flB" d="M0 -2 C-15 -5 -16 -24 -6 -38 C-5 -28 2 -28 1 -46 C13 -32 16 -14 0 -2 Z" fill="#FFB347"/>
+              <path class="c-flD" d="M0 -3 C-7 -6 -8 -15 -2 -22 C-1 -17 3 -17 2 -27 C8 -18 8 -9 0 -3 Z" fill="#FFE08A"/>
+              <ellipse cx="0" cy="-2" rx="11" ry="4" fill="#FFF1C4" opacity=".9"/>
+            </g>
+          </g>
+          <g fill="#FFD36B">
+            <circle class="c-spark" cx="190" cy="404" r="1.6" style="--dx:-18px"/>
+            <circle class="c-spark" cx="200" cy="400" r="1.2" style="--dx:14px;animation-delay:.6s;animation-duration:2.8s"/>
+            <circle class="c-spark" cx="196" cy="406" r="1.4" style="--dx:-6px;animation-delay:1.3s"/>
+            <circle class="c-spark" cx="186" cy="408" r="1" style="--dx:-26px;animation-delay:1.9s;animation-duration:3.9s"/>
+            <circle class="c-spark" cx="204" cy="406" r="1.1" style="--dx:22px;animation-delay:2.5s"/>
+            <circle class="c-spark" cx="198" cy="408" r="1.3" style="--dx:-12px;animation-delay:.2s;animation-duration:4.2s"/>
+          </g>
+          <g class="c-fly"><circle class="c-flyGlow" cx="86" cy="262" r="7" fill="url(#cFlyG)"/><circle cx="86" cy="262" r="1.3" fill="#FFE08A"/></g>
+          <g class="c-fly" style="animation-delay:2s;animation-duration:11s"><circle class="c-flyGlow" cx="300" cy="232" r="6" fill="url(#cFlyG)" style="animation-delay:1s"/><circle cx="300" cy="232" r="1.2" fill="#FFE08A"/></g>
+          <g class="c-fly" style="animation-delay:4s;animation-duration:8s"><circle class="c-flyGlow" cx="232" cy="300" r="6" fill="url(#cFlyG)" style="animation-delay:2s"/><circle cx="232" cy="300" r="1.1" fill="#FFE08A"/></g>
+          <rect width="390" height="520" fill="url(#cVig)" opacity=".7"/>
+        </svg>
+      </div>
+      <div id="fireChip" class="pointer-events-none absolute left-5 top-[76px] flex items-center gap-1.5 rounded-full border border-[#F2903A]/30 bg-[#0B1224]/70 px-3 py-1.5 text-[12px] th text-[#F5C08A]">
+        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c2 3 5 5 5 9a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-8z"/></svg>
+        <span id="fireTxt"></span>
+      </div>
+      <div id="charSay" class="say hide absolute left-[40%] top-[40%] max-w-[52%] rounded-2xl rounded-bl-sm bg-cream px-3 py-2 text-[12px] th font-medium text-[#171a2b] shadow-xl"></div>
       <div class="pointer-events-none absolute left-5 top-5 right-5 flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div id="rankName" class="disp text-[20px] leading-tight text-cream">Rookie Camper</div>
@@ -314,7 +435,7 @@
           <circle cx="10" cy="40" r="3.5" style="fill:rgb(var(--cream)/.45)"/>
           <path d="M290,16 v-14" style="stroke:rgb(var(--cream)/.7)" stroke-width="1.5"/><path d="M290,2 l11,4 -11,4z" style="fill:rgb(var(--warm))"/>
         </svg>
-        <div id="trailMarker" class="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cream/80 bg-card2 overflow-hidden shadow-lg" style="left:3%;top:70%"><svg id="trailAvatar" class="h-full w-full" viewBox="60 26 80 80"></svg></div>
+        <div id="trailMarker" class="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cream/80 bg-card2 overflow-hidden shadow-lg" style="left:3%;top:70%"><img id="trailImg" alt="" src="assets/cal/hero_m_0.png" style="width:100%;height:100%;object-fit:cover;object-position:52% 0;transform:scale(2.1);transform-origin:52% 8%"></div>
       </div>
       <div class="flex items-center justify-between num text-[11px] text-mute">
         <span id="trailL"></span><span id="trailPct" class="th font-medium text-acc2"></span><span id="trailR"></span>
@@ -433,7 +554,7 @@
     </div>
     <div class="px-5 py-4 space-y-4 th text-[13px]">
       <div class="flex gap-3 items-end">
-        <div class="h-[92px] aspect-[200/260] rounded-2xl bg-ink/60 border border-line overflow-hidden shrink-0"><svg id="pPreview" viewBox="0 20 200 240" class="h-full w-full"></svg></div>
+        <div class="h-[92px] aspect-[200/260] rounded-2xl bg-ink/60 border border-line overflow-hidden shrink-0"><img id="pPreview" alt="" src="assets/cal/hero_m_0.png" style="width:100%;height:100%;object-fit:contain"></div>
         <div class="flex-1">
           <label class="text-mute text-[11px]">ชื่อเล่น (ไม่บังคับ)</label>
           <input id="pName" class="field mt-1" maxlength="20" placeholder="เช่น Thus" />
@@ -522,6 +643,7 @@
       <div>
         <div class="eyebrow !tracking-normal mb-2">Theme · ธีม</div>
         <div class="seg grid grid-cols-2 gap-2" id="sTheme">
+          <button data-v="campfire" class="rounded-xl border border-line py-3 text-[12px] col-span-2">🔥 Campfire</button>
           <button data-v="obsidian" class="rounded-xl border border-line py-3 text-[12px]">🌙 Midnight (Dark)</button>
           <button data-v="traveller" class="rounded-xl border border-line py-3 text-[12px]">🏕️ Traveller (Blue)</button>
         </div>
@@ -811,7 +933,7 @@
   let range = load(KEYS.range, '1D');
   let wRange = load(KEYS.wRange, '1M');
   let logFilter = load(KEYS.logFilter, 'today');
-  let theme = load(KEYS.theme, 'obsidian');
+  let theme = load(KEYS.theme, 'campfire');
   let showGhost = load(KEYS.ghost, true);
   let quoteIdx = Math.floor(Date.now() / 864e5) % QUOTES.length;
   const firstRun = !localStorage.getItem(KEYS.profile);
@@ -1066,7 +1188,7 @@
   function buildScenes() {
     const stars = [[30, 30], [80, 18], [140, 42], [190, 22], [250, 36], [370, 24], [215, 60], [110, 70], [60, 90], [300, 80]]
       .map(([x, y], i) => `<circle class="twinkle" style="animation-delay:${i * 0.37}s;fill:#fff" cx="${x}" cy="${y}" r="${i % 3 ? 1 : 1.5}"/>`).join('');
-    $('#sceneSvg').innerHTML = `
+    const legacyScene = `
       <defs>
         <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="1" style="stop-color:var(--sky2)"/></linearGradient>
         <radialGradient id="fireG"><stop offset="0" stop-color="#f6b14a" stop-opacity=".6"/><stop offset="1" stop-color="#f6b14a" stop-opacity="0"/></radialGradient>
@@ -1107,7 +1229,7 @@
         return `<span class="snowflake" style="left:${(Math.random() * 100).toFixed(1)}%;width:${s}px;height:${s}px;opacity:${(Math.random() * 0.5 + 0.35).toFixed(2)};--d:${dist};--dx:${(Math.random() * 30 - 15).toFixed(0)}px;animation-duration:${(Math.random() * 8 + 7).toFixed(1)}s;animation-delay:-${(Math.random() * 12).toFixed(1)}s"></span>`;
       }).join('');
     };
-    flakes($('#heroSnow'), 26, '320px');
+    void legacyScene;
     flakes($('#bgSnow'), 22, '105vh');
   }
 
@@ -1175,11 +1297,11 @@
   }
   function renderHeader() {
     $('#modeSelect').value = profile.goal;
-    document.querySelector('meta[name=theme-color]').content = theme === 'obsidian' ? '#0c0d12' : '#1b2944';
+    document.querySelector('meta[name=theme-color]').content = theme === 'obsidian' ? '#0c0d12' : theme === 'campfire' ? '#0B1224' : '#1b2944';
   }
 
   // ---------- Hero / character ----------
-  let heroF = null, heroRaf = 0, heroSig = '';
+  let heroSig = '';
   function renderHero() {
     const cur = currentWeight(), start = startWeight(), goal = goalWeight();
     const b = bodyParams(profile, cur), b0 = bodyParams(profile, start);
@@ -1204,31 +1326,39 @@
     $('#trailL').textContent = `${fmt(start, 1)} kg`; $('#trailR').textContent = `${fmt(goal, 1)} kg`;
     $('#trailPct').textContent = `เดินมาแล้ว ${fmt(prog * 100)}%`;
 
-    // character (tween body shape when weight changes)
-    const sig = [b.f.toFixed(4), b0.f.toFixed(4), b.hs, b.m, b.sex, tier, showGhost].join('|');
-    if (sig === heroSig) return;
-    heroSig = sig;
-    const draw = (f) => {
-      const bb = { ...b, f }, ghost = showGhost && Math.abs(b0.f - f) > 0.004 ? b0 : null;
-      $('#charBox').innerHTML = `<svg viewBox="0 0 200 260" class="h-full w-full overflow-visible">${charSVG(bb, { uid: 'hero', tier, ghostB: ghost, anim: true })}</svg>`;
-      const head = charSVG(bb, { uid: 'av', tier });
-      const av = $('#avatarSvg'); av.setAttribute('viewBox', headViewBox(bb)); av.innerHTML = head;
-      const tv = $('#trailAvatar'); tv.setAttribute('viewBox', headViewBox(bb)); tv.innerHTML = charSVG(bb, { uid: 'tr', tier });
-    };
-    cancelAnimationFrame(heroRaf);
-    const from = heroF == null ? b.f : heroF, to = b.f, t0 = performance.now(), dur = 900;
-    if (Math.abs(from - to) < 0.002) { heroF = to; draw(to); return; }
-    const step = (now) => {
-      const k = clamp((now - t0) / dur, 0, 1), e = 1 - (1 - k) ** 3;
-      heroF = from + (to - from) * e; draw(heroF);
-      if (k < 1) heroRaf = requestAnimationFrame(step);
-    };
-    heroRaf = requestAnimationFrame(step);
+    // painted character: 4 body sizes stacked and cross-faded by BMI (S slim, 0 base, 1 round, 2 heaviest)
+    const sex = profile.sex === 'female' ? 'f' : 'm';
+    const ops = { s: 1, 0: clamp((b.f - 0.05) / 0.2, 0, 1), 1: clamp((b.f - 0.35) / 0.25, 0, 1), 2: clamp((b.f - 0.62) / 0.23, 0, 1) };
+    const gk = b0.f < 0.15 ? 's' : b0.f < 0.47 ? '0' : b0.f < 0.74 ? '1' : '2';
+    const ghostOn = showGhost && b0.f - b.f > 0.02;
+    const box = $('#charBox');
+    box.style.left = (sex === 'f' ? 66 : 58) + 'px'; box.style.width = (sex === 'f' ? 90 : 98) + 'px';
+    $('#steamG').setAttribute('transform', `translate(${sex === 'f' ? 71 : 72} 0)`);
+    $('#heroBody').style.transform = `scaleX(${(0.96 + 0.06 * b.f).toFixed(3)})`;
+    $('#heroGhost').style.transform = `scaleX(${(0.96 + 0.06 * b0.f).toFixed(3)})`;
+    $$('#heroBody img').forEach((img) => { const src = `assets/cal/hero_${sex}_${img.dataset.k}.png`; if (img.getAttribute('src') !== src) img.setAttribute('src', src); img.style.opacity = ops[img.dataset.k]; });
+    $$('#heroGhost img').forEach((img) => { const src = `assets/cal/hero_${sex}_${img.dataset.k}.png`; if (img.getAttribute('src') !== src) img.setAttribute('src', src); img.style.opacity = ghostOn && img.dataset.k === gk ? 1 : 0; });
+    const face = heroImg(profile.sex, b.f);
+    ['#avatarImg', '#trailImg'].forEach((s) => { if ($(s).getAttribute('src') !== face) $(s).setAttribute('src', face); });
+  }
+  // the painted body-size image closest to a BMI factor (for avatars and previews)
+  function heroImg(sexVal, f) {
+    const k = f < 0.15 ? 's' : f < 0.47 ? '0' : f < 0.74 ? '1' : '2';
+    return `assets/cal/hero_${sexVal === 'female' ? 'f' : 'm'}_${k}.png`;
+  }
+  function fitStage() {
+    const sc = $('#heroScene'); if (!sc) return;
+    sc.style.setProperty('--k', (sc.clientWidth / 390).toFixed(4));
   }
 
   function renderMain() {
     const c = calc(profile), t = totals(mealsOn(dayKey())), burned = num(burn[dayKey()]);
     const budget = c.target + burned, remaining = budget - t.kcal, netDeficit = c.tdee + burned - t.kcal;
+    const fuel = budget > 0 ? clamp(remaining / budget, 0.05, 1) : 0.05;
+    $('#flameG').setAttribute('transform', `scale(${(0.3 + 0.7 * fuel).toFixed(3)})`);
+    const glowO = (0.25 + 0.7 * fuel).toFixed(2);
+    $('#fireGlowC').setAttribute('opacity', glowO); $('#groundGlow').setAttribute('opacity', glowO);
+    $('#fireTxt').textContent = remaining <= 0 ? 'เหลือแค่ถ่านแดง · เกินงบแล้ว' : `ไฟเหลือ ${fmt(fuel * 100)}% · ${fmt(remaining)} kcal`;
     const rEl = $('#remainingNum');
     tween(rEl, remaining, (v) => (Math.round(v) < 0 ? '−' : '') + fmt(Math.abs(Math.round(v))));
     rEl.style.color = remaining < 0 ? C('bad') : C('txt');
@@ -1497,7 +1627,7 @@
     if (draft.sex === 'female' ? c.target < 1200 : c.target < 1500) warns.push('Target ต่ำกว่าค่าขั้นต่ำที่แนะนำ ควรปรึกษาผู้เชี่ยวชาญ');
     $('#cvWarn').textContent = warns.join(' · ');
     const pb = bodyParams(draft, num(draft.weight, 70));
-    $('#pPreview').innerHTML = charSVG(pb, { uid: 'pv', tier: 0 });
+    $('#pPreview').setAttribute('src', heroImg(draft.sex, pb.f));
   }
   ['pName', 'pAge', 'pHeight', 'pWeight', 'pGoalW', 'pActivity', 'pFat'].forEach((id) => {
     $('#' + id).addEventListener('input', () => {
@@ -1617,7 +1747,7 @@
       if (!Array.isArray(d.meals)) throw new Error('bad');
       profile = { ...DEFAULT_PROFILE, ...(d.profile || {}) }; meals = d.meals; burn = d.burn || {}; weights = d.weights || {};
       save(KEYS.profile, profile); save(KEYS.meals, meals); save(KEYS.burn, burn); save(KEYS.weights, weights);
-      heroF = null; heroSig = ''; renderAll(); closeModal('mSettings'); toast(`นำเข้า ${meals.length} มื้อ · ${Object.keys(weights).length} น้ำหนัก`);
+      heroSig = ''; renderAll(); closeModal('mSettings'); toast(`นำเข้า ${meals.length} มื้อ · ${Object.keys(weights).length} น้ำหนัก`);
     } catch { toast('ไฟล์ไม่ถูกต้อง', 'bad'); }
     e.target.value = '';
   });
@@ -1625,7 +1755,7 @@
     if (!confirm('ลบประวัติมื้ออาหาร น้ำหนัก และโปรไฟล์ทั้งหมด? (API Key และธีมจะยังอยู่)')) return;
     meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE };
     [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW].forEach((k) => localStorage.removeItem(k));
-    heroF = null; heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bad');
+    heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bad');
   });
   $('#sSample').addEventListener('click', () => {
     const c = calc(profile), out = [];
@@ -1654,7 +1784,7 @@
     }
     save(KEYS.sampleW, added); save(KEYS.weights, weights); save(KEYS.meals, meals);
     profile.weight = currentWeight(); profile.startWeight = wEntries()[0]?.kg ?? null; save(KEYS.profile, profile);
-    range = '1M'; save(KEYS.range, range); heroF = null; heroSig = ''; renderAll(); closeModal('mSettings');
+    range = '1M'; save(KEYS.range, range); heroSig = ''; renderAll(); closeModal('mSettings');
     toast(`โหลดตัวอย่าง ${out.length} มื้อ · ${added.length} น้ำหนัก`, 'acc');
   });
 
@@ -2045,7 +2175,7 @@ ANALYSIS RULES:
     const b = bodyParams(profile, currentWeight()), el = $('#lvlUp');
     el.innerHTML = `<div class="lvl-card card w-full max-w-[320px] p-6 text-center">
       <div class="eyebrow">🏆 Level Up</div>
-      <div class="mx-auto mt-2 h-[170px] aspect-[200/260]"><svg viewBox="0 0 200 260" class="h-full w-full overflow-visible">${charSVG(b, { uid: 'lv', tier, anim: true })}</svg></div>
+      <div class="mx-auto mt-2 h-[170px] aspect-[98/156]"><img src="${heroImg(profile.sex, b.f)}" alt="" class="h-full w-full object-contain c-breathe"></div>
       <div class="disp text-[26px] mt-2">${TIERS[tier].en}</div>
       <div class="th text-[12.5px] text-soft mt-1">${TIERS[tier].th}</div>
       <button class="btn-p mt-5 w-full rounded-2xl py-3 th" data-lvl-close>ไปต่อ 🚀</button></div>`;
@@ -2082,7 +2212,7 @@ ANALYSIS RULES:
     navBtns.forEach((b) => { const on = b.dataset.nav === id; b.style.color = on ? C('acc2') : ''; if (on) act = b; });
     const ind = $('#navInd'); if (act && ind) { ind.style.width = act.offsetWidth - 6 + 'px'; ind.style.transform = `translateX(${act.offsetLeft + 3}px)`; }
   };
-  window.addEventListener('resize', () => setNav(navCur));
+  window.addEventListener('resize', () => { setNav(navCur); fitStage(); });
   window.addEventListener('scroll', () => $('#hdr').classList.toggle('scrolled', window.scrollY > 8), { passive: true });
   navBtns.forEach((b) => b.addEventListener('click', () => {
     const el = $('#' + b.dataset.nav), y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + window.scrollY - 70;
@@ -2103,6 +2233,7 @@ ANALYSIS RULES:
   if (!firstRun && !wEntries().length && num(profile.weight) > 0) setWeight(dayKey(), num(profile.weight));
   document.documentElement.dataset.theme = theme;
   buildScenes();
+  fitStage();
   renderQuote();
   renderAll();
   booted = true;
