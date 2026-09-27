@@ -1,116 +1,179 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="traveller">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0c0d12" />
+<meta name="theme-color" content="#1b2944" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Nutri Journal — AI Calorie &amp; Macro Tracker</title>
+<script>
+  // apply saved theme before paint (no flash)
+  try { var t = JSON.parse(localStorage.getItem('nj.theme')); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Asap:wght@400;500;600;700;800&family=Mitr:wght@300;400;500;600&family=Gochi+Hand&family=Itim&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  const v = (n) => `rgb(var(--${n}) / <alpha-value>)`;
   tailwind.config = {
     theme: {
       extend: {
         colors: {
-          ink: '#0c0d12',
-          card: '#14141d',
-          card2: '#161722',
-          line: '#252538',
-          mute: '#7c7c96',
-          soft: '#a9a9c2',
-          violet: '#8b5cf6',
-          bull: '#10b981',
-          bear: '#ef4444',
-          sky2: '#38bdf8',
-          amber2: '#f5b544',
+          ink: v('ink'), card: v('card'), card2: v('card2'), line: v('line'),
+          txt: v('txt'), mute: v('mute'), soft: v('soft'),
+          acc: v('acc'), acc2: v('acc2'), onacc: v('onacc'),
+          good: v('good'), bad: v('bad'), warm: v('warm'), info: v('info'), cream: v('cream'),
         },
-        fontFamily: {
-          sans: ['Inter', 'Prompt', 'system-ui', 'sans-serif'],
-          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
-        },
+        fontFamily: { sans: ['var(--font-ui)'], num: ['var(--font-num)'], disp: ['var(--font-display)'] },
       },
     },
   };
 </script>
 <style>
-  :root { color-scheme: dark; }
-  html, body { background: #0c0d12; }
+  /* ============ THEME TOKENS ============ */
+  :root, [data-theme="traveller"] {
+    --ink: 27 41 68; --card: 35 53 88; --card2: 41 61 99; --line: 58 82 124;
+    --txt: 234 240 249; --mute: 128 152 188; --soft: 172 194 222;
+    --acc: 76 137 201; --acc2: 146 182 224; --onacc: 18 30 52;
+    --good: 116 200 146; --bad: 240 122 98; --warm: 243 170 60; --info: 126 206 242; --cream: 238 231 214;
+    --card-a: .84; --line-a: .55; --radius: 26px;
+    --ring1: rgb(146 182 224 / .5); --ring2: rgb(146 182 224 / .14);
+    --font-ui: 'Asap', 'Mitr', system-ui, sans-serif;
+    --font-th: 'Mitr', 'Asap', sans-serif;
+    --font-num: 'Asap', 'Mitr', sans-serif;
+    --font-display: 'Gochi Hand', 'Itim', cursive;
+    --eb-ls: .06em; --eb-col: var(--acc2);
+    --sky1: #15264a; --sky2: #2e528c; --mtn1: #25467a; --mtn2: #3862a0; --pine: #16294a; --pine2: #1f3a66;
+    --snow: #eef3f0; --snowsh: #bcd0e5; --bgpine: #15243f;
+  }
+  [data-theme="obsidian"] {
+    --ink: 12 13 18; --card: 20 20 29; --card2: 22 23 34; --line: 37 37 56;
+    --txt: 232 232 242; --mute: 124 124 150; --soft: 169 169 194;
+    --acc: 139 92 246; --acc2: 196 181 253; --onacc: 255 255 255;
+    --good: 16 185 129; --bad: 239 68 68; --warm: 245 181 68; --info: 56 189 248; --cream: 232 232 242;
+    --card-a: 1; --line-a: 1; --radius: 20px;
+    --ring1: rgb(139 92 246 / .35); --ring2: rgb(139 92 246 / 0);
+    --font-ui: 'Inter', 'Prompt', system-ui, sans-serif;
+    --font-th: 'Prompt', 'Inter', sans-serif;
+    --font-num: 'JetBrains Mono', ui-monospace, monospace;
+    --font-display: 'JetBrains Mono', 'Inter', monospace;
+    --eb-ls: .16em; --eb-col: var(--mute);
+    --sky1: #0d0d16; --sky2: #241a42; --mtn1: #1a1830; --mtn2: #2a2647; --pine: #0f0f18; --pine2: #17162a;
+    --snow: #26263a; --snowsh: #1b1b2b; --bgpine: #0f0f16;
+  }
+
+  html, body { background: rgb(var(--ink)); }
   body {
-    font-family: 'Inter', 'Prompt', system-ui, sans-serif;
-    color: #e8e8f2;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: none;
+    font-family: var(--font-ui); color: rgb(var(--txt));
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none;
   }
-  .th { font-family: 'Prompt', 'Inter', sans-serif; }
-  .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-feature-settings: 'tnum' 1, 'zero' 1; letter-spacing: -0.02em; }
-  .card { background: #14141d; border: 1px solid #252538; border-radius: 20px; }
-  .card2 { background: #161722; border: 1px solid #252538; }
-  .hair { border-color: #252538; }
-  .eyebrow { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #7c7c96; font-weight: 600; }
-  .track { height: 4px; background: #1d1d2b; border-radius: 99px; overflow: hidden; }
+  .th { font-family: var(--font-th); }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  [data-theme="obsidian"] .num { letter-spacing: -0.02em; font-feature-settings: 'tnum' 1, 'zero' 1; }
+  .disp { font-family: var(--font-display); }
+  .card {
+    background: rgb(var(--card) / var(--card-a)); border: 1px solid rgb(var(--line) / var(--line-a));
+    border-radius: var(--radius); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  [data-theme="traveller"] .card { box-shadow: 0 10px 30px -12px rgb(0 0 0 / .45); }
+  .eyebrow { font-size: 10.5px; letter-spacing: var(--eb-ls); text-transform: uppercase; color: rgb(var(--eb-col)); font-weight: 700; }
+  .brand1 { font-size: 15px; font-weight: 800; line-height: 1; }
+  .brand2 { font-size: 12px; font-weight: 700; line-height: 1; color: rgb(var(--acc2)); }
+  [data-theme="obsidian"] .brand1 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
+  [data-theme="obsidian"] .brand2 { font-size: 9px; letter-spacing: .32em; text-transform: uppercase; }
+  .track { height: 5px; background: rgb(var(--ink) / .7); border-radius: 99px; overflow: hidden; }
   .fill { height: 100%; border-radius: 99px; transition: width .7s cubic-bezier(.2,.8,.2,1); }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { scrollbar-width: none; }
-  .glow-violet { box-shadow: 0 0 0 1px rgba(139,92,246,.35), 0 10px 40px -8px rgba(139,92,246,.65); }
-  .bg-grid {
-    background-image:
-      linear-gradient(rgba(37,37,56,.35) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(37,37,56,.35) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-  .ambient::before {
-    content: ''; position: fixed; inset: -20% -20% auto -20%; height: 420px; pointer-events: none; z-index: 0;
-    background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,.18), transparent 60%);
-  }
-  .chip { font-size: 10px; font-weight: 600; letter-spacing: .06em; padding: 2px 7px; border-radius: 6px; border: 1px solid #252538; }
+  .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { scrollbar-width: none; }
+  .ringbtn { background: rgb(var(--acc)); color: rgb(var(--onacc)); box-shadow: 0 0 0 5px var(--ring1), 0 0 0 11px var(--ring2), 0 14px 34px -10px rgb(0 0 0 / .7); }
+  .btn-p { background: rgb(var(--acc)); color: rgb(var(--onacc)); font-weight: 700; }
+  .chip { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 8px; border: 1px solid rgb(var(--line)); }
   .seg button { transition: all .2s; }
-  .seg button.on { background: #8b5cf6; color: #fff; border-color: #8b5cf6; box-shadow: 0 4px 18px -6px rgba(139,92,246,.8); }
-  .rng button.on { background: rgba(139,92,246,.14); color: #c4b5fd; border-color: rgba(139,92,246,.5); }
-  .field { background: #0f1017; border: 1px solid #252538; border-radius: 12px; padding: 10px 12px; width: 100%; color: #e8e8f2; outline: none; transition: border-color .2s; }
-  .field:focus { border-color: #8b5cf6; }
-  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c7c96' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
-  input[type=range] { accent-color: #8b5cf6; }
-  input[type=number]::-webkit-inner-spin-button { opacity: .3; }
-  /* modal / sheet */
+  .seg button.on { background: rgb(var(--acc)); color: rgb(var(--onacc)); border-color: rgb(var(--acc)); font-weight: 700; }
+  .rng button.on { background: rgb(var(--acc) / .16); color: rgb(var(--acc2)); border-color: rgb(var(--acc) / .5); }
+  .field { background: rgb(var(--ink) / .7); border: 1px solid rgb(var(--line)); border-radius: 14px; padding: 10px 12px; width: 100%; color: rgb(var(--txt)); outline: none; transition: border-color .2s; }
+  .field:focus { border-color: rgb(var(--acc)); }
+  .field::placeholder { color: rgb(var(--mute) / .8); }
+  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238098bc' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  select option { background: rgb(var(--card)); color: rgb(var(--txt)); }
+  input[type=range] { accent-color: rgb(var(--acc)); }
+  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(.7); }
+
+  /* sheets */
   .sheet-wrap { transition: opacity .25s; }
   .sheet-wrap.hidden-sheet { opacity: 0; pointer-events: none; }
-  .sheet { transition: transform .35s cubic-bezier(.2,.9,.25,1); }
+  .sheet { transition: transform .35s cubic-bezier(.2,.9,.25,1); background: rgb(var(--card)); }
   .sheet-wrap.hidden-sheet .sheet { transform: translateY(40px); }
-  .scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #8b5cf6, #38bdf8, #8b5cf6, transparent); box-shadow: 0 0 18px 4px rgba(139,92,246,.6); animation: scan 1.6s ease-in-out infinite alternate; }
+  .sheet-head { background: rgb(var(--card) / .95); }
+
+  /* speech bubble */
+  .bubble { position: relative; }
+  .bubble::after { content: ''; position: absolute; left: 38px; bottom: -9px; width: 18px; height: 18px; background: rgb(var(--card) / var(--card-a)); border-right: 1px solid rgb(var(--line) / var(--line-a)); border-bottom: 1px solid rgb(var(--line) / var(--line-a)); transform: rotate(45deg); border-bottom-right-radius: 4px; }
+  [data-theme="obsidian"] .bubble::after { display: none; }
+
+  /* animations */
+  .scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgb(var(--acc)), rgb(var(--info)), rgb(var(--acc)), transparent); box-shadow: 0 0 18px 4px rgb(var(--acc) / .6); animation: scan 1.6s ease-in-out infinite alternate; }
   @keyframes scan { from { top: 4%; } to { top: 94%; } }
   .pulse-dot { animation: pd 2s infinite; }
-  @keyframes pd { 0% { box-shadow: 0 0 0 0 rgba(139,92,246,.7);} 70% { box-shadow: 0 0 0 10px rgba(139,92,246,0);} 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0);} }
+  @keyframes pd { 0% { box-shadow: 0 0 0 0 rgb(var(--acc) / .7);} 70% { box-shadow: 0 0 0 10px rgb(var(--acc) / 0);} 100% { box-shadow: 0 0 0 0 rgb(var(--acc) / 0);} }
   .fade-in { animation: fi .45s ease both; }
   @keyframes fi { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none; } }
   .quote-slide { transition: opacity .35s ease, transform .35s ease; }
   .spin { animation: sp 1s linear infinite; } @keyframes sp { to { transform: rotate(360deg); } }
   .safe-bottom { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+  .snowflake { position: absolute; top: -10px; border-radius: 50%; background: #fff; animation: fall linear infinite; }
+  @keyframes fall { from { transform: translate3d(0, -10px, 0); } to { transform: translate3d(var(--dx, 10px), var(--d, 100vh), 0); } }
+  [data-theme="obsidian"] .snowflake { background: rgb(196 181 253); opacity: .35 !important; }
+  .twinkle { animation: tw 3s ease-in-out infinite alternate; } @keyframes tw { from { opacity: .25 } to { opacity: .9 } }
+  .flame { animation: flick .45s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+  .flame2 { animation-duration: .6s; animation-delay: .15s; }
+  @keyframes flick { from { transform: scale(1, 1) } to { transform: scale(.9, 1.14) } }
+  .fire-glow { animation: glow 1.8s ease-in-out infinite alternate; } @keyframes glow { from { opacity: .55 } to { opacity: 1 } }
+  .ch-bob { animation: bob 3.2s ease-in-out infinite; transform-box: view-box; transform-origin: 100px 246px; }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2.5px) } }
+  .ch-blink { animation: blink 4.6s infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes blink { 0%, 93%, 100% { transform: scaleY(1) } 95% { transform: scaleY(.1) } }
+  .ch-flag { animation: wave 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 0 50%; }
+  @keyframes wave { 50% { transform: skewY(-9deg) scaleX(.9) } }
+  .ch-scarf { animation: scarf 2.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 0; }
+  @keyframes scarf { 50% { transform: rotate(9deg) } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+  /* background scenery */
+  #bgScene .obs { display: none; }
+  [data-theme="obsidian"] #bgScene .trav { display: none; }
+  [data-theme="obsidian"] #bgScene .obs { display: block; }
 </style>
 </head>
-<body class="ambient min-h-screen">
+<body class="min-h-screen">
 
-<div id="app" class="relative z-10 mx-auto w-full max-w-md px-4 pb-36" style="padding-top: max(12px, env(safe-area-inset-top));">
+<!-- ===================== BACKGROUND SCENERY ===================== -->
+<div id="bgScene" class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
+  <div class="trav absolute inset-0" style="background: linear-gradient(180deg, var(--sky1) 0%, rgb(var(--ink)) 55%);"></div>
+  <svg class="trav absolute bottom-0 left-0 w-full h-[190px] opacity-60" viewBox="0 0 400 190" preserveAspectRatio="xMidYMax slice" id="bgPines"></svg>
+  <div class="obs absolute inset-x-0 top-0 h-[420px]" style="background: radial-gradient(ellipse at 50% 0%, rgba(139,92,246,.18), transparent 60%);"></div>
+  <div id="bgSnow" class="absolute inset-0"></div>
+</div>
+
+<div id="app" class="relative z-10 mx-auto w-full max-w-md px-4 pb-36" style="padding-top: max(10px, env(safe-area-inset-top));">
 
   <!-- ===================== HEADER ===================== -->
-  <header class="sticky top-0 z-30 -mx-4 px-4 py-3 bg-ink/80 backdrop-blur-xl">
+  <header class="sticky top-0 z-30 -mx-4 px-4 py-3 bg-ink/75 backdrop-blur-xl">
     <div class="flex items-center gap-1.5">
       <div class="flex items-center gap-2 min-w-0 flex-1">
-        <div class="h-8 w-8 shrink-0 rounded-[10px] bg-gradient-to-br from-violet to-[#5b3bd1] grid place-items-center glow-violet">
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 6-8"/><path d="M18 6h3v3"/></svg>
-        </div>
-        <div class="leading-none min-w-0">
-          <div class="text-[14px] font-extrabold tracking-[.16em] whitespace-nowrap">NUTRI</div>
-          <div class="text-[9px] tracking-[.32em] text-[#a78bfa] mt-1 font-bold whitespace-nowrap">JOURNAL</div>
+        <svg viewBox="0 0 40 40" class="h-9 w-9 shrink-0 text-txt" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 34 L15 15 L21 25 L26 18 L35 34 Z"/><path d="M13 7 l2 3 M20 4 v4 M27 7 l-2 3"/>
+        </svg>
+        <div class="min-w-0">
+          <div class="brand1 whitespace-nowrap">Nutri</div>
+          <div class="brand2 whitespace-nowrap mt-1">Journal</div>
         </div>
       </div>
       <label class="relative shrink-0">
-        <span class="absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-violet pulse-dot"></span>
-        <select id="modeSelect" class="appearance-none cursor-pointer rounded-full border border-line bg-card pl-5 pr-6 py-1.5 text-[10px] font-bold tracking-wide text-[#c4b5fd] outline-none focus:border-violet">
+        <span class="absolute left-2 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-acc pulse-dot"></span>
+        <select id="modeSelect" class="appearance-none cursor-pointer rounded-full border border-line bg-card pl-5 pr-6 py-1.5 text-[10.5px] font-bold tracking-wide text-acc2 outline-none focus:border-acc">
           <option value="cut20">CUTTING -20%</option>
           <option value="cut15">CUTTING -15%</option>
           <option value="maintain">MAINTENANCE</option>
@@ -118,70 +181,113 @@
         </select>
         <svg class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-mute" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
       </label>
-      <button id="btnSettings" aria-label="Settings" class="h-8 w-8 shrink-0 rounded-full border border-line bg-card grid place-items-center text-soft hover:text-white active:scale-95 transition">
-        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      <button id="btnSettings" aria-label="Settings" class="h-9 w-9 shrink-0 rounded-full bg-acc/90 text-onacc grid place-items-center active:scale-95 transition">
+        <svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <button id="btnProfile" aria-label="Profile" class="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-[#2a2a40] to-[#1a1a28] border border-line grid place-items-center text-[12px] font-bold text-[#c4b5fd] active:scale-95 transition">
-        <span id="avatarInitial">N</span>
+      <button id="btnProfile" aria-label="Profile" class="relative h-10 w-10 shrink-0 rounded-full border-2 border-acc2/60 bg-card2 overflow-hidden active:scale-95 transition">
+        <svg id="avatarSvg" class="h-full w-full" viewBox="60 26 80 80"></svg>
       </button>
     </div>
   </header>
 
-  <!-- ===================== QUOTE CARD ===================== -->
-  <section id="secHome" class="card relative overflow-hidden mt-2 p-4 fade-in">
-    <div class="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-violet/10 blur-2xl"></div>
-    <div class="flex items-center justify-between gap-2 relative">
-      <div class="flex items-center gap-2">
-        <svg viewBox="0 0 24 24" class="h-3.5 w-3.5 text-violet" fill="currentColor"><path d="M9.5 6C6.5 6 4 8.5 4 11.5V18h6v-6H6.5c0-1.9 1.4-3.5 3-3.5V6zm10 0c-3 0-5.5 2.5-5.5 5.5V18h6v-6h-3.5c0-1.9 1.4-3.5 3-3.5V6z"/></svg>
-        <span class="eyebrow">Daily Nutrition Mindset</span>
-      </div>
+  <!-- ===================== QUOTE BUBBLE ===================== -->
+  <section id="secHome" class="card bubble mt-2 p-4 fade-in">
+    <div class="flex items-center justify-between gap-2">
+      <span class="eyebrow">Daily Nutrition Mindset</span>
       <span id="statusBadge" class="chip num">ON TRACK</span>
     </div>
-    <div id="quoteBox" class="relative mt-3 min-h-[64px] quote-slide">
-      <p id="quoteText" class="th text-[15px] leading-relaxed text-[#ececf6] font-medium"></p>
-      <p id="quoteAuthor" class="mt-1.5 text-[11px] text-mute"></p>
+    <div id="quoteBox" class="relative mt-2 min-h-[58px] quote-slide">
+      <p id="quoteText" class="th text-[15px] leading-relaxed text-acc2 font-medium"></p>
+      <p id="quoteAuthor" class="mt-1 text-[11px] text-mute"></p>
     </div>
-    <div class="mt-3 flex items-center justify-between relative">
+    <div class="mt-2 flex items-center justify-between">
       <div id="quoteDots" class="flex items-center gap-1.5"></div>
-      <button id="quoteNext" aria-label="Next quote" class="h-7 px-2.5 rounded-full border border-line text-mute hover:text-white text-sm leading-none tracking-widest active:scale-95 transition">•••</button>
+      <button id="quoteNext" aria-label="Next quote" class="h-7 px-2.5 rounded-full border border-line text-mute hover:text-txt text-sm leading-none tracking-widest active:scale-95 transition">•••</button>
     </div>
-    <p id="statusHint" class="th relative mt-3 pt-3 border-t hair text-[12px] text-soft"></p>
+    <p id="statusHint" class="th mt-3 pt-3 border-t border-line/60 text-[12px] text-soft"></p>
+  </section>
+
+  <!-- ===================== TRAVELLER (CHARACTER) ===================== -->
+  <section id="secHero" class="card mt-4 overflow-hidden fade-in">
+    <div class="relative h-[300px] overflow-hidden" id="heroScene">
+      <svg class="absolute inset-0 h-full w-full" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" id="sceneSvg" aria-hidden="true"></svg>
+      <div id="heroSnow" class="absolute inset-0 pointer-events-none"></div>
+      <div id="charBox" class="absolute bottom-[5%] left-[6%] h-[74%] aspect-[200/260]"></div>
+      <div class="absolute left-4 top-4 right-4 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="eyebrow !text-cream/70">Your Traveller</div>
+          <div id="rankName" class="disp text-[24px] leading-tight text-cream mt-0.5">Rookie Camper</div>
+          <div id="rankTh" class="th text-[11px] text-cream/70"></div>
+        </div>
+        <div class="text-right shrink-0">
+          <div class="disp text-[34px] leading-none text-cream"><span id="heroKg">0</span><span class="text-[16px] text-cream/70"> kg</span></div>
+          <div id="heroDelta" class="num text-[11px] font-bold mt-1"></div>
+        </div>
+      </div>
+    </div>
+    <div class="p-4">
+      <div class="grid grid-cols-4 gap-2 text-center">
+        <div><div class="eyebrow !text-[9px]">Start</div><div id="hsStart" class="num text-[15px] font-bold mt-0.5"></div></div>
+        <div><div class="eyebrow !text-[9px]">Now</div><div id="hsNow" class="num text-[15px] font-bold mt-0.5 text-acc2"></div></div>
+        <div><div class="eyebrow !text-[9px]">Goal</div><div id="hsGoal" class="num text-[15px] font-bold mt-0.5 text-warm"></div></div>
+        <div><div class="eyebrow !text-[9px]">BMI</div><div id="hsBmi" class="num text-[15px] font-bold mt-0.5"></div></div>
+      </div>
+      <div class="relative mt-3 h-[56px]">
+        <svg viewBox="0 0 300 56" class="absolute inset-0 h-full w-full overflow-visible" aria-hidden="true">
+          <path id="trailBase" d="M10,40 C50,14 80,48 122,30 S190,10 232,32 S282,34 290,16" fill="none" style="stroke:rgb(var(--cream)/.18)" stroke-width="11" stroke-linecap="round"/>
+          <path d="M10,40 C50,14 80,48 122,30 S190,10 232,32 S282,34 290,16" fill="none" style="stroke:rgb(var(--cream)/.45)" stroke-width="1.6" stroke-dasharray="5 5" stroke-linecap="round"/>
+          <path id="trailProg" d="M10,40 C50,14 80,48 122,30 S190,10 232,32 S282,34 290,16" pathLength="100" fill="none" style="stroke:rgb(var(--acc2))" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="0 100"/>
+          <circle cx="10" cy="40" r="4" style="fill:rgb(var(--cream)/.6)"/>
+          <path d="M290,16 v-14" style="stroke:rgb(var(--cream))" stroke-width="1.6"/><path d="M290,2 l12,4 -12,4z" style="fill:rgb(var(--warm))"/>
+        </svg>
+        <div id="trailMarker" class="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-cream bg-card2 overflow-hidden shadow-lg" style="left:3%;top:70%"><svg id="trailAvatar" class="h-full w-full" viewBox="60 26 80 80"></svg></div>
+      </div>
+      <div class="flex items-center justify-between num text-[10.5px] text-mute -mt-1">
+        <span id="trailL"></span><span id="trailPct" class="font-bold text-acc2"></span><span id="trailR"></span>
+      </div>
+      <div class="mt-3 grid grid-cols-[1fr_auto] gap-2">
+        <button id="btnWeigh" class="btn-p rounded-2xl py-3 text-[13px] th flex items-center justify-center gap-2 active:scale-[.99] transition">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M8.5 10a3.5 3.5 0 0 1 7 0"/><path d="m12 10 1.5-2"/></svg>
+          บันทึกน้ำหนักวันนี้
+        </button>
+        <button id="btnGhost" class="rounded-2xl border border-line px-3 text-[11.5px] th text-soft hover:text-txt transition">เทียบร่างแรก</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===================== MAIN STAT CARD ===================== -->
   <section id="secStats" class="card relative overflow-hidden mt-3 fade-in">
-    <div class="absolute inset-0 bg-grid opacity-40 pointer-events-none" style="mask-image: linear-gradient(to bottom, transparent, #000 40%, transparent);"></div>
     <div class="relative p-4 pb-0">
       <div class="flex items-start justify-between gap-2">
         <div>
           <div class="eyebrow">Remaining Calories</div>
           <div class="th text-[12px] text-soft mt-0.5">พลังงานคงเหลือวันนี้</div>
         </div>
-        <span id="deficitBadge" class="chip num !text-[10.5px] !px-2 !py-1 border-violet/40 bg-violet/10 text-[#c4b5fd]">▼ 20.0% DEFICIT</span>
+        <span id="deficitBadge" class="chip num !text-[10.5px] !px-2 !py-1">▼ 20.0% DEFICIT</span>
       </div>
       <div class="mt-2 flex items-end gap-2">
-        <div id="remainingNum" class="num text-[44px] leading-none font-bold tracking-tight">0</div>
+        <div id="remainingNum" class="disp text-[48px] leading-none font-bold tracking-tight">0</div>
         <div class="num text-sm text-mute mb-1.5">kcal</div>
-        <div id="remainingPct" class="num text-[11px] font-semibold mb-2 ml-auto"></div>
+        <div id="remainingPct" class="num text-[11px] font-bold mb-2 ml-auto"></div>
       </div>
       <div id="tdeeLine" class="num text-[11px] text-mute mt-2"></div>
-      <div class="track mt-3"><div id="budgetFill" class="fill bg-gradient-to-r from-violet to-sky2" style="width:0%"></div></div>
+      <div class="track mt-3"><div id="budgetFill" class="fill" style="width:0%"></div></div>
 
       <div class="mt-4 grid grid-cols-3 rounded-2xl border border-line bg-ink/40 divide-x divide-line">
         <div class="px-3 py-2.5">
           <div class="eyebrow !text-[9px]">Target</div>
-          <div id="statTarget" class="num text-[15px] font-semibold mt-1">0</div>
+          <div id="statTarget" class="num text-[15px] font-bold mt-1">0</div>
         </div>
         <div class="px-3 py-2.5">
           <div class="eyebrow !text-[9px]">Consumed</div>
-          <div id="statConsumed" class="num text-[15px] font-semibold mt-1 text-[#f87171]">0</div>
+          <div id="statConsumed" class="num text-[15px] font-bold mt-1 text-bad">0</div>
         </div>
-        <button id="btnBurn" class="px-3 py-2.5 text-left hover:bg-white/[.02] transition rounded-r-2xl">
+        <button id="btnBurn" class="px-3 py-2.5 text-left hover:bg-white/[.03] transition rounded-r-2xl">
           <div class="eyebrow !text-[9px] flex items-center gap-1">Deficit/Burn
             <svg viewBox="0 0 24 24" class="h-2.5 w-2.5" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
           </div>
-          <div id="statDeficit" class="num text-[15px] font-semibold mt-1 text-bull">0</div>
-          <div id="statBurn" class="num text-[10px] text-amber2 mt-0.5">🔥 0</div>
+          <div id="statDeficit" class="num text-[15px] font-bold mt-1 text-good">0</div>
+          <div id="statBurn" class="num text-[10px] text-warm mt-0.5">🔥 0</div>
         </button>
       </div>
 
@@ -190,42 +296,42 @@
           <div class="eyebrow !text-[9px]" id="chartTitle">Intraday Intake</div>
           <div id="chartMeta" class="num text-[11px] text-soft mt-0.5"></div>
         </div>
-        <div id="chartDelta" class="num text-[11px] font-semibold"></div>
+        <div id="chartDelta" class="num text-[11px] font-bold"></div>
       </div>
     </div>
-
-    <!-- Sparkline -->
-    <div id="chartWrap" class="relative mt-2 h-[150px] select-none" style="touch-action: pan-y;">
-      <svg id="chartSvg" viewBox="0 0 100 50" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible">
-        <defs>
-          <linearGradient id="gFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#8b5cf6" stop-opacity=".45"/>
-            <stop offset="60%" stop-color="#8b5cf6" stop-opacity=".08"/>
-            <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
-          </linearGradient>
-          <linearGradient id="gStroke" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#6d4de0"/>
-            <stop offset="55%" stop-color="#8b5cf6"/>
-            <stop offset="100%" stop-color="#c084fc"/>
-          </linearGradient>
-        </defs>
-        <line id="chartTarget" x1="0" x2="100" y1="10" y2="10" stroke="#38bdf8" stroke-opacity=".55" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>
-        <path id="chartArea" fill="url(#gFill)" d=""/>
-        <path id="chartLine" fill="none" stroke="url(#gStroke)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" d=""/>
-        <line id="chartCursor" x1="0" x2="0" y1="0" y2="50" stroke="#a9a9c2" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke" style="display:none"/>
-      </svg>
-      <div id="chartTargetLbl" class="absolute right-3 -translate-y-full num text-[9px] font-semibold text-sky2/80 pb-0.5"></div>
-      <div id="chartDot" class="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c084fc] ring-4 ring-violet/25 pulse-dot"></div>
-      <div id="chartTip" class="absolute top-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-[#0f1017]/95 px-2 py-1 num text-[10px] shadow-xl" style="display:none"></div>
-      <div id="chartEmpty" class="absolute inset-0 grid place-items-center th text-[12px] text-mute" style="display:none"></div>
+    <div id="calChart" class="relative mt-2 h-[150px] select-none" style="touch-action: pan-y;"></div>
+    <div class="rng flex items-center justify-between gap-1 px-4 py-3 border-t border-line/60" id="calRange">
+      <button data-range="1D" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">1D</button>
+      <button data-range="1W" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">1W</button>
+      <button data-range="1M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">1M</button>
+      <button data-range="3M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">3M</button>
+      <button data-range="ALL" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">ALL</button>
     </div>
+  </section>
 
-    <div class="rng relative flex items-center justify-between gap-1 px-4 py-3 border-t hair">
-      <button data-range="1D" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-semibold text-mute num">1D</button>
-      <button data-range="1W" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-semibold text-mute num">1W</button>
-      <button data-range="1M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-semibold text-mute num">1M</button>
-      <button data-range="3M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-semibold text-mute num">3M</button>
-      <button data-range="ALL" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-semibold text-mute num">ALL</button>
+  <!-- ===================== WEIGHT JOURNEY ===================== -->
+  <section id="secWeight" class="card mt-3 overflow-hidden fade-in">
+    <div class="p-4 pb-0">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <div class="eyebrow">Weight Journey</div>
+          <div class="th text-[12px] text-soft mt-0.5">กราฟน้ำหนัก · เส้นประ = ค่าเฉลี่ย 7 วัน</div>
+        </div>
+        <span id="rateBadge" class="chip num">—</span>
+      </div>
+      <div class="mt-3 grid grid-cols-3 rounded-2xl border border-line bg-ink/40 divide-x divide-line">
+        <div class="px-3 py-2.5"><div class="eyebrow !text-[9px]">7D Trend</div><div id="wTrend" class="num text-[15px] font-bold mt-1">—</div></div>
+        <div class="px-3 py-2.5"><div class="eyebrow !text-[9px]">Rate / wk</div><div id="wRate" class="num text-[15px] font-bold mt-1">—</div><div id="wRatePct" class="num text-[10px] text-mute mt-0.5"></div></div>
+        <div class="px-3 py-2.5"><div class="eyebrow !text-[9px]">To Goal</div><div id="wToGoal" class="num text-[15px] font-bold mt-1 text-warm">—</div><div id="wEta" class="num text-[10px] text-mute mt-0.5"></div></div>
+      </div>
+      <p id="wHint" class="th text-[11.5px] text-soft mt-3"></p>
+    </div>
+    <div id="wChart" class="relative mt-2 h-[130px] select-none" style="touch-action: pan-y;"></div>
+    <div class="rng flex items-center justify-between gap-1 px-4 py-3 border-t border-line/60" id="wRange">
+      <button data-wr="1W" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">1W</button>
+      <button data-wr="1M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">1M</button>
+      <button data-wr="3M" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">3M</button>
+      <button data-wr="ALL" class="flex-1 rounded-lg border border-transparent py-1.5 text-[11px] font-bold text-mute num">ALL</button>
     </div>
   </section>
 
@@ -241,12 +347,11 @@
         <div id="splitLegend" class="num text-[10px] text-soft mt-0.5"></div>
       </div>
     </div>
-    <div class="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-[#1d1d2b] gap-[2px]" id="splitBar"></div>
-
-    <div class="mt-4 grid grid-cols-[1fr_auto_auto] gap-x-3 text-[9px] font-semibold tracking-[.14em] text-mute uppercase pb-2 border-b hair">
+    <div class="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-ink/70 gap-[2px]" id="splitBar"></div>
+    <div class="mt-4 grid grid-cols-[1fr_auto_auto] gap-x-3 text-[9px] font-bold tracking-[.12em] text-mute uppercase pb-2 border-b border-line/60">
       <div>Asset</div><div class="text-right w-[92px]">Holding / Target</div><div class="text-right w-[40px]">Wt.</div>
     </div>
-    <div id="allocRows" class="divide-y divide-line"></div>
+    <div id="allocRows" class="divide-y divide-line/60"></div>
   </section>
 
   <!-- ===================== MEALS LOG ===================== -->
@@ -257,73 +362,80 @@
         <div class="th text-[12px] text-soft mt-0.5">ประวัติมื้ออาหาร · <span id="logCount" class="num">0</span> รายการ</div>
       </div>
       <div class="rng flex items-center gap-1" id="logFilter">
-        <button data-lf="today" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-semibold text-mute num">TODAY</button>
-        <button data-lf="7d" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-semibold text-mute num">7D</button>
-        <button data-lf="all" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-semibold text-mute num">ALL</button>
+        <button data-lf="today" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-bold text-mute num">TODAY</button>
+        <button data-lf="7d" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-bold text-mute num">7D</button>
+        <button data-lf="all" class="rounded-lg border border-transparent px-2 py-1 text-[10px] font-bold text-mute num">ALL</button>
       </div>
     </div>
-    <div class="grid grid-cols-[1fr_auto] px-4 pb-2 text-[9px] font-semibold tracking-[.14em] text-mute uppercase border-b hair">
+    <div class="grid grid-cols-[1fr_auto] px-4 pb-2 text-[9px] font-bold tracking-[.12em] text-mute uppercase border-b border-line/60">
       <div>Position</div><div class="text-right">Energy / Macro</div>
     </div>
     <div id="mealList"></div>
   </section>
 
-  <p class="text-center text-[10px] text-mute/70 mt-6 th">ข้อมูลทั้งหมดถูกบันทึกในเบราว์เซอร์ของคุณ (localStorage) · ค่าประมาณจาก AI ไม่ใช่คำแนะนำทางการแพทย์</p>
+  <p class="text-center text-[10px] text-mute/80 mt-6 th">ข้อมูลทั้งหมดถูกบันทึกในเบราว์เซอร์ของคุณ (localStorage) · ค่าประมาณจาก AI ไม่ใช่คำแนะนำทางการแพทย์</p>
 </div>
 
 <!-- ===================== FLOATING BOTTOM NAV ===================== -->
 <nav class="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 safe-bottom pointer-events-none">
-  <div class="pointer-events-auto relative flex w-full max-w-[380px] items-center justify-between rounded-full border border-line bg-[#14141d]/85 backdrop-blur-xl px-3 py-2 shadow-[0_20px_50px_-10px_rgba(0,0,0,.8)]">
-    <button data-nav="secHome" class="nav-btn on flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
-      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-      <span class="text-[9px] font-semibold tracking-wider">HOME</span>
+  <div class="pointer-events-auto relative flex w-full max-w-[380px] items-center justify-between rounded-full border border-line bg-card/90 backdrop-blur-xl px-3 py-2 shadow-[0_20px_50px_-10px_rgba(0,0,0,.8)]">
+    <button data-nav="secHome" class="nav-btn flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
+      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 20 6-11 4 6 3-4 5 9z"/></svg>
+      <span class="text-[9.5px] font-bold">Journey</span>
     </button>
     <button data-nav="secStats" class="nav-btn flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
       <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 6-7"/></svg>
-      <span class="text-[9px] font-semibold tracking-wider">CHART</span>
+      <span class="text-[9.5px] font-bold">Calories</span>
     </button>
     <div class="flex-1 flex justify-center">
-      <button id="btnScan" aria-label="Scan food" class="-mt-9 h-16 w-16 rounded-full bg-gradient-to-br from-[#a78bfa] via-violet to-[#5b3bd1] grid place-items-center glow-violet border-4 border-ink active:scale-95 transition">
-        <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      <button id="btnScan" aria-label="Scan food" class="ringbtn -mt-10 h-[62px] w-[62px] rounded-full grid place-items-center active:scale-95 transition">
+        <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </div>
-    <button data-nav="secAlloc" class="nav-btn flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
-      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-      <span class="text-[9px] font-semibold tracking-wider">MACROS</span>
+    <button data-nav="secWeight" class="nav-btn flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
+      <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="4"/><path d="M8.5 10a3.5 3.5 0 0 1 7 0"/><path d="m12 10 1.5-2"/></svg>
+      <span class="text-[9.5px] font-bold">Weight</span>
     </button>
     <button data-nav="secLog" class="nav-btn flex flex-1 flex-col items-center gap-0.5 py-1 text-mute">
       <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      <span class="text-[9px] font-semibold tracking-wider">LOG</span>
+      <span class="text-[9.5px] font-bold">Log</span>
     </button>
   </div>
 </nav>
 
 <!-- ===================== MODAL: PROFILE ===================== -->
-<div id="mProfile" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="sheet card w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-b-none sm:rounded-b-[20px] safe-bottom">
-    <div class="sticky top-0 z-10 bg-card/95 backdrop-blur px-5 pt-4 pb-3 border-b hair flex items-center justify-between">
+<div id="mProfile" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
       <div>
-        <div class="eyebrow">Athlete Profile</div>
+        <div class="eyebrow">Traveller Profile</div>
         <div class="th text-[15px] font-semibold mt-0.5">ตั้งค่าโปรไฟล์ &amp; เป้าหมาย</div>
       </div>
-      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-white">✕</button>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
     <div class="px-5 py-4 space-y-4 th text-[13px]">
-      <div>
-        <label class="text-mute text-[11px]">ชื่อเล่น (ไม่บังคับ)</label>
-        <input id="pName" class="field mt-1" maxlength="20" placeholder="เช่น Thus" />
+      <div class="flex gap-3 items-end">
+        <div class="h-[92px] aspect-[200/260] rounded-2xl bg-ink/60 border border-line overflow-hidden shrink-0"><svg id="pPreview" viewBox="0 20 200 240" class="h-full w-full"></svg></div>
+        <div class="flex-1">
+          <label class="text-mute text-[11px]">ชื่อเล่น (ไม่บังคับ)</label>
+          <input id="pName" class="field mt-1" maxlength="20" placeholder="เช่น Thus" />
+        </div>
       </div>
       <div>
         <label class="text-mute text-[11px]">เพศ (Sex)</label>
         <div class="seg mt-1 grid grid-cols-2 gap-2" id="pSex">
-          <button data-v="male" class="rounded-xl border border-line py-2.5 font-medium">ชาย · Male</button>
-          <button data-v="female" class="rounded-xl border border-line py-2.5 font-medium">หญิง · Female</button>
+          <button data-v="male" class="rounded-xl border border-line py-2.5">ชาย · Male</button>
+          <button data-v="female" class="rounded-xl border border-line py-2.5">หญิง · Female</button>
         </div>
       </div>
       <div class="grid grid-cols-3 gap-2">
         <div><label class="text-mute text-[11px]">อายุ (ปี)</label><input id="pAge" type="number" inputmode="numeric" min="13" max="90" class="field mt-1 num" /></div>
         <div><label class="text-mute text-[11px]">ส่วนสูง (cm)</label><input id="pHeight" type="number" inputmode="decimal" min="120" max="230" class="field mt-1 num" /></div>
         <div><label class="text-mute text-[11px]">น้ำหนัก (kg)</label><input id="pWeight" type="number" inputmode="decimal" min="30" max="250" step="0.1" class="field mt-1 num" /></div>
+      </div>
+      <div>
+        <label class="text-mute text-[11px]">น้ำหนักเป้าหมาย (kg)</label>
+        <input id="pGoalW" type="number" inputmode="decimal" min="30" max="250" step="0.1" class="field mt-1 num" />
       </div>
       <div>
         <label class="text-mute text-[11px]">ระดับกิจกรรม (Activity Level)</label>
@@ -338,10 +450,10 @@
       <div>
         <label class="text-mute text-[11px]">เป้าหมาย (Goal)</label>
         <div class="seg mt-1 grid grid-cols-2 gap-2" id="pGoal">
-          <button data-v="cut20" class="rounded-xl border border-line py-2 text-[12px] font-medium">Fat Loss −20%</button>
-          <button data-v="cut15" class="rounded-xl border border-line py-2 text-[12px] font-medium">Fat Loss −15%</button>
-          <button data-v="maintain" class="rounded-xl border border-line py-2 text-[12px] font-medium">Maintenance</button>
-          <button data-v="bulk" class="rounded-xl border border-line py-2 text-[12px] font-medium">Lean Bulk +10%</button>
+          <button data-v="cut20" class="rounded-xl border border-line py-2 text-[12px]">Fat Loss −20%</button>
+          <button data-v="cut15" class="rounded-xl border border-line py-2 text-[12px]">Fat Loss −15%</button>
+          <button data-v="maintain" class="rounded-xl border border-line py-2 text-[12px]">Maintenance</button>
+          <button data-v="bulk" class="rounded-xl border border-line py-2 text-[12px]">Lean Bulk +10%</button>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -354,17 +466,16 @@
           </div>
         </div>
         <div>
-          <label class="text-mute text-[11px]">ไขมัน <span id="pFatLbl" class="num text-white">25%</span> ของแคลอรี่</label>
+          <label class="text-mute text-[11px]">ไขมัน <span id="pFatLbl" class="num text-txt">25%</span> ของแคลอรี่</label>
           <input id="pFat" type="range" min="20" max="25" step="1" class="w-full mt-3" />
         </div>
       </div>
-
-      <div class="rounded-2xl border border-violet/30 bg-violet/[.06] p-3">
-        <div class="eyebrow !text-[#c4b5fd]">Live Calculation · Mifflin-St Jeor</div>
+      <div class="rounded-2xl border border-acc/40 bg-acc/[.08] p-3">
+        <div class="eyebrow">Live Calculation · Mifflin-St Jeor</div>
         <div class="mt-2 grid grid-cols-3 gap-2 num">
-          <div><div class="text-[9px] text-mute">BMR</div><div id="cvBmr" class="text-[14px] font-semibold"></div></div>
-          <div><div class="text-[9px] text-mute">TDEE</div><div id="cvTdee" class="text-[14px] font-semibold"></div></div>
-          <div><div class="text-[9px] text-mute">TARGET</div><div id="cvTarget" class="text-[14px] font-semibold text-[#c4b5fd]"></div></div>
+          <div><div class="text-[9px] text-mute">BMR</div><div id="cvBmr" class="text-[15px] font-bold"></div></div>
+          <div><div class="text-[9px] text-mute">TDEE</div><div id="cvTdee" class="text-[15px] font-bold"></div></div>
+          <div><div class="text-[9px] text-mute">TARGET</div><div id="cvTarget" class="text-[15px] font-bold text-acc2"></div></div>
         </div>
         <div class="mt-2 grid grid-cols-4 gap-2 num text-[11px]">
           <div><span class="text-mute">P</span> <span id="cvP"></span></div>
@@ -372,148 +483,188 @@
           <div><span class="text-mute">C</span> <span id="cvC"></span></div>
           <div><span class="text-mute">Fb</span> <span id="cvFb"></span></div>
         </div>
-        <p id="cvWarn" class="th mt-2 text-[11px] text-amber2"></p>
+        <p id="cvWarn" class="th mt-2 text-[11px] text-warm"></p>
       </div>
-
-      <button id="pSave" class="w-full rounded-2xl bg-violet py-3.5 font-semibold text-white glow-violet active:scale-[.99] transition">บันทึกโปรไฟล์</button>
+      <button id="pSave" class="btn-p w-full rounded-2xl py-3.5 active:scale-[.99] transition">บันทึกโปรไฟล์</button>
     </div>
   </div>
 </div>
 
 <!-- ===================== MODAL: SETTINGS ===================== -->
-<div id="mSettings" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="sheet card w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-b-none sm:rounded-b-[20px] safe-bottom">
-    <div class="sticky top-0 z-10 bg-card/95 backdrop-blur px-5 pt-4 pb-3 border-b hair flex items-center justify-between">
+<div id="mSettings" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
       <div>
-        <div class="eyebrow">Terminal Settings</div>
+        <div class="eyebrow">Settings</div>
         <div class="th text-[15px] font-semibold mt-0.5">ตั้งค่าระบบ</div>
       </div>
-      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-white">✕</button>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
     <div class="px-5 py-4 space-y-5 th text-[13px]">
       <div>
+        <div class="eyebrow mb-2">Theme · ธีม</div>
+        <div class="seg grid grid-cols-2 gap-2" id="sTheme">
+          <button data-v="traveller" class="rounded-xl border border-line py-3 text-[12px]">🏕️ Traveller (Night Forest)</button>
+          <button data-v="obsidian" class="rounded-xl border border-line py-3 text-[12px]">📈 Obsidian (Trading)</button>
+        </div>
+      </div>
+      <div class="border-t border-line/60 pt-4">
         <div class="eyebrow mb-2">Gemini Vision API</div>
         <label class="text-mute text-[11px]">API Key</label>
         <div class="mt-1 flex gap-2">
           <input id="sKey" type="password" autocomplete="off" class="field num text-[12px]" placeholder="AIza..." />
-          <button data-toggle-pw="sKey" class="shrink-0 rounded-xl border border-line px-3 text-mute hover:text-white text-[11px]">แสดง</button>
+          <button data-toggle-pw="sKey" class="shrink-0 rounded-xl border border-line px-3 text-mute hover:text-txt text-[11px]">แสดง</button>
         </div>
-        <label class="text-mute text-[11px] mt-3 block">Model</label>
-        <input id="sModel" class="field mt-1 num text-[12px]" placeholder="gemini-2.5-flash" />
-        <p class="text-[11px] text-mute mt-2">คีย์ถูกเก็บใน localStorage ของเบราว์เซอร์นี้เท่านั้น และส่งตรงไปยัง generativelanguage.googleapis.com</p>
-        <button id="sSaveKey" class="mt-3 w-full rounded-xl bg-violet py-3 font-semibold text-white">บันทึก API</button>
+        <label class="text-mute text-[11px] mt-3 block">Model สำหรับวิเคราะห์รูปอาหาร</label>
+        <select id="sModel" class="field mt-1 text-[12px]">
+          <option value="gemini-3.8-flash">gemini-3.8-flash — แนะนำ · แม่น + เร็ว</option>
+          <option value="gemini-3-pro-preview">gemini-3-pro-preview — ละเอียดสุด (ช้ากว่า)</option>
+          <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite — ถูก/เร็วสุด</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash — รุ่นเก่า (สำรอง)</option>
+          <option value="custom">กำหนดเอง…</option>
+        </select>
+        <input id="sModelCustom" class="field mt-2 num text-[12px] hidden" placeholder="เช่น gemini-3.8-flash" />
+        <p class="text-[11px] text-mute mt-2">ถ้าโมเดลที่เลือกใช้ไม่ได้ ระบบจะสลับไปรุ่นสำรองให้อัตโนมัติ · คีย์เก็บใน localStorage ของเบราว์เซอร์นี้เท่านั้น</p>
+        <button id="sSaveKey" class="btn-p mt-3 w-full rounded-xl py-3">บันทึก API</button>
       </div>
-      <div class="border-t hair pt-4">
+      <div class="border-t border-line/60 pt-4">
         <div class="eyebrow mb-2">Data</div>
         <div class="grid grid-cols-2 gap-2">
-          <button id="sSample" class="rounded-xl border border-line py-3 text-[12px] hover:border-violet">โหลดข้อมูลตัวอย่าง 30 วัน</button>
-          <button id="sExport" class="rounded-xl border border-line py-3 text-[12px] hover:border-violet">Export JSON</button>
-          <label class="rounded-xl border border-line py-3 text-[12px] hover:border-violet text-center cursor-pointer">Import JSON<input id="sImport" type="file" accept="application/json" class="hidden" /></label>
-          <button id="sReset" class="rounded-xl border border-bear/40 text-bear py-3 text-[12px] hover:bg-bear/10">ล้างข้อมูลทั้งหมด</button>
+          <button id="sSample" class="rounded-xl border border-line py-3 text-[12px] hover:border-acc">โหลดข้อมูลตัวอย่าง 30 วัน</button>
+          <button id="sExport" class="rounded-xl border border-line py-3 text-[12px] hover:border-acc">Export JSON</button>
+          <label class="rounded-xl border border-line py-3 text-[12px] hover:border-acc text-center cursor-pointer">Import JSON<input id="sImport" type="file" accept="application/json" class="hidden" /></label>
+          <button id="sReset" class="rounded-xl border border-bad/50 text-bad py-3 text-[12px] hover:bg-bad/10">ล้างข้อมูลทั้งหมด</button>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: WEIGHT ===================== -->
+<div id="mWeight" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
+      <div>
+        <div class="eyebrow">Weigh-in</div>
+        <div class="th text-[15px] font-semibold mt-0.5">บันทึกน้ำหนัก</div>
+      </div>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
+    </div>
+    <div class="px-5 py-4 space-y-3 th">
+      <div class="flex items-center gap-3">
+        <button data-step="-0.1" class="h-12 w-12 shrink-0 rounded-full border border-line text-xl text-soft active:scale-95">−</button>
+        <div class="flex-1 relative">
+          <input id="wInput" type="number" inputmode="decimal" step="0.1" min="30" max="250" class="field disp text-[40px] leading-none text-center !py-3" />
+          <span class="absolute right-4 top-1/2 -translate-y-1/2 text-mute num text-sm">kg</span>
+        </div>
+        <button data-step="0.1" class="h-12 w-12 shrink-0 rounded-full border border-line text-xl text-soft active:scale-95">+</button>
+      </div>
+      <div class="grid grid-cols-[auto_1fr] items-center gap-3">
+        <label class="text-mute text-[12px]">วันที่</label>
+        <input id="wDate" type="date" class="field num text-[13px]" />
+      </div>
+      <p id="wPrevInfo" class="text-[11.5px] text-soft"></p>
+      <p class="text-[11px] text-mute">💡 ชั่งตอนเช้าหลังเข้าห้องน้ำ ก่อนกิน/ดื่ม เพื่อให้ค่าสม่ำเสมอ · น้ำหนักรายวันแกว่ง ±1 kg ได้จากน้ำและโซเดียม ให้ดูเส้นเฉลี่ย 7 วันเป็นหลัก</p>
+      <button id="wSave" class="btn-p w-full rounded-2xl py-3.5">บันทึกน้ำหนัก</button>
+      <div class="pt-2">
+        <div class="eyebrow mb-1">History</div>
+        <div id="wList" class="divide-y divide-line/60"></div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ===================== MODAL: SCAN ===================== -->
-<div id="mScan" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="sheet card w-full max-w-md max-h-[94vh] overflow-y-auto no-scrollbar rounded-b-none sm:rounded-b-[20px] safe-bottom">
-    <div class="sticky top-0 z-10 bg-card/95 backdrop-blur px-5 pt-4 pb-3 border-b hair flex items-center justify-between">
+<div id="mScan" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[94vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
       <div>
-        <div class="eyebrow flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-bull"></span>AI Vision Scanner</div>
+        <div class="eyebrow flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-good"></span>AI Vision Scanner</div>
         <div class="th text-[15px] font-semibold mt-0.5">สแกนอาหารด้วย Gemini</div>
       </div>
-      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-white">✕</button>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
-
     <div class="px-5 py-4 space-y-4 th text-[13px]">
-      <!-- API key -->
-      <details id="keyBox" class="rounded-2xl border border-line bg-ink/40 group">
-        <summary class="list-none cursor-pointer px-3 py-2.5 flex items-center justify-between">
-          <span class="flex items-center gap-2 text-[12px]">
-            <svg viewBox="0 0 24 24" class="h-4 w-4 text-violet" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>
-            Gemini API Key
+      <details id="keyBox" class="rounded-2xl border border-line bg-ink/40">
+        <summary class="list-none cursor-pointer px-3 py-2.5 flex items-center justify-between gap-2">
+          <span class="flex items-center gap-2 text-[12px] min-w-0">
+            <svg viewBox="0 0 24 24" class="h-4 w-4 text-acc2 shrink-0" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>
+            <span class="truncate">API Key · <span id="modelLbl" class="num text-mute"></span></span>
           </span>
-          <span id="keyState" class="chip num"></span>
+          <span id="keyState" class="chip num shrink-0"></span>
         </summary>
         <div class="px-3 pb-3">
           <div class="flex gap-2">
             <input id="scKey" type="password" autocomplete="off" class="field num text-[12px]" placeholder="วาง API Key ที่นี่ (AIza...)" />
-            <button id="scKeySave" class="shrink-0 rounded-xl bg-violet px-4 text-[12px] font-semibold text-white">บันทึก</button>
+            <button id="scKeySave" class="btn-p shrink-0 rounded-xl px-4 text-[12px]">บันทึก</button>
           </div>
-          <p class="text-[10.5px] text-mute mt-2">รับคีย์ฟรีที่ aistudio.google.com · เก็บใน localStorage เท่านั้น</p>
+          <p class="text-[10.5px] text-mute mt-2">รับคีย์ฟรีที่ aistudio.google.com · เปลี่ยนโมเดลได้ที่ ☰ ตั้งค่า</p>
         </div>
       </details>
-
-      <!-- Image -->
-      <div id="dropZone" class="relative overflow-hidden rounded-2xl border border-dashed border-line bg-ink/40 aspect-[4/3] grid place-items-center">
+      <div class="relative overflow-hidden rounded-2xl border border-dashed border-line bg-ink/40 aspect-[4/3] grid place-items-center">
         <img id="scImg" class="absolute inset-0 h-full w-full object-cover hidden" alt="food preview" />
         <div id="scPlaceholder" class="text-center px-6">
-          <div class="mx-auto h-12 w-12 rounded-2xl border border-line grid place-items-center text-violet">
+          <div class="mx-auto h-12 w-12 rounded-2xl border border-line grid place-items-center text-acc2">
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3.5"/></svg>
           </div>
           <p class="mt-3 text-[13px]">ถ่ายรูปหรืออัปโหลดรูปอาหาร</p>
           <p class="text-[11px] text-mute mt-1">AI จะประเมินน้ำหนัก น้ำมันแฝง และมาโครให้อัตโนมัติ</p>
         </div>
         <div id="scScanning" class="absolute inset-0 hidden">
-          <div class="absolute inset-0 bg-violet/10"></div>
+          <div class="absolute inset-0 bg-acc/10"></div>
           <div class="scanline"></div>
-          <div class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-[11px] num text-[#c4b5fd] flex items-center gap-2">
-            <span class="h-3 w-3 rounded-full border-2 border-violet border-t-transparent spin"></span> ANALYZING…
+          <div class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-[11px] num text-acc2 flex items-center gap-2">
+            <span class="h-3 w-3 rounded-full border-2 border-acc border-t-transparent spin"></span> <span id="scScanLbl">ANALYZING…</span>
           </div>
         </div>
       </div>
       <div class="grid grid-cols-2 gap-2">
-        <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-violet flex items-center justify-center gap-2">
+        <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-acc flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>
           ถ่ายรูป<input id="scCamera" type="file" accept="image/*" capture="environment" class="hidden" />
         </label>
-        <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-violet flex items-center justify-center gap-2">
+        <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-acc flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
           เลือกจากคลัง<input id="scFile" type="file" accept="image/*" class="hidden" />
         </label>
       </div>
       <input id="scNote" class="field text-[12px]" maxlength="200" placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ) เช่น ข้าวครึ่งจาน, ไม่ใส่น้ำมัน" />
-
       <div class="grid grid-cols-1 gap-2">
-        <button id="scAnalyze" class="w-full rounded-2xl bg-violet py-3.5 font-semibold text-white glow-violet disabled:opacity-40 disabled:shadow-none active:scale-[.99] transition flex items-center justify-center gap-2">
+        <button id="scAnalyze" class="btn-p w-full rounded-2xl py-3.5 disabled:opacity-40 active:scale-[.99] transition flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
           วิเคราะห์ด้วย Gemini Vision
         </button>
-        <button id="scDemo" class="w-full rounded-2xl border border-line py-3 text-[13px] text-soft hover:border-violet hover:text-white transition">ทดสอบด้วยข้อมูล Demo</button>
+        <button id="scDemo" class="w-full rounded-2xl border border-line py-3 text-[13px] text-soft hover:border-acc hover:text-txt transition">ทดสอบด้วยข้อมูล Demo</button>
       </div>
-      <p id="scError" class="hidden rounded-xl border border-bear/40 bg-bear/10 px-3 py-2 text-[12px] text-[#fca5a5]"></p>
-
-      <!-- Result -->
+      <p id="scError" class="hidden rounded-xl border border-bad/40 bg-bad/10 px-3 py-2 text-[12px] text-bad"></p>
       <div id="scResult" class="hidden"></div>
     </div>
   </div>
 </div>
 
 <!-- ===================== MODAL: MEAL DETAIL ===================== -->
-<div id="mMeal" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="sheet card w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-b-none sm:rounded-b-[20px] safe-bottom">
-    <div class="sticky top-0 z-10 bg-card/95 backdrop-blur px-5 pt-4 pb-3 border-b hair flex items-center justify-between">
-      <div class="eyebrow">Position Detail</div>
-      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-white">✕</button>
+<div id="mMeal" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
+      <div class="eyebrow">Meal Detail</div>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
     <div id="mealDetail" class="px-5 py-4 th text-[13px]"></div>
   </div>
 </div>
 
 <!-- ===================== MODAL: BURN ===================== -->
-<div id="mBurn" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm">
-  <div class="sheet card w-full max-w-md rounded-b-none sm:rounded-b-[20px] safe-bottom">
-    <div class="px-5 pt-4 pb-3 border-b hair flex items-center justify-between">
+<div id="mBurn" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
       <div>
         <div class="eyebrow">Active Burn</div>
         <div class="th text-[15px] font-semibold mt-0.5">แคลอรี่ที่เผาผลาญจากการออกกำลังกายวันนี้</div>
       </div>
-      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-white">✕</button>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
     <div class="px-5 py-4 space-y-3 th">
-      <input id="burnInput" type="number" inputmode="numeric" min="0" max="3000" class="field num text-2xl font-semibold text-center" placeholder="0" />
+      <input id="burnInput" type="number" inputmode="numeric" min="0" max="3000" class="field num text-2xl font-bold text-center" placeholder="0" />
       <div class="grid grid-cols-4 gap-2 num text-[12px]" id="burnQuick">
         <button data-b="150" class="rounded-lg border border-line py-2">+150</button>
         <button data-b="250" class="rounded-lg border border-line py-2">+250</button>
@@ -521,14 +672,14 @@
         <button data-b="0" class="rounded-lg border border-line py-2 text-mute">RESET</button>
       </div>
       <p class="text-[11px] text-mute">แนะนำให้กรอกเพียง ~50–70% ของค่าจากนาฬิกา/แอป เพราะอุปกรณ์มักประเมินเกินจริง และ TDEE รวมกิจกรรมพื้นฐานไว้แล้ว</p>
-      <button id="burnSave" class="w-full rounded-2xl bg-violet py-3 font-semibold text-white">บันทึก</button>
+      <button id="burnSave" class="btn-p w-full rounded-2xl py-3">บันทึก</button>
     </div>
   </div>
 </div>
 
 <!-- Toast -->
-<div id="toast" class="fixed left-1/2 top-4 z-[60] -translate-x-1/2 -translate-y-24 transition-transform duration-300 rounded-full border border-line bg-[#161722]/95 backdrop-blur px-4 py-2 text-[12px] th shadow-2xl flex items-center gap-2 max-w-[90vw]">
-  <span id="toastDot" class="h-2 w-2 rounded-full bg-bull shrink-0"></span><span id="toastText"></span>
+<div id="toast" class="fixed left-1/2 top-4 z-[60] -translate-x-1/2 -translate-y-24 transition-transform duration-300 rounded-full border border-line bg-card2/95 backdrop-blur px-4 py-2 text-[12px] th shadow-2xl flex items-center gap-2 max-w-[90vw]">
+  <span id="toastDot" class="h-2 w-2 rounded-full bg-good shrink-0"></span><span id="toastText"></span>
 </div>
 
 <script>
@@ -541,32 +692,41 @@
 
   // ---------- Storage ----------
   const KEYS = {
-    profile: 'nj.profile.v1', meals: 'nj.meals.v1', burn: 'nj.burn.v1',
-    apiKey: 'nj.geminiKey', model: 'nj.geminiModel', range: 'nj.range', logFilter: 'nj.logFilter',
+    profile: 'nj.profile.v1', meals: 'nj.meals.v1', burn: 'nj.burn.v1', weights: 'nj.weights.v1', sampleW: 'nj.sampleWeightDates',
+    apiKey: 'nj.geminiKey', model: 'nj.geminiModel', range: 'nj.range', wRange: 'nj.wRange', logFilter: 'nj.logFilter',
+    theme: 'nj.theme', ghost: 'nj.ghost',
   };
   const load = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
-  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { toast('พื้นที่จัดเก็บเต็ม ลองลบประวัติเก่า', 'bear'); return false; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { toast('พื้นที่จัดเก็บเต็ม ลองลบประวัติเก่า', 'bad'); return false; } };
 
   // ---------- Constants ----------
   const GOALS = {
-    cut20:    { pct: 0.20,  badge: '▼ 20.0% DEFICIT', th: 'ลดไขมัน −20%' },
-    cut15:    { pct: 0.15,  badge: '▼ 15.0% DEFICIT', th: 'ลดไขมัน −15%' },
-    maintain: { pct: 0,     badge: '◆ 0.0% MAINTAIN', th: 'รักษาน้ำหนัก' },
-    bulk:     { pct: -0.10, badge: '▲ 10.0% SURPLUS', th: 'เพิ่มกล้าม +10%' },
+    cut20:    { pct: 0.20,  badge: '▼ 20.0% DEFICIT', th: 'ลดไขมัน −20%', tone: 'acc2' },
+    cut15:    { pct: 0.15,  badge: '▼ 15.0% DEFICIT', th: 'ลดไขมัน −15%', tone: 'acc2' },
+    maintain: { pct: 0,     badge: '◆ 0.0% MAINTAIN', th: 'รักษาน้ำหนัก', tone: 'info' },
+    bulk:     { pct: -0.10, badge: '▲ 10.0% SURPLUS', th: 'เพิ่มกล้าม +10%', tone: 'good' },
   };
   const SODIUM_LIMIT = 2000;
-  const MPS_PROTEIN_G = 25; // ~0.4 g/kg per meal / ~2.5 g leucine threshold
-  const DEFAULT_PROFILE = { name: '', sex: 'male', age: 28, height: 175, weight: 75, activity: 1.55, goal: 'cut20', proteinPerKg: 2.2, fatPct: 25 };
-
+  const MPS_PROTEIN_G = 25;
+  const DEFAULT_MODEL = 'gemini-3.8-flash';
+  const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+  const DEFAULT_PROFILE = { name: '', sex: 'male', age: 28, height: 175, weight: 75, startWeight: null, goalWeight: null, activity: 1.55, goal: 'cut20', proteinPerKg: 2.2, fatPct: 25 };
+  const TIERS = [
+    { en: 'Rookie Camper', th: 'นักตั้งแคมป์มือใหม่ · เริ่มต้นการเดินทาง' },
+    { en: 'Trail Walker', th: 'นักเดินป่า · ปลดล็อกไม้เท้าเดินป่า' },
+    { en: 'Ridge Runner', th: 'นักวิ่งสันเขา · ปลดล็อกแว่นกันแดด' },
+    { en: 'Peak Seeker', th: 'ผู้ไล่ล่ายอดเขา · ผ้าพันคอปลิวลม' },
+    { en: 'Summit Legend', th: 'ตำนานแห่งยอดเขา · ปักธงสำเร็จ!' },
+  ];
   const QUOTES = [
     { t: 'Protein first. โปรตีนคือประกันความเสี่ยงของกล้ามเนื้อในช่วง Deficit — ปิดโปรตีนให้ถึงเป้าก่อนทุกอย่าง', a: '— Risk Management 101' },
-    { t: 'Consistency beats intensity. คุมได้ 80% ทุกวัน ดีกว่าเป๊ะ 100% แค่สองวันแล้วพอร์ตพัง', a: '— Compounding Principle' },
-    { t: 'อย่าเทรดตามอารมณ์กับจานอาหาร ถามตัวเองก่อนกิน: หิวจริง หรือแค่เบื่อ?', a: '— Behavioral Discipline' },
-    { t: 'Deficit ที่ยั่งยืนคือ 15–20% ของ TDEE ไม่ใช่การอดอาหาร — Drawdown ลึกเกินไป ร่างกายจะ Cut Loss กล้ามเนื้อ', a: '— Position Sizing' },
-    { t: 'โปรตีน + ไฟเบอร์ = Satiety สูง อิ่มนาน ไม่ต้อง Over-trade ด้วยของว่าง', a: '— Hedging Strategy' },
-    { t: 'น้ำมันที่มองไม่เห็นคือ Hidden Fee ของพอร์ตแคลอรี่ 1 ช้อนโต๊ะ ≈ 120 kcal', a: '— Transaction Cost' },
-    { t: 'นอน 7–9 ชั่วโมง Cortisol ต่ำ Ghrelin ต่ำ ความหิวก็ต่ำ — การพักผ่อนคือ Alpha ที่ถูกที่สุด', a: '— Recovery Edge' },
-    { t: 'บันทึกทุกมื้อ แม้มื้อที่พลาด ข้อมูลที่ซื่อสัตย์คือ Journal ที่ทำกำไร', a: '— Trading Journal Rule' },
+    { t: 'ความสนุกของการเดินป่าอยู่ที่ระหว่างทาง ไม่ใช่ปลายทาง — คุมได้ 80% ทุกวัน ดีกว่าเป๊ะ 100% แค่สองวัน', a: '— The Journey' },
+    { t: 'อย่ากินตามอารมณ์ ถามตัวเองก่อนกิน: หิวจริง หรือแค่เบื่อ?', a: '— Behavioral Discipline' },
+    { t: 'Deficit ที่ยั่งยืนคือ 15–20% ของ TDEE ไม่ใช่การอดอาหาร — ลดเร็วเกิน ร่างกายจะเผากล้ามเนื้อแทน', a: '— Pace Yourself' },
+    { t: 'โปรตีน + ไฟเบอร์ = Satiety สูง อิ่มนาน ไม่ต้องพึ่งของว่าง', a: '— Trail Snack Rule' },
+    { t: 'น้ำมันที่มองไม่เห็นคือค่าธรรมเนียมแฝงของพอร์ตแคลอรี่ 1 ช้อนโต๊ะ ≈ 120 kcal', a: '— Hidden Fee' },
+    { t: 'นอน 7–9 ชั่วโมง Cortisol ต่ำ Ghrelin ต่ำ ความหิวก็ต่ำ — การพักผ่อนคือทางลัดที่ถูกที่สุด', a: '— Campfire Rest' },
+    { t: 'น้ำหนักรายวันคือสภาพอากาศ เส้นเฉลี่ย 7 วันคือภูมิอากาศ — ดูแนวโน้ม อย่าตกใจกับวันเดียว', a: '— Weather vs Climate' },
   ];
 
   // ---------- Helpers ----------
@@ -576,7 +736,9 @@
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const num = (v, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+  const C = (name, a) => (a == null ? `rgb(var(--${name}))` : `rgb(var(--${name}) / ${a})`);
   const dayKey = (d = new Date()) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const keyTime = (k) => new Date(k + 'T00:00:00').getTime();
   const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
   const timeStr = (ts) => new Date(ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
   const dateStr = (ts) => new Date(ts).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
@@ -586,8 +748,12 @@
   let profile = { ...DEFAULT_PROFILE, ...load(KEYS.profile, {}) };
   let meals = load(KEYS.meals, []);
   let burn = load(KEYS.burn, {});
+  let weights = load(KEYS.weights, {});
   let range = load(KEYS.range, '1D');
+  let wRange = load(KEYS.wRange, '1M');
   let logFilter = load(KEYS.logFilter, 'today');
+  let theme = load(KEYS.theme, 'traveller');
+  let showGhost = load(KEYS.ghost, true);
   let quoteIdx = Math.floor(Date.now() / 864e5) % QUOTES.length;
   const firstRun = !localStorage.getItem(KEYS.profile);
 
@@ -598,13 +764,12 @@
     const tdee = bmr * num(p.activity, 1.2);
     const pct = (GOALS[p.goal] || GOALS.cut20).pct;
     const target = tdee * (1 - pct);
-    const protein = w * num(p.proteinPerKg, 2.2);             // 2.0–2.2 g/kg
-    const fat = (target * (num(p.fatPct, 25) / 100)) / 9;      // 20–25% kcal
-    const carbs = Math.max(0, (target - protein * 4 - fat * 9) / 4); // remainder
-    const fiber = (target / 1000) * 14;                         // 14 g / 1,000 kcal
+    const protein = w * num(p.proteinPerKg, 2.2);                    // 2.0–2.2 g/kg
+    const fat = (target * (num(p.fatPct, 25) / 100)) / 9;             // 20–25% kcal
+    const carbs = Math.max(0, (target - protein * 4 - fat * 9) / 4);  // remainder
+    const fiber = (target / 1000) * 14;                               // 14 g / 1,000 kcal
     return { bmr, tdee, pct, target, protein, fat, carbs, fiber, sodium: SODIUM_LIMIT };
   }
-
   const mealsOn = (key) => meals.filter((m) => dayKey(m.ts) === key);
   function totals(list) {
     return list.reduce((t, m) => {
@@ -613,12 +778,49 @@
     }, { kcal: 0, p: 0, f: 0, c: 0, fiber: 0, sodium: 0 });
   }
 
+  // ---------- Weight engine ----------
+  const wEntries = () => Object.entries(weights).map(([d, kg]) => ({ d, kg: num(kg), t: keyTime(d) })).filter((e) => e.kg > 0).sort((a, b) => a.t - b.t);
+  const currentWeight = () => { const e = wEntries(); return e.length ? e[e.length - 1].kg : num(profile.weight); };
+  const startWeight = () => { if (num(profile.startWeight) > 0) return num(profile.startWeight); const e = wEntries(); return e.length ? e[0].kg : num(profile.weight); };
+  function defaultGoalWeight(p, base) {
+    if (p.goal === 'bulk') return Math.round((base + 3) * 10) / 10;
+    if (p.goal === 'maintain') return Math.round(base * 10) / 10;
+    const bmi22 = 22.5 * (num(p.height) / 100) ** 2;
+    return Math.round(Math.max(bmi22, base * 0.9) * 10) / 10;
+  }
+  const goalWeight = () => (num(profile.goalWeight) > 0 ? num(profile.goalWeight) : defaultGoalWeight(profile, startWeight()));
+  function trendAt(list, i) {
+    const t = list[i].t, win = list.filter((e) => e.t <= t && e.t > t - 7 * 864e5);
+    return win.reduce((a, e) => a + e.kg, 0) / win.length;
+  }
+  function weeklyRate() {
+    const list = wEntries().filter((e) => e.t >= keyTime(dayKey()) - 20 * 864e5);
+    if (list.length < 3 || (list[list.length - 1].t - list[0].t) < 4 * 864e5) return null;
+    const xs = list.map((e) => e.t / 864e5), ys = list.map((e) => e.kg);
+    const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+    let n = 0, d = 0; xs.forEach((x, i) => { n += (x - mx) * (ys[i] - my); d += (x - mx) ** 2; });
+    return d ? (n / d) * 7 : null; // kg per week
+  }
+  function progressOf(start, cur, goal) {
+    if (Math.abs(start - goal) < 0.05) return Math.abs(cur - goal) <= 0.5 ? 1 : 0;
+    return clamp((start - cur) / (start - goal), 0, 1);
+  }
+  const tierOf = (p) => (p >= 1 ? 4 : p >= 0.75 ? 3 : p >= 0.5 ? 2 : p >= 0.25 ? 1 : 0);
+  function setWeight(date, kg) {
+    const all = wEntries();
+    // journey start = first weigh-in ever (or an older back-filled entry); never overwritten by same-day re-logs
+    if (!(num(profile.startWeight) > 0)) profile.startWeight = all.length ? all[0].kg : Math.round(kg * 10) / 10;
+    if (all.length && date < all[0].d) profile.startWeight = Math.round(kg * 10) / 10;
+    weights[date] = Math.round(kg * 10) / 10;
+    save(KEYS.weights, weights);
+    profile.weight = currentWeight(); save(KEYS.profile, profile);
+  }
+
   // ---------- Toast ----------
   let toastTimer;
-  function toast(msg, tone = 'bull') {
-    const colors = { bull: '#10b981', bear: '#ef4444', violet: '#8b5cf6', sky: '#38bdf8' };
+  function toast(msg, tone = 'good') {
     $('#toastText').textContent = msg;
-    $('#toastDot').style.background = colors[tone] || colors.bull;
+    $('#toastDot').style.background = C(tone);
     const el = $('#toast');
     el.style.transform = 'translate(-50%, 0)';
     clearTimeout(toastTimer);
@@ -626,225 +828,494 @@
   }
 
   // ---------- Modals ----------
-  function openModal(id) { const m = $('#' + id); m.classList.remove('hidden-sheet'); document.body.style.overflow = 'hidden'; }
+  function openModal(id) { $('#' + id).classList.remove('hidden-sheet'); document.body.style.overflow = 'hidden'; }
   function closeModal(id) {
-    const m = $('#' + id); m.classList.add('hidden-sheet');
+    $('#' + id).classList.add('hidden-sheet');
     if (!$$('.sheet-wrap').some((x) => !x.classList.contains('hidden-sheet'))) document.body.style.overflow = '';
   }
-  $$('.sheet-wrap').forEach((w) => {
-    w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-close]')) closeModal(w.id); });
-  });
+  $$('.sheet-wrap').forEach((w) => w.addEventListener('click', (e) => { if (e.target === w || e.target.closest('[data-close]')) closeModal(w.id); }));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') $$('.sheet-wrap:not(.hidden-sheet)').forEach((w) => closeModal(w.id)); });
+
+  // =========================================================================
+  // CHARACTER (parametric SVG — body shape follows sex / height / weight)
+  // =========================================================================
+  const CH = {
+    skin: '#f2c8a0', skinSh: '#d9a27a', jacket: '#3f7cc0', jacketSh: '#2c5c93', pants: '#2a3350', pantsSh: '#222a44',
+    boot: '#6a4430', sole: '#2c1d15', beanie: '#f2a33b', beanieSh: '#d4832a', pom: '#f4ede0', scarf: '#e0574a',
+    pack: '#7b5a3c', packSh: '#5e4330', roll: '#3f9a5a', rollSh: '#2f7a46', hair: '#3b2a22', eye: '#2b2230', blush: '#f08a7a',
+  };
+  function bodyParams(p, kg) {
+    const h = num(p.height, 170) || 170, bmi = kg / ((h / 100) ** 2);
+    return {
+      f: clamp((bmi - 19) / (36 - 19), 0, 1),
+      m: clamp((num(p.activity, 1.2) - 1.2) / 0.7, 0, 1),
+      hs: clamp(h / 172, 0.9, 1.08),
+      sex: p.sex, bmi,
+    };
+  }
+  function geo(b) {
+    const { f, m } = b, fem = b.sex === 'female';
+    return {
+      sw: 23 + 5 * m + 6 * f + (fem ? -2 : 3),
+      ww: 15 + 26 * f - (fem ? 2 * (1 - f) : 0),
+      bw: 15 + 36 * f - (fem ? 1 : 0),
+      hw: 19 + 16 * f + (fem ? 4 : 0),
+      lw: 14 + 13 * f + m,
+      aw: 9.5 + 8 * f + 3 * m,
+      R: 21.5 + 4.5 * f,
+      Y: { neck: 96, sh: 104, waist: 142, hip: 170, ankle: 236, foot: 246, head: 70 },
+    };
+  }
+  const r2 = (n) => Math.round(n * 100) / 100;
+  function torsoD(g) {
+    const { sw, ww, bw, hw, Y } = g, L = (x) => r2(100 - x), R = (x) => r2(100 + x);
+    return `M${L(sw - 6)},${Y.sh - 6} Q${L(sw)},${Y.sh - 5} ${L(sw)},${Y.sh + 6} C${L(sw)},${Y.waist - 18} ${L(ww)},${Y.waist - 12} ${L(bw)},${Y.waist + 4} C${L(bw + 1)},${Y.hip - 10} ${L(hw)},${Y.hip - 6} ${L(hw)},${Y.hip + 2} Q100,${Y.hip + 9} ${R(hw)},${Y.hip + 2} C${R(hw)},${Y.hip - 6} ${R(bw + 1)},${Y.hip - 10} ${R(bw)},${Y.waist + 4} C${R(ww)},${Y.waist - 12} ${R(sw)},${Y.waist - 18} ${R(sw)},${Y.sh + 6} Q${R(sw)},${Y.sh - 5} ${R(sw - 6)},${Y.sh - 6} Z`;
+  }
+  function limbs(g) {
+    const { Y } = g, side = Math.max(g.sw, g.bw);
+    const legCx = Math.max(g.lw / 2 + 1, g.hw - g.lw / 2 - 2);
+    const arm = (s) => {
+      const sx = 100 + s * (g.sw - 4), sy = Y.sh + 4;
+      const ex = 100 + s * (side + g.aw * 0.5 + 2), ey = Y.waist - 8;
+      const hx = 100 + s * (side + g.aw * 0.3 + 1), hy = Y.hip - 6;
+      return { d: `M${r2(sx)},${sy} Q${r2(ex)},${ey} ${r2(hx)},${hy}`, hx, hy };
+    };
+    return { legCx, arms: [arm(-1), arm(1)] };
+  }
+  // silhouette used for "start body" ghost
+  function ghostSVG(b) {
+    const g = geo(b), { Y } = g, lb = limbs(g);
+    let s = `<g transform="translate(100 ${Y.foot}) scale(${r2(b.hs)}) translate(-100 -${Y.foot})" opacity=".38" style="fill:rgb(var(--cream))">`;
+    [-1, 1].forEach((sd) => { s += `<rect x="${r2(100 + sd * lb.legCx - g.lw / 2)}" y="${Y.hip - 4}" width="${r2(g.lw)}" height="${Y.foot - Y.hip + 2}" rx="${r2(g.lw / 2.4)}"/>`; });
+    s += `<path d="${torsoD(g)}"/>`;
+    lb.arms.forEach((a) => { s += `<path d="${a.d}" fill="none" style="stroke:rgb(var(--cream))" stroke-width="${r2(g.aw + 2)}" stroke-linecap="round"/>`; });
+    s += `<circle cx="100" cy="${Y.head}" r="${r2(g.R + 2)}"/>`;
+    if (b.f > 0.35) s += `<ellipse cx="100" cy="${r2(Y.head + g.R * 0.3)}" rx="${r2(g.R * (0.86 + 0.2 * b.f) + 2)}" ry="${r2(g.R * 0.72 + 2)}"/>`;
+    return s + '</g>';
+  }
+  function charSVG(b, o = {}) {
+    const g = geo(b), { Y, R } = g, id = o.uid || 'c', t = o.tier || 0, fem = b.sex === 'female';
+    const L = (x) => r2(100 - x), Rr = (x) => r2(100 + x), lb = limbs(g);
+    let s = '';
+    if (o.ghostB) s += ghostSVG(o.ghostB);
+    s += `<g transform="translate(100 ${Y.foot}) scale(${r2(b.hs)}) translate(-100 -${Y.foot})">`;
+    s += `<ellipse cx="100" cy="${Y.foot + 3}" rx="${r2(g.hw + 20)}" ry="5.5" fill="#000" opacity=".22"/>`;
+    s += `<g class="${o.anim ? 'ch-bob' : ''}">`;
+    // summit flag (tier 4)
+    if (t >= 4) {
+      const fx = Rr(g.sw - 5);
+      s += `<line x1="${fx}" y1="${Y.sh - 24}" x2="${fx}" y2="${Y.sh - 84}" stroke="#cfd6e0" stroke-width="2.2" stroke-linecap="round"/>`;
+      s += `<path class="${o.anim ? 'ch-flag' : ''}" d="M${fx},${Y.sh - 84} l28,8 -28,9z" fill="${CH.beanie}"/>`;
+    }
+    // backpack + bedroll
+    s += `<rect x="${L(g.sw - 3)}" y="${Y.sh - 18}" width="${r2(2 * (g.sw - 3))}" height="62" rx="12" fill="${CH.pack}"/>`;
+    s += `<rect x="${L(g.sw + 3)}" y="${Y.sh - 29}" width="${r2(2 * (g.sw + 3))}" height="14" rx="7" fill="${CH.roll}"/>`;
+    s += `<path d="M${L(g.sw - 7)},${Y.sh - 29} v14 M${Rr(g.sw - 7)},${Y.sh - 29} v14" stroke="${CH.rollSh}" stroke-width="3"/>`;
+    // hair behind (female)
+    if (fem) s += `<rect x="${r2(100 - R - 5)}" y="${Y.head - 10}" width="${r2(2 * R + 10)}" height="${r2(R + 36)}" rx="${r2(R * 0.75)}" fill="${CH.hair}"/>`;
+    // legs + boots
+    [-1, 1].forEach((sd) => {
+      const cx = 100 + sd * lb.legCx;
+      s += `<rect x="${r2(cx - g.lw / 2)}" y="${Y.hip - 6}" width="${r2(g.lw)}" height="${Y.ankle - Y.hip + 8}" rx="${r2(g.lw / 2.4)}" fill="${CH.pants}"/>`;
+      s += `<rect x="${r2(cx - g.lw / 2 + (sd < 0 ? -4 : 1))}" y="${Y.ankle - 3}" width="${r2(g.lw + 3)}" height="13" rx="5.5" fill="${CH.boot}"/>`;
+      s += `<rect x="${r2(cx - g.lw / 2 + (sd < 0 ? -4 : 1))}" y="${Y.ankle + 7}" width="${r2(g.lw + 3)}" height="3.5" rx="1.75" fill="${CH.sole}"/>`;
+    });
+    s += `<rect x="${r2(100 + lb.legCx - g.lw / 2)}" y="${Y.hip - 6}" width="${r2(g.lw)}" height="${Y.ankle - Y.hip + 8}" rx="${r2(g.lw / 2.4)}" fill="${CH.pantsSh}" opacity=".55"/>`;
+    // torso
+    const td = torsoD(g);
+    s += `<clipPath id="${id}-tc"><path d="${td}"/></clipPath>`;
+    s += `<path d="${td}" fill="${CH.jacket}"/>`;
+    s += `<g clip-path="url(#${id}-tc)"><rect x="100" y="80" width="80" height="120" fill="#0a1830" opacity=".16"/><rect x="${L(g.bw + 4)}" y="${Y.hip - 4}" width="${r2(2 * g.bw + 8)}" height="14" fill="${CH.jacketSh}"/></g>`;
+    s += `<line x1="100" y1="${Y.sh - 2}" x2="100" y2="${Y.hip + 4}" stroke="${CH.jacketSh}" stroke-width="2"/>`;
+    // straps
+    s += `<path d="M${L(g.sw * 0.58)},${Y.sh - 4} C${L(g.sw * 0.6)},${Y.sh + 14} ${L(g.ww * 0.72)},${Y.waist - 14} ${L(g.ww * 0.7)},${Y.waist + 2} M${Rr(g.sw * 0.58)},${Y.sh - 4} C${Rr(g.sw * 0.6)},${Y.sh + 14} ${Rr(g.ww * 0.72)},${Y.waist - 14} ${Rr(g.ww * 0.7)},${Y.waist + 2}" fill="none" stroke="${CH.pack}" stroke-width="5" stroke-linecap="round"/>`;
+    s += `<line x1="${L(g.sw * 0.6)}" y1="${Y.sh + 20}" x2="${Rr(g.sw * 0.6)}" y2="${Y.sh + 20}" stroke="${CH.packSh}" stroke-width="3" stroke-linecap="round"/>`;
+    // neck + scarf
+    s += `<rect x="93" y="${Y.neck - 9}" width="14" height="14" rx="4" fill="${CH.skinSh}"/>`;
+    s += `<g class="${o.anim && t >= 3 ? 'ch-scarf' : ''}"><rect x="${L(11)}" y="${Y.neck + 4}" width="8" height="${t >= 3 ? 34 : 20}" rx="3" fill="${CH.scarf}" transform="rotate(8 ${L(7)} ${Y.neck + 4})"/></g>`;
+    s += `<rect x="${L(16)}" y="${Y.neck}" width="32" height="10" rx="5" fill="${CH.scarf}"/>`;
+    // trekking pole (tier 1+)
+    const ra = lb.arms[1];
+    if (t >= 1) {
+      s += `<line x1="${r2(ra.hx + 1)}" y1="${ra.hy - 26}" x2="${r2(ra.hx + 5)}" y2="${Y.foot + 1}" stroke="#aeb8c6" stroke-width="2.6" stroke-linecap="round"/>`;
+      s += `<rect x="${r2(ra.hx - 2)}" y="${ra.hy - 30}" width="6" height="12" rx="3" fill="${CH.beanie}"/>`;
+    }
+    // arms + hands
+    lb.arms.forEach((a, i) => {
+      s += `<path d="${a.d}" fill="none" stroke="${i ? CH.jacketSh : CH.jacket}" stroke-width="${r2(g.aw)}" stroke-linecap="round"/>`;
+      s += `<circle cx="${r2(a.hx)}" cy="${r2(a.hy + g.aw * 0.1)}" r="${r2(g.aw * 0.5)}" fill="${CH.jacketSh}"/>`;
+      s += `<circle cx="${r2(a.hx)}" cy="${r2(a.hy + g.aw * 0.55)}" r="${r2(g.aw * 0.42 + 1.5)}" fill="${CH.skin}"/>`;
+    });
+    // head
+    s += `<circle cx="${L(R - 1)}" cy="${Y.head + 4}" r="5" fill="${CH.skinSh}"/><circle cx="${Rr(R - 1)}" cy="${Y.head + 4}" r="5" fill="${CH.skinSh}"/>`;
+    s += `<circle cx="100" cy="${Y.head}" r="${r2(R)}" fill="${CH.skin}"/>`;
+    if (b.f > 0.35) s += `<ellipse cx="100" cy="${r2(Y.head + R * 0.3)}" rx="${r2(R * (0.86 + 0.2 * b.f))}" ry="${r2(R * 0.72)}" fill="${CH.skin}"/>`;
+    if (b.f > 0.7) s += `<path d="M${L(R * 0.45)},${r2(Y.head + R * 0.92)} Q100,${r2(Y.head + R * 1.08)} ${Rr(R * 0.45)},${r2(Y.head + R * 0.92)}" fill="none" stroke="${CH.skinSh}" stroke-width="1.6" stroke-linecap="round"/>`;
+    const ey = Y.head + 5, dx = r2(R * 0.38);
+    if (t >= 2) {
+      s += `<rect x="${r2(100 - dx - 8)}" y="${ey - 5.5}" width="16" height="11" rx="4.5" fill="#1b2233"/><rect x="${r2(100 + dx - 8)}" y="${ey - 5.5}" width="16" height="11" rx="4.5" fill="#1b2233"/>`;
+      s += `<line x1="${r2(100 - dx + 8)}" y1="${ey - 2}" x2="${r2(100 + dx - 8)}" y2="${ey - 2}" stroke="#1b2233" stroke-width="2"/>`;
+      s += `<path d="M${r2(100 - dx - 4)},${ey - 2.5} l4,-1.5 M${r2(100 + dx - 4)},${ey - 2.5} l4,-1.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>`;
+    } else {
+      s += `<g class="${o.anim ? 'ch-blink' : ''}"><ellipse cx="${r2(100 - dx)}" cy="${ey}" rx="2.7" ry="3.2" fill="${CH.eye}"/><ellipse cx="${r2(100 + dx)}" cy="${ey}" rx="2.7" ry="3.2" fill="${CH.eye}"/></g>`;
+      s += `<circle cx="${r2(100 - dx + 0.9)}" cy="${ey - 1.2}" r=".9" fill="#fff"/><circle cx="${r2(100 + dx + 0.9)}" cy="${ey - 1.2}" r=".9" fill="#fff"/>`;
+    }
+    s += `<ellipse cx="${r2(100 - R * 0.58)}" cy="${Y.head + 13}" rx="4.5" ry="2.6" fill="${CH.blush}" opacity=".55"/><ellipse cx="${r2(100 + R * 0.58)}" cy="${Y.head + 13}" rx="4.5" ry="2.6" fill="${CH.blush}" opacity=".55"/>`;
+    s += `<path d="M98.2,${Y.head + 10.5} q1.8,1.6 3.6,0" fill="none" stroke="${CH.skinSh}" stroke-width="1.4" stroke-linecap="round"/>`;
+    s += t >= 3
+      ? `<path d="M94.5,${Y.head + 15} Q100,${Y.head + 22} 105.5,${Y.head + 15} Z" fill="#7a2f2f" stroke="${CH.eye}" stroke-width="1.4" stroke-linejoin="round"/>`
+      : `<path d="M95.5,${Y.head + 15} Q100,${Y.head + 19.5} 104.5,${Y.head + 15}" fill="none" stroke="${CH.eye}" stroke-width="2" stroke-linecap="round"/>`;
+    // hair front
+    if (fem) s += `<rect x="${r2(100 - R + 0.5)}" y="${Y.head - 9}" width="9" height="${r2(R * 0.8)}" rx="4.5" fill="${CH.hair}"/><rect x="${r2(100 + R - 9.5)}" y="${Y.head - 9}" width="9" height="${r2(R * 0.8)}" rx="4.5" fill="${CH.hair}"/>`;
+    else s += `<rect x="${r2(100 - R + 2)}" y="${Y.head - 8}" width="4.5" height="10" rx="2" fill="${CH.hair}"/><rect x="${r2(100 + R - 6.5)}" y="${Y.head - 8}" width="4.5" height="10" rx="2" fill="${CH.hair}"/>`;
+    // beanie
+    s += `<path d="M${L(R + 2)},${Y.head - 8} C${L(R + 2)},${r2(Y.head - R - 16)} ${Rr(R + 2)},${r2(Y.head - R - 16)} ${Rr(R + 2)},${Y.head - 8} Z" fill="${CH.beanie}"/>`;
+    s += `<path d="M${L(R * 0.45)},${Y.head - 12} q-2,-12 1,-${r2(R * 0.6)} M100,${Y.head - 12} v-${r2(R * 0.75)} M${Rr(R * 0.45)},${Y.head - 12} q2,-12 -1,-${r2(R * 0.6)}" fill="none" stroke="${CH.beanieSh}" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>`;
+    s += `<rect x="${r2(100 - R - 4)}" y="${Y.head - 15}" width="${r2(2 * R + 8)}" height="10" rx="5" fill="${CH.beanieSh}"/>`;
+    s += `<circle cx="100" cy="${r2(Y.head - R - 11)}" r="7" fill="${CH.pom}"/>`;
+    s += '</g></g>';
+    return s;
+  }
+  const headViewBox = (b) => { const cy = 246 - (246 - 66) * b.hs; return `${r2(100 - 40 * b.hs)} ${r2(cy - 42 * b.hs)} ${r2(80 * b.hs)} ${r2(80 * b.hs)}`; };
+
+  // =========================================================================
+  // SCENERY
+  // =========================================================================
+  function pine(x, base, h, fill, snow = true) {
+    const w = h * 0.42; let s = `<rect x="${x - h * 0.03}" y="${base - h * 0.14}" width="${h * 0.06}" height="${h * 0.14}" style="fill:${fill}"/>`;
+    [0, 0.28, 0.52].forEach((k, i) => {
+      const top = base - h + k * h, bot = base - h * 0.12 - (2 - i) * h * 0.12, ww = w * (0.55 + i * 0.25);
+      s += `<path d="M${x},${top} L${x + ww},${bot} L${x - ww},${bot} Z" style="fill:${fill}"/>`;
+      if (snow) s += `<path d="M${x},${top} L${x + ww * 0.35},${top + (bot - top) * 0.35} L${x},${top + (bot - top) * 0.28} L${x - ww * 0.35},${top + (bot - top) * 0.35} Z" style="fill:var(--snow)" opacity=".9"/>`;
+    });
+    return s;
+  }
+  function buildScenes() {
+    const stars = [[30, 30], [80, 18], [140, 42], [190, 22], [250, 36], [370, 24], [215, 60], [110, 70], [60, 90], [300, 80]]
+      .map(([x, y], i) => `<circle class="twinkle" style="animation-delay:${i * 0.37}s;fill:#fff" cx="${x}" cy="${y}" r="${i % 3 ? 1 : 1.5}"/>`).join('');
+    $('#sceneSvg').innerHTML = `
+      <defs>
+        <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--sky1)"/><stop offset="1" style="stop-color:var(--sky2)"/></linearGradient>
+        <radialGradient id="fireG"><stop offset="0" stop-color="#f6b14a" stop-opacity=".6"/><stop offset="1" stop-color="#f6b14a" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect width="400" height="300" fill="url(#skyG)"/>
+      ${stars}
+      <circle cx="318" cy="70" r="24" style="fill:var(--snow)" opacity=".28"/><circle cx="312" cy="64" r="8" style="fill:var(--snow)" opacity=".12"/><circle cx="326" cy="78" r="5" style="fill:var(--snow)" opacity=".12"/>
+      <path d="M0,205 L55,140 L90,170 L150,100 L205,175 L255,125 L305,185 L350,118 L400,165 L400,300 L0,300Z" style="fill:var(--mtn2)"/>
+      <path d="M150,100 L166,120 L156,116 L147,124 L138,114Z M255,125 L268,141 L258,137 L250,144 L244,137Z M350,118 L362,133 L353,130 L344,137 L339,131Z" style="fill:var(--snow)" opacity=".75"/>
+      <path d="M0,232 C80,196 140,226 200,212 C262,198 330,222 400,200 L400,300 L0,300Z" style="fill:var(--mtn1)"/>
+      ${pine(170, 232, 46, 'var(--pine2)')}${pine(196, 226, 36, 'var(--pine2)')}${pine(292, 222, 42, 'var(--pine2)')}
+      ${pine(22, 262, 150, 'var(--pine)')}${pine(378, 258, 160, 'var(--pine)')}${pine(340, 250, 96, 'var(--pine)')}
+      <path d="M0,258 C90,240 180,254 250,246 C320,238 370,248 400,244 L400,300 L0,300Z" style="fill:var(--snow)"/>
+      <path d="M40,270 q30,-6 60,0 M200,282 q40,-6 80,0 M300,262 q20,-4 40,0" fill="none" style="stroke:var(--snowsh)" stroke-width="2" stroke-linecap="round"/>
+      <g transform="translate(268 206)">
+        <path d="M0,46 L34,0 L70,46 Z" fill="#f2a33b"/><path d="M34,0 L22,46 L46,46 Z" fill="#3f9a5a"/><path d="M34,14 L27,46 L41,46 Z" fill="#1c3a64"/>
+        <path d="M0,46 L34,0 L70,46" fill="none" stroke="#3a3f4a" stroke-width="2.2" stroke-linejoin="round"/><path d="M34,0 l-3,-7" stroke="#3a3f4a" stroke-width="2"/>
+      </g>
+      <g transform="translate(222 262)">
+        <circle class="fire-glow" cx="0" cy="-10" r="58" fill="url(#fireG)"/>
+        <rect x="-16" y="-3" width="32" height="7" rx="3.5" fill="#6b3f26" transform="rotate(-14)"/><rect x="-16" y="-3" width="32" height="7" rx="3.5" fill="#5a331f" transform="rotate(14)"/>
+        <path class="flame" d="M0,-2 C-12,-6 -12,-20 -4,-30 C-4,-22 2,-22 1,-34 C10,-24 13,-10 0,-2Z" fill="#f28a2e"/>
+        <path class="flame flame2" d="M0,-3 C-6,-6 -6,-14 -1,-20 C0,-15 4,-15 3,-22 C8,-14 7,-6 0,-3Z" fill="#fcd060"/>
+      </g>
+      <path d="M0,300 L0,280 C10,266 16,272 22,262 C26,276 34,270 38,282 L44,300Z M400,300 L400,276 C390,266 384,272 378,262 C372,276 366,272 360,284 L354,300Z" style="fill:var(--pine)" opacity=".85"/>`;
+    let bp = '';
+    [[10, 190, 170], [52, 190, 120], [90, 190, 90], [300, 190, 100], [342, 190, 140], [392, 190, 175]].forEach(([x, bse, h]) => { bp += pine(x, bse, h, 'var(--bgpine)', false); });
+    $('#bgPines').innerHTML = bp;
+    const flakes = (host, n, dist) => {
+      host.innerHTML = Array.from({ length: n }, () => {
+        const s = (Math.random() * 2.6 + 1.2).toFixed(1);
+        return `<span class="snowflake" style="left:${(Math.random() * 100).toFixed(1)}%;width:${s}px;height:${s}px;opacity:${(Math.random() * 0.5 + 0.35).toFixed(2)};--d:${dist};--dx:${(Math.random() * 30 - 15).toFixed(0)}px;animation-duration:${(Math.random() * 8 + 7).toFixed(1)}s;animation-delay:-${(Math.random() * 12).toFixed(1)}s"></span>`;
+      }).join('');
+    };
+    flakes($('#heroSnow'), 26, '320px');
+    flakes($('#bgSnow'), 22, '105vh');
+  }
+
+  // =========================================================================
+  // GENERIC SPARKLINE
+  // =========================================================================
+  function smoothPath(xy) {
+    let d = `M${r2(xy[0][0])},${r2(xy[0][1])}`;
+    for (let i = 1; i < xy.length; i++) {
+      const [x0, y0] = xy[i - 1], [x1, y1] = xy[i], mx = r2((x0 + x1) / 2);
+      d += ` C${mx},${r2(y0)} ${mx},${r2(y1)} ${r2(x1)},${r2(y1)}`;
+    }
+    return d;
+  }
+  function spark(wrap, o) {
+    const { pts, ref = null, refLabel = '', min = 0, max = 1, color = 'acc', trend = null, empty = '', unit = '', dec = 0 } = o;
+    const has = o.has ?? pts.length > 0;
+    const W = 100, H = 50, pt = 7, pb = 4;
+    const Y = (v) => pt + (1 - (v - min) / ((max - min) || 1)) * (H - pt - pb);
+    const xy = pts.map((p) => [p.x * W, Y(p.y)]);
+    const gid = wrap.id + '-g';
+    const showRef = ref != null && ref >= min && ref <= max;
+    let h = `<svg viewBox="0 0 100 50" preserveAspectRatio="none" class="absolute inset-0 h-full w-full overflow-visible"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:${C(color)};stop-opacity:.45"/><stop offset=".7" style="stop-color:${C(color)};stop-opacity:.07"/><stop offset="1" style="stop-color:${C(color)};stop-opacity:0"/></linearGradient></defs>`;
+    if (showRef) h += `<line x1="0" x2="100" y1="${r2(Y(ref))}" y2="${r2(Y(ref))}" style="stroke:${C('info', 0.6)}" stroke-width="1" stroke-dasharray="3 4" vector-effect="non-scaling-stroke"/>`;
+    if (xy.length) {
+      const d = xy.length === 1 ? `M${r2(xy[0][0] - 0.01)},${r2(xy[0][1])} L${r2(xy[0][0])},${r2(xy[0][1])}` : smoothPath(xy);
+      if (xy.length > 1) h += `<path d="${d} L${r2(xy[xy.length - 1][0])},50 L${r2(xy[0][0])},50 Z" fill="url(#${gid})"/>`;
+      if (trend && trend.length > 1) h += `<path d="${smoothPath(trend.map((v, i) => [xy[i][0], Y(v)]))}" fill="none" style="stroke:${C('warm')}" stroke-width="1.8" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>`;
+      h += `<path d="${d}" fill="none" style="stroke:${C(color)}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" opacity="${has ? 1 : 0.25}"/>`;
+    }
+    h += `<line class="sp-cur" x1="0" x2="0" y1="0" y2="50" style="stroke:${C('soft', 0.45)};display:none" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>`;
+    if (showRef && refLabel) h += `<div class="absolute right-3 -translate-y-full num text-[9.5px] font-bold pb-0.5" style="top:${r2(Y(ref) / H * 100)}%;color:${C('info', 0.9)}">${esc(refLabel)}</div>`;
+    if (xy.length && has) { const l = xy[xy.length - 1]; h += `<div class="absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full pulse-dot" style="left:${r2(l[0])}%;top:${r2(l[1] / H * 100)}%;background:${C(color)}"></div>`; }
+    h += `<div class="sp-tip absolute top-1 -translate-x-1/2 whitespace-nowrap rounded-lg border border-line bg-ink/95 px-2 py-1 num text-[10px] shadow-xl" style="display:none"></div>`;
+    if (!has) h += `<div class="absolute inset-0 grid place-items-center th text-[12px] text-mute px-6 text-center">${esc(empty)}</div>`;
+    wrap.innerHTML = h;
+    wrap._s = { pts, xy, unit, dec };
+    if (!wrap._bound) bindScrub(wrap);
+  }
+  function bindScrub(wrap) {
+    wrap._bound = true;
+    const move = (e) => {
+      const s = wrap._s; if (!s || !s.pts.length) return;
+      const r = wrap.getBoundingClientRect(), x = clamp((e.clientX - r.left) / r.width, 0, 1) * 100;
+      let i = 0, bd = Infinity; s.xy.forEach((p, j) => { const dd = Math.abs(p[0] - x); if (dd < bd) { bd = dd; i = j; } });
+      const cur = wrap.querySelector('.sp-cur'), tip = wrap.querySelector('.sp-tip');
+      cur.setAttribute('x1', s.xy[i][0]); cur.setAttribute('x2', s.xy[i][0]); cur.style.display = '';
+      tip.style.display = ''; tip.style.left = clamp(s.xy[i][0], 14, 86) + '%';
+      tip.innerHTML = `<span class="text-mute">${esc(s.pts[i].label)}</span> <span class="text-txt font-bold">${fmt(s.pts[i].y, s.dec)}</span> <span class="text-mute">${s.unit}</span>`;
+    };
+    const leave = () => { const c = wrap.querySelector('.sp-cur'), t = wrap.querySelector('.sp-tip'); if (c) c.style.display = 'none'; if (t) t.style.display = 'none'; };
+    wrap.addEventListener('pointermove', move);
+    wrap.addEventListener('pointerdown', move);
+    wrap.addEventListener('pointerleave', leave);
+    wrap.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(leave, 1400); });
+  }
 
   // =========================================================================
   // RENDER
   // =========================================================================
   function renderAll() {
-    renderHeader(); renderMain(); renderChart(); renderAlloc(); renderMeals(); renderStatus();
+    renderHeader(); renderHero(); renderMain(); renderCalChart(); renderWeight(); renderAlloc(); renderMeals(); renderStatus();
   }
-
   function renderHeader() {
     $('#modeSelect').value = profile.goal;
-    $('#avatarInitial').textContent = (profile.name || 'N').trim().charAt(0).toUpperCase() || 'N';
+    document.querySelector('meta[name=theme-color]').content = theme === 'obsidian' ? '#0c0d12' : '#1b2944';
+  }
+
+  // ---------- Hero / character ----------
+  let heroF = null, heroRaf = 0, heroSig = '';
+  function renderHero() {
+    const cur = currentWeight(), start = startWeight(), goal = goalWeight();
+    const b = bodyParams(profile, cur), b0 = bodyParams(profile, start);
+    const prog = progressOf(start, cur, goal), tier = tierOf(prog);
+    $('#rankName').textContent = TIERS[tier].en;
+    $('#rankTh').textContent = TIERS[tier].th;
+    $('#heroKg').textContent = fmt(cur, 1);
+    const diff = cur - start, dEl = $('#heroDelta');
+    dEl.textContent = Math.abs(diff) < 0.05 ? 'เริ่มต้นการเดินทาง' : `${diff < 0 ? '▼' : '▲'} ${fmt(Math.abs(diff), 1)} kg จากจุดเริ่ม`;
+    const wantDown = goal < start;
+    dEl.style.color = Math.abs(diff) < 0.05 ? C('cream', 0.7) : (diff < 0) === wantDown ? C('good') : C('bad');
+    $('#hsStart').textContent = fmt(start, 1); $('#hsNow').textContent = fmt(cur, 1); $('#hsGoal').textContent = fmt(goal, 1);
+    const bmiEl = $('#hsBmi'); bmiEl.textContent = fmt(b.bmi, 1);
+    bmiEl.style.color = b.bmi < 18.5 ? C('info') : b.bmi < 23 ? C('good') : b.bmi < 25 ? C('warm') : C('bad'); // Asian BMI cut-offs
+    $('#btnGhost').classList.toggle('!border-acc', showGhost);
+    $('#btnGhost').classList.toggle('!text-acc2', showGhost);
+
+    // trail
+    const path = $('#trailBase'), len = path.getTotalLength(), pt = path.getPointAtLength(len * prog);
+    $('#trailProg').setAttribute('stroke-dasharray', `${r2(prog * 100)} 100`);
+    const mk = $('#trailMarker'); mk.style.left = (pt.x / 300) * 100 + '%'; mk.style.top = (pt.y / 56) * 100 + '%';
+    $('#trailL').textContent = `${fmt(start, 1)} kg`; $('#trailR').textContent = `🚩 ${fmt(goal, 1)} kg`;
+    $('#trailPct').textContent = `${fmt(prog * 100)}% OF TRAIL`;
+
+    // character (tween body shape when weight changes)
+    const sig = [b.f.toFixed(4), b0.f.toFixed(4), b.hs, b.m, b.sex, tier, showGhost].join('|');
+    if (sig === heroSig) return;
+    heroSig = sig;
+    const draw = (f) => {
+      const bb = { ...b, f }, ghost = showGhost && Math.abs(b0.f - f) > 0.004 ? b0 : null;
+      $('#charBox').innerHTML = `<svg viewBox="0 0 200 260" class="h-full w-full overflow-visible">${charSVG(bb, { uid: 'hero', tier, ghostB: ghost, anim: true })}</svg>`;
+      const head = charSVG(bb, { uid: 'av', tier });
+      const av = $('#avatarSvg'); av.setAttribute('viewBox', headViewBox(bb)); av.innerHTML = head;
+      const tv = $('#trailAvatar'); tv.setAttribute('viewBox', headViewBox(bb)); tv.innerHTML = charSVG(bb, { uid: 'tr', tier });
+    };
+    cancelAnimationFrame(heroRaf);
+    const from = heroF == null ? b.f : heroF, to = b.f, t0 = performance.now(), dur = 900;
+    if (Math.abs(from - to) < 0.002) { heroF = to; draw(to); return; }
+    const step = (now) => {
+      const k = clamp((now - t0) / dur, 0, 1), e = 1 - (1 - k) ** 3;
+      heroF = from + (to - from) * e; draw(heroF);
+      if (k < 1) heroRaf = requestAnimationFrame(step);
+    };
+    heroRaf = requestAnimationFrame(step);
   }
 
   function renderMain() {
-    const c = calc(profile);
-    const t = totals(mealsOn(dayKey()));
-    const burned = num(burn[dayKey()]);
-    const budget = c.target + burned;
-    const remaining = budget - t.kcal;
-    const netDeficit = c.tdee + burned - t.kcal;
-
+    const c = calc(profile), t = totals(mealsOn(dayKey())), burned = num(burn[dayKey()]);
+    const budget = c.target + burned, remaining = budget - t.kcal, netDeficit = c.tdee + burned - t.kcal;
     const rEl = $('#remainingNum');
     rEl.textContent = (remaining < 0 ? '−' : '') + fmt(Math.abs(Math.round(remaining)));
-    rEl.style.color = remaining < 0 ? '#ef4444' : '#f4f4fb';
-    const left = budget > 0 ? (remaining / budget) * 100 : 0;
-    const rp = $('#remainingPct');
+    rEl.style.color = remaining < 0 ? C('bad') : C('txt');
+    const left = budget > 0 ? (remaining / budget) * 100 : 0, rp = $('#remainingPct');
     rp.textContent = remaining < 0 ? `OVER ${fmt(Math.abs(left), 1)}%` : `${fmt(left, 1)}% LEFT`;
-    rp.style.color = remaining < 0 ? '#ef4444' : '#10b981';
-
-    const g = GOALS[profile.goal] || GOALS.cut20;
-    const db = $('#deficitBadge');
-    db.textContent = g.badge;
-    const tone = profile.goal === 'bulk' ? ['#10b981', 'rgba(16,185,129,.1)', 'rgba(16,185,129,.4)']
-      : profile.goal === 'maintain' ? ['#38bdf8', 'rgba(56,189,248,.1)', 'rgba(56,189,248,.4)']
-      : ['#c4b5fd', 'rgba(139,92,246,.1)', 'rgba(139,92,246,.4)'];
-    db.style.color = tone[0]; db.style.background = tone[1]; db.style.borderColor = tone[2];
-
+    rp.style.color = remaining < 0 ? C('bad') : C('good');
+    const g = GOALS[profile.goal] || GOALS.cut20, db = $('#deficitBadge');
+    db.textContent = g.badge; db.style.color = C(g.tone); db.style.background = C(g.tone, 0.1); db.style.borderColor = C(g.tone, 0.4);
     $('#tdeeLine').innerHTML = `BMR <span class="text-soft">${fmt(c.bmr)}</span> · TDEE <span class="text-soft">${fmt(c.tdee)}</span> · ×${profile.activity} <span class="th">· ${g.th}</span>`;
-    $('#budgetFill').style.width = clamp(budget > 0 ? (t.kcal / budget) * 100 : 0, 0, 100) + '%';
-    $('#budgetFill').className = 'fill ' + (remaining < 0 ? 'bg-bear' : 'bg-gradient-to-r from-violet to-sky2');
-
+    const bf = $('#budgetFill');
+    bf.style.width = clamp(budget > 0 ? (t.kcal / budget) * 100 : 0, 0, 100) + '%';
+    bf.style.background = remaining < 0 ? C('bad') : `linear-gradient(90deg, ${C('acc')}, ${C('info')})`;
     $('#statTarget').textContent = fmt(c.target);
     $('#statConsumed').textContent = fmt(t.kcal);
     const dEl = $('#statDeficit');
     dEl.textContent = (netDeficit >= 0 ? '−' : '+') + fmt(Math.abs(netDeficit));
-    dEl.style.color = netDeficit >= 0 ? '#10b981' : '#ef4444';
+    dEl.style.color = netDeficit >= 0 ? C('good') : C('bad');
     $('#statBurn').textContent = `🔥 +${fmt(burned)} burn`;
   }
 
-  // ---------- Chart ----------
-  function seriesFor(r) {
-    const c = calc(profile);
-    const now = new Date();
-    if (r === '1D') {
-      const list = mealsOn(dayKey()).sort((a, b) => a.ts - b.ts);
-      const pts = [];
-      let cum = 0;
-      const hNow = now.getHours();
-      for (let h = 0; h <= hNow; h++) {
+  function renderCalChart() {
+    $$('#calRange [data-range]').forEach((b) => b.classList.toggle('on', b.dataset.range === range));
+    const c = calc(profile), now = new Date();
+    let pts, ref, title;
+    if (range === '1D') {
+      const list = mealsOn(dayKey()).sort((a, b) => a.ts - b.ts), raw = []; let cum = 0;
+      for (let h = 0; h <= now.getHours(); h++) {
         list.forEach((m) => { if (new Date(m.ts).getHours() === h) cum += num(m.kcal); });
-        pts.push({ y: cum, label: `${String(h).padStart(2, '0')}:00` });
+        raw.push({ y: cum, label: `${String(h).padStart(2, '0')}:00` });
       }
-      pts.push({ y: cum, label: timeStr(now) });
-      return { pts, ref: c.target + num(burn[dayKey()]), title: 'Intraday Intake · สะสมวันนี้', kind: '1D' };
-    }
-    let days = { '1W': 7, '1M': 30, '3M': 90 }[r];
-    if (r === 'ALL') {
-      const first = meals.length ? Math.min(...meals.map((m) => m.ts)) : Date.now();
-      days = Math.max(7, Math.ceil((new Date(dayKey()) - new Date(dayKey(first))) / 864e5) + 1);
-    }
-    const byDay = {};
-    meals.forEach((m) => { const k = dayKey(m.ts); byDay[k] = (byDay[k] || 0) + num(m.kcal); });
-    const pts = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = addDays(now, -i);
-      pts.push({ y: byDay[dayKey(d)] || 0, label: d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) });
-    }
-    return { pts, ref: c.target, title: `Daily Intake · ${r}`, kind: 'multi' };
-  }
-
-  let chartState = null;
-  function renderChart() {
-    $$('.rng [data-range]').forEach((b) => b.classList.toggle('on', b.dataset.range === range));
-    const s = seriesFor(range);
-    const { pts, ref } = s;
-    const W = 100, H = 50, padT = 6, padB = 4;
-    const maxY = Math.max(ref * 1.15, ...pts.map((p) => p.y)) || 1;
-    const X = (i) => (pts.length === 1 ? W : (i / (pts.length - 1)) * W);
-    const Y = (v) => padT + (1 - v / maxY) * (H - padT - padB);
-    const xy = pts.map((p, i) => [X(i), Y(p.y)]);
-
-    let d = `M${xy[0][0]},${xy[0][1]}`;
-    for (let i = 1; i < xy.length; i++) {
-      const [x0, y0] = xy[i - 1], [x1, y1] = xy[i];
-      const mx = (x0 + x1) / 2;
-      d += ` C${mx},${y0} ${mx},${y1} ${x1},${y1}`;
-    }
-    $('#chartLine').setAttribute('d', d);
-    $('#chartArea').setAttribute('d', `${d} L${W},${H} L0,${H} Z`);
-    const ty = Y(ref);
-    const tl = $('#chartTarget'); tl.setAttribute('y1', ty); tl.setAttribute('y2', ty);
-    const lbl = $('#chartTargetLbl'); lbl.style.top = (ty / H) * 100 + '%'; lbl.textContent = `TARGET ${fmt(ref)}`;
-
-    const last = xy[xy.length - 1];
-    const dot = $('#chartDot'); dot.style.left = (last[0] / W) * 100 + '%'; dot.style.top = (last[1] / H) * 100 + '%';
-
-    const hasData = pts.some((p) => p.y > 0);
-    $('#chartEmpty').style.display = hasData ? 'none' : 'grid';
-    $('#chartEmpty').textContent = range === '1D' ? 'ยังไม่มีมื้ออาหารวันนี้ · กด + เพื่อสแกน' : 'ยังไม่มีข้อมูลในช่วงนี้';
-    $('#chartLine').style.opacity = hasData ? 1 : 0.25;
-    dot.style.display = hasData ? '' : 'none';
-
-    $('#chartTitle').textContent = s.title;
-    const meta = $('#chartMeta'), delta = $('#chartDelta');
-    if (s.kind === '1D') {
-      const v = last && pts[pts.length - 1].y;
-      meta.textContent = `${fmt(v)} / ${fmt(ref)} kcal`;
-      const pct = ref ? (v / ref) * 100 : 0;
-      delta.textContent = `${fmt(pct, 1)}% USED`;
-      delta.style.color = pct > 100 ? '#ef4444' : '#a78bfa';
+      raw.push({ y: cum, label: timeStr(now) });
+      pts = raw.map((p, i) => ({ ...p, x: i / (raw.length - 1) }));
+      ref = c.target + num(burn[dayKey()]); title = 'Intraday Intake · สะสมวันนี้';
     } else {
-      const logged = pts.filter((p) => p.y > 0);
-      const avg = logged.length ? logged.reduce((a, p) => a + p.y, 0) / logged.length : 0;
+      let days = { '1W': 7, '1M': 30, '3M': 90 }[range];
+      if (range === 'ALL') {
+        const first = meals.length ? Math.min(...meals.map((m) => m.ts)) : Date.now();
+        days = Math.max(7, Math.round((keyTime(dayKey()) - keyTime(dayKey(first))) / 864e5) + 1);
+      }
+      const byDay = {};
+      meals.forEach((m) => { const k = dayKey(m.ts); byDay[k] = (byDay[k] || 0) + num(m.kcal); });
+      pts = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = addDays(now, -i);
+        pts.push({ x: (days - 1 - i) / (days - 1), y: byDay[dayKey(d)] || 0, label: d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) });
+      }
+      ref = c.target; title = `Daily Intake · ${range}`;
+    }
+    const has = pts.some((p) => p.y > 0);
+    spark($('#calChart'), {
+      pts, ref, refLabel: `TARGET ${fmt(ref)}`, min: 0, max: Math.max(ref * 1.15, ...pts.map((p) => p.y)) || 1,
+      color: 'acc', has, unit: 'kcal', empty: range === '1D' ? 'ยังไม่มีมื้ออาหารวันนี้ · กด + เพื่อสแกน' : 'ยังไม่มีข้อมูลในช่วงนี้',
+    });
+    $('#chartTitle').textContent = title;
+    const meta = $('#chartMeta'), delta = $('#chartDelta');
+    if (range === '1D') {
+      const v = pts[pts.length - 1].y, pct = ref ? (v / ref) * 100 : 0;
+      meta.textContent = `${fmt(v)} / ${fmt(ref)} kcal`;
+      delta.textContent = `${fmt(pct, 1)}% USED`; delta.style.color = pct > 100 ? C('bad') : C('acc2');
+    } else {
+      const logged = pts.filter((p) => p.y > 0), avg = logged.length ? logged.reduce((a, p) => a + p.y, 0) / logged.length : 0;
       meta.textContent = `AVG ${fmt(avg)} kcal · ${logged.length}/${pts.length} days logged`;
       const diff = ref ? ((avg - ref) / ref) * 100 : 0;
       delta.textContent = logged.length ? `${diff >= 0 ? '▲ +' : '▼ '}${fmt(diff, 1)}% vs TGT` : '—';
-      delta.style.color = !logged.length ? '#7c7c96' : Math.abs(diff) <= 5 ? '#10b981' : diff > 0 ? '#ef4444' : '#38bdf8';
+      delta.style.color = !logged.length ? C('mute') : Math.abs(diff) <= 5 ? C('good') : diff > 0 ? C('bad') : C('info');
     }
-    chartState = { pts, xy, W, H };
   }
 
-  // chart scrub
-  (() => {
-    const wrap = $('#chartWrap'), tip = $('#chartTip'), cur = $('#chartCursor');
-    const move = (e) => {
-      if (!chartState) return;
-      const r = wrap.getBoundingClientRect();
-      const ratio = clamp((e.clientX - r.left) / r.width, 0, 1);
-      const { pts, xy, W } = chartState;
-      const i = Math.round(ratio * (pts.length - 1));
-      const x = xy[i][0];
-      cur.setAttribute('x1', x); cur.setAttribute('x2', x); cur.style.display = '';
-      tip.style.display = '';
-      tip.style.left = clamp((x / W) * 100, 12, 88) + '%';
-      tip.innerHTML = `<span class="text-mute">${esc(pts[i].label)}</span> <span class="text-white font-semibold">${fmt(pts[i].y)}</span> <span class="text-mute">kcal</span>`;
-    };
-    const leave = () => { tip.style.display = 'none'; cur.style.display = 'none'; };
-    wrap.addEventListener('pointermove', move);
-    wrap.addEventListener('pointerdown', move);
-    wrap.addEventListener('pointerleave', leave);
-    wrap.addEventListener('pointerup', (e) => { if (e.pointerType !== 'mouse') setTimeout(leave, 1200); });
-  })();
+  function renderWeight() {
+    $$('#wRange [data-wr]').forEach((b) => b.classList.toggle('on', b.dataset.wr === wRange));
+    const all = wEntries(), goal = goalWeight(), cur = currentWeight(), today = keyTime(dayKey());
+    const days = { '1W': 7, '1M': 30, '3M': 90 }[wRange];
+    const startT = wRange === 'ALL' ? (all.length ? Math.min(all[0].t, today - 6 * 864e5) : today - 6 * 864e5) : today - (days - 1) * 864e5;
+    const span = Math.max(1, today - startT);
+    const idx = all.map((e, i) => i).filter((i) => all[i].t >= startT);
+    const pts = idx.map((i) => ({ x: (all[i].t - startT) / span, y: all[i].kg, label: dateStr(all[i].t) }));
+    const trend = idx.map((i) => trendAt(all, i));
+    const ys = pts.map((p) => p.y).concat(trend);
+    let lo = ys.length ? Math.min(...ys) : cur - 1, hi = ys.length ? Math.max(...ys) : cur + 1;
+    if (Math.abs(goal - cur) <= 3) { lo = Math.min(lo, goal); hi = Math.max(hi, goal); }
+    spark($('#wChart'), {
+      pts, trend, ref: goal, refLabel: `GOAL ${fmt(goal, 1)}`, min: lo - 0.6, max: hi + 0.6, color: 'acc2', unit: 'kg', dec: 1,
+      empty: 'ยังไม่มีข้อมูลน้ำหนักในช่วงนี้ · กด "บันทึกน้ำหนักวันนี้"',
+    });
+    const tr = all.length ? trendAt(all, all.length - 1) : null;
+    $('#wTrend').textContent = tr ? fmt(tr, 1) + ' kg' : '—';
+    const rate = weeklyRate(), rEl = $('#wRate'), pEl = $('#wRatePct'), badge = $('#rateBadge');
+    const toGoal = cur - goal;
+    $('#wToGoal').textContent = Math.abs(toGoal) < 0.05 ? 'ถึงแล้ว 🎉' : `${fmt(Math.abs(toGoal), 1)} kg`;
+    let hint = 'บันทึกน้ำหนักอย่างน้อย 3 ครั้งใน 3 สัปดาห์ เพื่อคำนวณอัตราการเปลี่ยนแปลง';
+    if (rate == null) {
+      rEl.textContent = '—'; pEl.textContent = ''; $('#wEta').textContent = '';
+      badge.textContent = 'NEED DATA'; badge.style.color = C('mute'); badge.style.borderColor = C('line'); badge.style.background = 'transparent';
+    } else {
+      const pct = (rate / cur) * 100;
+      rEl.textContent = `${rate > 0 ? '+' : ''}${fmt(rate, 2)} kg`; rEl.style.color = C('txt');
+      pEl.textContent = `${pct > 0 ? '+' : ''}${fmt(pct, 2)}% BW`;
+      const weeks = (rate !== 0 && Math.sign(-toGoal) === Math.sign(rate)) ? Math.abs(toGoal / rate) : null;
+      $('#wEta').textContent = weeks && Math.abs(toGoal) >= 0.05 ? `~${fmt(weeks, weeks < 10 ? 1 : 0)} สัปดาห์` : '';
+      let st;
+      if (profile.goal === 'bulk') {
+        st = pct < 0 ? ['LOSING', 'bad', 'น้ำหนักลดลงระหว่าง Bulk — เพิ่มคาร์บอีก 150–200 kcal/วัน']
+          : pct <= 0.5 ? ['OPTIMAL', 'good', 'เพิ่ม 0.25–0.5% ต่อสัปดาห์ = Lean Bulk ที่ได้กล้ามมากที่สุด ไขมันน้อยที่สุด']
+          : ['TOO FAST', 'warm', 'ขึ้นเร็วเกิน 0.5%/สัปดาห์ ส่วนเกินมักเป็นไขมัน — ลดลงสัก 150 kcal/วัน'];
+      } else if (profile.goal === 'maintain') {
+        st = Math.abs(pct) <= 0.25 ? ['STABLE', 'good', 'น้ำหนักคงที่ดีมาก — รักษาวินัยนี้ไว้'] : [pct > 0 ? 'DRIFTING UP' : 'DRIFTING DOWN', 'warm', 'น้ำหนักเคลื่อนเกิน ±0.25%/สัปดาห์ ปรับแคลอรี่ ±100–150 kcal'];
+      } else {
+        st = pct > 0 ? ['GAINING', 'bad', 'แนวโน้มขึ้นระหว่าง Cut — ตรวจน้ำมันแฝง/ของว่างที่ไม่ได้บันทึก']
+          : pct >= -0.5 ? ['SLOW', 'info', 'ลดช้ากว่า 0.5%/สัปดาห์ — ถ้าต่อเนื่อง 2 สัปดาห์ ลองลดอีก 100–150 kcal']
+          : pct >= -1 ? ['OPTIMAL', 'good', 'ลด 0.5–1% ต่อสัปดาห์ = โซนที่รักษากล้ามเนื้อได้ดีที่สุด 🔥']
+          : ['TOO FAST', 'warm', 'ลดเร็วเกิน 1%/สัปดาห์ เสี่ยงเสียกล้าม — เพิ่มแคลอรี่เล็กน้อยและรักษาโปรตีนให้ถึงเป้า'];
+      }
+      badge.textContent = '● ' + st[0]; badge.style.color = C(st[1]); badge.style.borderColor = C(st[1], 0.45); badge.style.background = C(st[1], 0.1);
+      hint = st[2];
+    }
+    $('#wHint').textContent = hint;
+  }
 
-  // ---------- Allocation ----------
   function renderAlloc() {
-    const c = calc(profile);
-    const t = totals(mealsOn(dayKey()));
+    const c = calc(profile), t = totals(mealsOn(dayKey()));
     const rows = [
-      { k: 'Protein', th: 'โปรตีน · Protein Target', v: t.p, tg: c.protein, u: 'g', color: '#8b5cf6', note: `${profile.proteinPerKg} g/kg` },
-      { k: 'Carbs', th: 'คาร์โบไฮเดรต', v: t.c, tg: c.carbs, u: 'g', color: '#38bdf8', note: 'remainder' },
-      { k: 'Fats', th: 'ไขมัน', v: t.f, tg: c.fat, u: 'g', color: '#f5b544', note: `${profile.fatPct}% kcal` },
-      { k: 'Fiber', th: 'ไฟเบอร์', v: t.fiber, tg: c.fiber, u: 'g', color: '#10b981', note: '14g/1k kcal' },
-      { k: 'Sodium', th: 'โซเดียม · ลิมิต', v: t.sodium, tg: c.sodium, u: 'mg', color: '#a9a9c2', note: 'LIMIT', limit: true },
+      { k: 'Protein', th: 'โปรตีน · Protein Target', v: t.p, tg: c.protein, u: 'g', col: 'acc', note: `${profile.proteinPerKg} g/kg`, more: true },
+      { k: 'Carbs', th: 'คาร์โบไฮเดรต', v: t.c, tg: c.carbs, u: 'g', col: 'info', note: 'remainder' },
+      { k: 'Fats', th: 'ไขมัน', v: t.f, tg: c.fat, u: 'g', col: 'warm', note: `${profile.fatPct}% kcal` },
+      { k: 'Fiber', th: 'ไฟเบอร์', v: t.fiber, tg: c.fiber, u: 'g', col: 'good', note: '14g/1k kcal', more: true },
+      { k: 'Sodium', th: 'โซเดียม · ลิมิต', v: t.sodium, tg: c.sodium, u: 'mg', col: 'soft', note: 'LIMIT', limit: true },
     ];
     $('#allocRows').innerHTML = rows.map((r) => {
-      const pct = r.tg > 0 ? (r.v / r.tg) * 100 : 0;
-      const over = pct > 100;
-      const barColor = r.limit ? (over ? '#ef4444' : pct > 80 ? '#f5b544' : '#a9a9c2') : (over ? (r.k === 'Protein' || r.k === 'Fiber' ? '#10b981' : '#ef4444') : r.color);
-      const pctColor = r.limit ? (over ? '#ef4444' : '#a9a9c2') : pct >= 90 && pct <= 110 ? '#10b981' : over ? (r.k === 'Protein' || r.k === 'Fiber' ? '#10b981' : '#ef4444') : '#e8e8f2';
+      const pct = r.tg > 0 ? (r.v / r.tg) * 100 : 0, over = pct > 100;
+      const bar = r.limit ? (over ? C('bad') : pct > 80 ? C('warm') : C('soft')) : over ? (r.more ? C('good') : C('bad')) : C(r.col);
+      const pc = r.limit ? (over ? C('bad') : C('soft')) : pct >= 90 && pct <= 110 ? C('good') : over ? (r.more ? C('good') : C('bad')) : C('txt');
       return `
         <div class="py-3">
           <div class="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
             <div class="flex items-center gap-2 min-w-0">
-              <span class="h-2 w-2 rounded-[3px] shrink-0" style="background:${r.color}"></span>
+              <span class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${C(r.col)}"></span>
               <div class="min-w-0">
-                <div class="text-[13px] font-semibold leading-tight">${r.k} <span class="chip num !text-[8.5px] !py-0 !px-1.5 ml-1 text-mute align-middle">${r.note}</span></div>
+                <div class="text-[13px] font-bold leading-tight">${r.k} <span class="chip num !text-[8.5px] !py-0 !px-1.5 ml-1 text-mute align-middle">${r.note}</span></div>
                 <div class="th text-[10.5px] text-mute leading-tight mt-0.5 truncate">${r.th}</div>
               </div>
             </div>
-            <div class="num text-right w-[92px] text-[12px]"><span class="text-white font-semibold">${fmt(r.v)}</span><span class="text-mute">/${fmt(r.tg)}${r.u}</span></div>
-            <div class="num text-right w-[40px] text-[11px] font-semibold" style="color:${pctColor}">${fmt(pct)}%</div>
+            <div class="num text-right w-[92px] text-[12px]"><span class="text-txt font-bold">${fmt(r.v)}</span><span class="text-mute">/${fmt(r.tg)}${r.u}</span></div>
+            <div class="num text-right w-[40px] text-[11px] font-bold" style="color:${pc}">${fmt(pct)}%</div>
           </div>
-          <div class="track mt-2 !h-[3px]"><div class="fill" style="width:${clamp(pct, 0, 100)}%;background:${barColor}"></div></div>
+          <div class="track mt-2 !h-[4px]"><div class="fill" style="width:${clamp(pct, 0, 100)}%;background:${bar}"></div></div>
         </div>`;
     }).join('');
-
-    const kp = t.p * 4, kc = t.c * 4, kf = t.f * 9, sum = kp + kc + kf;
-    const bar = $('#splitBar');
+    const kp = t.p * 4, kc = t.c * 4, kf = t.f * 9, sum = kp + kc + kf, bar = $('#splitBar');
+    const seg = (vals, op = 1) => vals.map(([v, col]) => `<div style="width:${(v / (vals.reduce((a, x) => a + x[0], 0) || 1)) * 100}%;background:${C(col)};opacity:${op}" class="h-full transition-all duration-700"></div>`).join('');
     if (sum > 0) {
-      bar.innerHTML = [[kp, '#8b5cf6'], [kc, '#38bdf8'], [kf, '#f5b544']].map(([v, col]) => `<div style="width:${(v / sum) * 100}%;background:${col}" class="h-full transition-all duration-700"></div>`).join('');
-      $('#splitLegend').innerHTML = `<span style="color:#a78bfa">P ${fmt((kp / sum) * 100)}%</span> · <span style="color:#38bdf8">C ${fmt((kc / sum) * 100)}%</span> · <span style="color:#f5b544">F ${fmt((kf / sum) * 100)}%</span>`;
+      bar.innerHTML = seg([[kp, 'acc'], [kc, 'info'], [kf, 'warm']]);
+      $('#splitLegend').innerHTML = `<span style="color:${C('acc2')}">P ${fmt((kp / sum) * 100)}%</span> · <span style="color:${C('info')}">C ${fmt((kc / sum) * 100)}%</span> · <span style="color:${C('warm')}">F ${fmt((kf / sum) * 100)}%</span>`;
     } else {
       const tp = c.protein * 4, tc = c.carbs * 4, tf = c.fat * 9, ts = tp + tc + tf || 1;
-      bar.innerHTML = [[tp, '#8b5cf6'], [tc, '#38bdf8'], [tf, '#f5b544']].map(([v, col]) => `<div style="width:${(v / ts) * 100}%;background:${col};opacity:.3" class="h-full"></div>`).join('');
+      bar.innerHTML = seg([[tp, 'acc'], [tc, 'info'], [tf, 'warm']], 0.3);
       $('#splitLegend').innerHTML = `<span class="text-mute">TARGET P ${fmt((tp / ts) * 100)} · C ${fmt((tc / ts) * 100)} · F ${fmt((tf / ts) * 100)}</span>`;
     }
   }
 
-  // ---------- Meals log ----------
   function mealIcon(m) {
     if (m.thumb) return `<img src="${m.thumb}" alt="" class="h-10 w-10 rounded-xl object-cover border border-line shrink-0" />`;
-    const col = num(m.p) >= MPS_PROTEIN_G ? '#10b981' : '#a78bfa';
-    return `<div class="h-10 w-10 rounded-xl border border-line bg-gradient-to-br from-[#1f1f30] to-[#15151f] grid place-items-center shrink-0" style="color:${col}"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>`;
+    const col = num(m.p) >= MPS_PROTEIN_G ? C('good') : C('acc2');
+    return `<div class="h-10 w-10 rounded-xl border border-line bg-ink/50 grid place-items-center shrink-0" style="color:${col}"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg></div>`;
   }
   function renderMeals() {
     $$('#logFilter [data-lf]').forEach((b) => b.classList.toggle('on', b.dataset.lf === logFilter));
-    const today = dayKey();
-    const minTs = logFilter === '7d' ? new Date(dayKey(addDays(new Date(), -6))).getTime() : 0;
-    let list = logFilter === 'today' ? mealsOn(today) : meals.filter((m) => m.ts >= minTs);
-    list = list.sort((a, b) => b.ts - a.ts);
+    const today = dayKey(), minTs = logFilter === '7d' ? keyTime(dayKey(addDays(new Date(), -6))) : 0;
+    const list = (logFilter === 'today' ? mealsOn(today) : meals.filter((m) => m.ts >= minTs)).sort((a, b) => b.ts - a.ts);
     $('#logCount').textContent = list.length;
     const box = $('#mealList');
     if (!list.length) {
@@ -854,50 +1325,46 @@
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>
           </div>
           <p class="th text-[13px] mt-3">ยังไม่มีรายการ</p>
-          <p class="th text-[11px] text-mute mt-1">กดปุ่ม <span class="text-violet font-semibold">+</span> ด้านล่างเพื่อสแกนมื้อแรก</p>
+          <p class="th text-[11px] text-mute mt-1">กดปุ่ม <span class="text-acc2 font-bold">+</span> ด้านล่างเพื่อสแกนมื้อแรก</p>
         </div>`;
       return;
     }
     let lastDay = null;
     box.innerHTML = list.slice(0, 200).map((m) => {
-      const k = dayKey(m.ts);
-      let head = '';
+      const k = dayKey(m.ts); let head = '';
       if (logFilter !== 'today' && k !== lastDay) {
-        lastDay = k;
-        const dt = totals(mealsOn(k));
-        head = `<div class="flex items-center justify-between px-4 py-1.5 bg-ink/50 border-b hair num text-[10px] text-mute"><span>${k === today ? 'TODAY' : esc(dateStr(m.ts))}</span><span>${fmt(dt.kcal)} kcal · P ${fmt(dt.p)}g</span></div>`;
+        lastDay = k; const dt = totals(mealsOn(k));
+        head = `<div class="flex items-center justify-between px-4 py-1.5 bg-ink/40 border-b border-line/60 num text-[10px] text-mute"><span>${k === today ? 'TODAY' : esc(dateStr(m.ts))}</span><span>${fmt(dt.kcal)} kcal · P ${fmt(dt.p)}g</span></div>`;
       }
       const mps = m.mps ?? num(m.p) >= MPS_PROTEIN_G;
-      const src = m.source === 'gemini' ? '<span class="chip !text-[8.5px] !px-1.5 !py-0 text-sky2 border-sky2/30">AI</span>'
-        : m.source === 'demo' ? '<span class="chip !text-[8.5px] !px-1.5 !py-0 text-mute">DEMO</span>'
-        : m.source === 'sample' ? '<span class="chip !text-[8.5px] !px-1.5 !py-0 text-mute">SAMPLE</span>' : '';
+      const tag = (txt, col) => `<span class="chip !text-[8.5px] !px-1.5 !py-0" style="color:${C(col)};border-color:${C(col, 0.35)}">${txt}</span>`;
+      const src = m.source === 'gemini' ? tag('AI', 'info') : m.source === 'demo' ? tag('DEMO', 'mute') : m.source === 'sample' ? tag('SAMPLE', 'mute') : '';
       return `${head}
-        <button data-meal="${esc(m.id)}" class="w-full flex items-center gap-3 px-4 py-3 border-b hair text-left hover:bg-white/[.02] active:bg-white/[.04] transition">
+        <button data-meal="${esc(m.id)}" class="w-full flex items-center gap-3 px-4 py-3 border-b border-line/60 text-left hover:bg-white/[.03] active:bg-white/[.05] transition">
           ${mealIcon(m)}
           <div class="min-w-0 flex-1">
             <div class="th text-[13.5px] font-medium truncate">${esc(m.name)}</div>
             <div class="mt-1 flex items-center gap-1.5 flex-wrap">
               <span class="num text-[10.5px] text-mute">${timeStr(m.ts)}</span>
-              <span class="chip num !text-[9px] !px-1.5 !py-0 ${mps ? 'text-bull border-bull/40 bg-bull/10' : 'text-soft'}">P ${fmt(m.p)}g${mps ? ' ✓' : ''}</span>
+              <span class="chip num !text-[9px] !px-1.5 !py-0" style="color:${mps ? C('good') : C('soft')};border-color:${mps ? C('good', 0.4) : C('line')};background:${mps ? C('good', 0.1) : 'transparent'}">P ${fmt(m.p)}g${mps ? ' ✓' : ''}</span>
               ${src}
             </div>
           </div>
           <div class="text-right shrink-0">
-            <div class="num text-[14px] font-semibold text-[#f87171]">−${fmt(m.kcal)}</div>
+            <div class="num text-[14px] font-bold text-bad">−${fmt(m.kcal)}</div>
             <div class="num text-[10px] text-mute mt-0.5">C ${fmt(m.c)} · F ${fmt(m.f)}</div>
           </div>
         </button>`;
     }).join('');
   }
 
-  // ---------- Status / Quote ----------
   function renderQuote(dir = 0) {
     const box = $('#quoteBox');
     const apply = () => {
       const q = QUOTES[quoteIdx];
-      $('#quoteText').textContent = q.t;
+      $('#quoteText').textContent = `"${q.t}"`;
       $('#quoteAuthor').textContent = q.a;
-      $('#quoteDots').innerHTML = QUOTES.map((_, i) => `<button data-q="${i}" aria-label="quote ${i + 1}" class="h-1.5 rounded-full transition-all ${i === quoteIdx ? 'w-5 bg-violet' : 'w-1.5 bg-line hover:bg-mute'}"></button>`).join('');
+      $('#quoteDots').innerHTML = QUOTES.map((_, i) => `<button data-q="${i}" aria-label="quote ${i + 1}" class="h-1.5 rounded-full transition-all ${i === quoteIdx ? 'w-5 bg-acc2' : 'w-1.5 bg-line hover:bg-mute'}"></button>`).join('');
       box.style.opacity = 1; box.style.transform = 'none';
     };
     if (!dir) return apply();
@@ -905,21 +1372,17 @@
     setTimeout(apply, 180);
   }
   function renderStatus() {
-    const c = calc(profile);
-    const list = mealsOn(dayKey());
-    const t = totals(list);
-    const budget = c.target + num(burn[dayKey()]);
-    const hr = new Date().getHours();
-    const pPct = t.p / c.protein;
+    const c = calc(profile), list = mealsOn(dayKey()), t = totals(list);
+    const budget = c.target + num(burn[dayKey()]), hr = new Date().getHours(), pPct = t.p / c.protein;
     let s;
-    if (!list.length) s = ['READY', '#38bdf8', 'ยังไม่มีบันทึกวันนี้ — เริ่มต้นวันด้วยมื้อที่มีโปรตีน ≥ 25g เพื่อกระตุ้น MPS'];
-    else if (t.kcal > budget) s = ['OVER BUDGET', '#ef4444', `เกินงบแคลอรี่ ${fmt(t.kcal - budget)} kcal — มื้อถัดไปเน้นผัก + โปรตีนลีน ไม่ต้องชดเชยด้วยการอด`];
-    else if (t.sodium > SODIUM_LIMIT) s = ['SODIUM ALERT', '#ef4444', `โซเดียม ${fmt(t.sodium)} mg เกินลิมิต — ดื่มน้ำเพิ่ม น้ำหนักพรุ่งนี้อาจขึ้นจากน้ำ ไม่ใช่ไขมัน`];
-    else if (hr >= 17 && pPct < 0.7) s = ['PROTEIN LOW', '#a78bfa', `โปรตีนยังขาด ${fmt(c.protein - t.p)} g — เติมอกไก่/ไข่ขาว/เวย์ในมื้อเย็น`];
-    else if (t.kcal > budget * 0.9) s = ['NEAR LIMIT', '#f5b544', `เหลืออีก ${fmt(budget - t.kcal)} kcal — เลือกมื้อเบาที่โปรตีนสูง`];
-    else s = ['ON TRACK', '#10b981', `คงเหลือ ${fmt(budget - t.kcal)} kcal · โปรตีน ${fmt(pPct * 100)}% ของเป้า — วินัยดีมาก`];
+    if (!list.length) s = ['READY', 'info', 'ยังไม่มีบันทึกวันนี้ — เริ่มต้นวันด้วยมื้อที่มีโปรตีน ≥ 25g เพื่อกระตุ้น MPS'];
+    else if (t.kcal > budget) s = ['OVER BUDGET', 'bad', `เกินงบแคลอรี่ ${fmt(t.kcal - budget)} kcal — มื้อถัดไปเน้นผัก + โปรตีนลีน ไม่ต้องชดเชยด้วยการอด`];
+    else if (t.sodium > SODIUM_LIMIT) s = ['SODIUM ALERT', 'bad', `โซเดียม ${fmt(t.sodium)} mg เกินลิมิต — ดื่มน้ำเพิ่ม น้ำหนักพรุ่งนี้อาจขึ้นจากน้ำ ไม่ใช่ไขมัน`];
+    else if (hr >= 17 && pPct < 0.7) s = ['PROTEIN LOW', 'acc2', `โปรตีนยังขาด ${fmt(c.protein - t.p)} g — เติมอกไก่/ไข่ขาว/เวย์ในมื้อเย็น`];
+    else if (t.kcal > budget * 0.9) s = ['NEAR LIMIT', 'warm', `เหลืออีก ${fmt(budget - t.kcal)} kcal — เลือกมื้อเบาที่โปรตีนสูง`];
+    else s = ['ON TRACK', 'good', `คงเหลือ ${fmt(budget - t.kcal)} kcal · โปรตีน ${fmt(pPct * 100)}% ของเป้า — วินัยดีมาก`];
     const b = $('#statusBadge');
-    b.textContent = '● ' + s[0]; b.style.color = s[1]; b.style.borderColor = s[1] + '66'; b.style.background = s[1] + '14';
+    b.textContent = '● ' + s[0]; b.style.color = C(s[1]); b.style.borderColor = C(s[1], 0.4); b.style.background = C(s[1], 0.08);
     $('#statusHint').textContent = s[2];
   }
 
@@ -927,18 +1390,16 @@
   // PROFILE MODAL
   // =========================================================================
   let draft = { ...profile };
-  function segBind(id, key, parse = (v) => v) {
-    $('#' + id).addEventListener('click', (e) => {
-      const b = e.target.closest('[data-v]'); if (!b) return;
-      draft[key] = parse(b.dataset.v); syncProfileForm();
-    });
+  function segBind(id, key, parse = (x) => x) {
+    $('#' + id).addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (!b) return; draft[key] = parse(b.dataset.v); syncProfileForm(); });
   }
   segBind('pSex', 'sex'); segBind('pGoal', 'goal'); segBind('pProt', 'proteinPerKg', Number);
   function syncProfileForm(fill = false) {
     if (fill) {
       $('#pName').value = draft.name || ''; $('#pAge').value = draft.age; $('#pHeight').value = draft.height; $('#pWeight').value = draft.weight;
-      $('#pActivity').value = String(draft.activity); $('#pFat').value = draft.fatPct;
+      $('#pGoalW').value = num(draft.goalWeight) > 0 ? draft.goalWeight : ''; $('#pActivity').value = String(draft.activity); $('#pFat').value = draft.fatPct;
     }
+    $('#pGoalW').placeholder = `แนะนำ ${fmt(defaultGoalWeight(draft, num(draft.weight)), 1)} kg`;
     $$('#pSex [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.sex));
     $$('#pGoal [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.goal));
     $$('#pProt [data-v]').forEach((b) => b.classList.toggle('on', Number(b.dataset.v) === Number(draft.proteinPerKg)));
@@ -950,43 +1411,116 @@
     if (c.carbs < 100) warns.push('คาร์บต่ำกว่า 100g อาจกระทบประสิทธิภาพการซ้อม ลองลด Deficit หรือเพิ่มระดับกิจกรรม');
     if (draft.sex === 'female' ? c.target < 1200 : c.target < 1500) warns.push('Target ต่ำกว่าค่าขั้นต่ำที่แนะนำ ควรปรึกษาผู้เชี่ยวชาญ');
     $('#cvWarn').textContent = warns.join(' · ');
+    const pb = bodyParams(draft, num(draft.weight, 70));
+    $('#pPreview').innerHTML = charSVG(pb, { uid: 'pv', tier: 0 });
   }
-  ['pName', 'pAge', 'pHeight', 'pWeight', 'pActivity', 'pFat'].forEach((id) => {
+  ['pName', 'pAge', 'pHeight', 'pWeight', 'pGoalW', 'pActivity', 'pFat'].forEach((id) => {
     $('#' + id).addEventListener('input', () => {
       draft.name = $('#pName').value.trim();
       draft.age = num($('#pAge').value, draft.age); draft.height = num($('#pHeight').value, draft.height); draft.weight = num($('#pWeight').value, draft.weight);
+      draft.goalWeight = num($('#pGoalW').value) > 0 ? num($('#pGoalW').value) : null;
       draft.activity = Number($('#pActivity').value); draft.fatPct = Number($('#pFat').value);
       syncProfileForm();
     });
   });
-  function openProfile() { draft = { ...profile }; syncProfileForm(true); openModal('mProfile'); }
+  function openProfile() { draft = { ...profile, weight: currentWeight() }; syncProfileForm(true); openModal('mProfile'); }
   $('#btnProfile').addEventListener('click', openProfile);
   $('#pSave').addEventListener('click', () => {
-    const bad = !(draft.age >= 13 && draft.age <= 90) || !(draft.height >= 120 && draft.height <= 230) || !(draft.weight >= 30 && draft.weight <= 250);
-    if (bad) return toast('กรุณากรอก อายุ 13–90, ส่วนสูง 120–230 cm, น้ำหนัก 30–250 kg', 'bear');
+    const bad = !(draft.age >= 13 && draft.age <= 90) || !(draft.height >= 120 && draft.height <= 230) || !(draft.weight >= 30 && draft.weight <= 250) || (draft.goalWeight != null && !(draft.goalWeight >= 30 && draft.goalWeight <= 250));
+    if (bad) return toast('กรุณากรอก อายุ 13–90, ส่วนสูง 120–230 cm, น้ำหนัก 30–250 kg', 'bad');
+    const changedW = !wEntries().length || Math.abs(draft.weight - currentWeight()) >= 0.05;
     profile = { ...draft }; save(KEYS.profile, profile);
+    if (changedW) setWeight(dayKey(), draft.weight);
     closeModal('mProfile'); renderAll(); toast('บันทึกโปรไฟล์แล้ว · Target ' + fmt(calc(profile).target) + ' kcal');
   });
   $('#modeSelect').addEventListener('change', (e) => {
     profile.goal = e.target.value; save(KEYS.profile, profile); renderAll();
-    toast('เปลี่ยนโหมดเป็น ' + e.target.options[e.target.selectedIndex].text, 'violet');
+    toast('เปลี่ยนโหมดเป็น ' + e.target.options[e.target.selectedIndex].text, 'acc');
   });
+
+  // =========================================================================
+  // WEIGHT MODAL
+  // =========================================================================
+  function renderWeightList() {
+    const list = wEntries().reverse().slice(0, 14);
+    $('#wList').innerHTML = list.length ? list.map((e, i) => {
+      const prev = list[i + 1], d = prev ? e.kg - prev.kg : 0;
+      return `<div class="flex items-center justify-between py-2 text-[12.5px]">
+        <span class="num text-soft">${esc(new Date(e.t).toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' }))}</span>
+        <span class="flex items-center gap-3"><span class="num font-bold">${fmt(e.kg, 1)} kg</span>
+        <span class="num text-[11px] w-12 text-right" style="color:${!prev ? C('mute') : d < 0 ? C('good') : d > 0 ? C('bad') : C('mute')}">${prev ? (d > 0 ? '+' : '') + fmt(d, 1) : '—'}</span>
+        <button data-wdel="${e.d}" class="h-6 w-6 rounded-full border border-line text-mute text-[11px] hover:text-bad hover:border-bad">✕</button></span></div>`;
+    }).join('') : '<p class="text-[12px] text-mute py-2">ยังไม่มีประวัติ</p>';
+  }
+  function syncWPrev() {
+    const d = $('#wDate').value, kg = num($('#wInput').value);
+    const before = wEntries().filter((e) => e.d < d).pop();
+    $('#wPrevInfo').innerHTML = before
+      ? `ครั้งก่อน (${esc(dateStr(before.t))}): <b class="num">${fmt(before.kg, 1)} kg</b> · เปลี่ยนแปลง <b class="num" style="color:${kg - before.kg <= 0 ? C('good') : C('bad')}">${kg - before.kg > 0 ? '+' : ''}${fmt(kg - before.kg, 1)} kg</b>`
+      : 'นี่คือการบันทึกครั้งแรก — จะใช้เป็นจุดเริ่มต้นของการเดินทาง 🏕️';
+  }
+  function openWeigh() {
+    $('#wDate').value = dayKey(); $('#wDate').max = dayKey();
+    $('#wInput').value = num(weights[dayKey()] ?? currentWeight()).toFixed(1);
+    syncWPrev(); renderWeightList(); openModal('mWeight');
+  }
+  $('#btnWeigh').addEventListener('click', openWeigh);
+  $('#wInput').addEventListener('input', syncWPrev);
+  $('#wDate').addEventListener('change', () => { const d = $('#wDate').value; if (weights[d]) $('#wInput').value = num(weights[d]).toFixed(1); syncWPrev(); });
+  $$('[data-step]').forEach((b) => b.addEventListener('click', () => { $('#wInput').value = (num($('#wInput').value, currentWeight()) + Number(b.dataset.step)).toFixed(1); syncWPrev(); }));
+  $('#wSave').addEventListener('click', () => {
+    const kg = num($('#wInput').value), d = $('#wDate').value || dayKey();
+    if (!(kg >= 30 && kg <= 250)) return toast('น้ำหนักต้องอยู่ระหว่าง 30–250 kg', 'bad');
+    if (d > dayKey()) return toast('บันทึกล่วงหน้าไม่ได้', 'bad');
+    const prevCur = currentWeight(), tierBefore = tierOf(progressOf(startWeight(), prevCur, goalWeight()));
+    setWeight(d, kg); closeModal('mWeight'); renderAll();
+    const tierAfter = tierOf(progressOf(startWeight(), currentWeight(), goalWeight())), diff = currentWeight() - prevCur;
+    if (tierAfter > tierBefore) toast(`🏆 เลื่อนขั้นเป็น ${TIERS[tierAfter].en}!`, 'warm');
+    else toast(Math.abs(diff) < 0.05 ? `บันทึก ${fmt(kg, 1)} kg แล้ว` : `บันทึกแล้ว · ${diff > 0 ? '+' : ''}${fmt(diff, 1)} kg`, diff <= 0 ? 'good' : 'info');
+    $('#secHero').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  $('#wList').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-wdel]'); if (!b) return;
+    delete weights[b.dataset.wdel]; save(KEYS.weights, weights);
+    if (!wEntries().length) profile.startWeight = null;
+    profile.weight = currentWeight(); save(KEYS.profile, profile);
+    renderWeightList(); syncWPrev(); renderAll();
+  });
+  $('#btnGhost').addEventListener('click', () => { showGhost = !showGhost; save(KEYS.ghost, showGhost); renderHero(); toast(showGhost ? 'แสดงเงาร่างตอนเริ่มต้น' : 'ซ่อนเงาร่างตอนเริ่มต้น', 'info'); });
 
   // =========================================================================
   // SETTINGS
   // =========================================================================
   const getKey = () => load(KEYS.apiKey, '');
-  const getModel = () => load(KEYS.model, '') || 'gemini-2.5-flash';
-  $('#btnSettings').addEventListener('click', () => { $('#sKey').value = getKey(); $('#sModel').value = getModel(); openModal('mSettings'); });
+  const getModel = () => load(KEYS.model, '') || DEFAULT_MODEL;
+  function applyTheme(t) {
+    theme = t; document.documentElement.dataset.theme = t; save(KEYS.theme, t);
+    $$('#sTheme [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === t));
+    heroSig = ''; renderAll();
+  }
+  $('#sTheme').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) applyTheme(b.dataset.v); });
+  function syncModelSelect() {
+    const m = getModel(), sel = $('#sModel'), known = [...sel.options].some((o) => o.value === m);
+    sel.value = known ? m : 'custom';
+    $('#sModelCustom').classList.toggle('hidden', known);
+    $('#sModelCustom').value = known ? '' : m;
+  }
+  $('#sModel').addEventListener('change', () => $('#sModelCustom').classList.toggle('hidden', $('#sModel').value !== 'custom'));
+  $('#btnSettings').addEventListener('click', () => {
+    $('#sKey').value = getKey(); syncModelSelect();
+    $$('#sTheme [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === theme));
+    openModal('mSettings');
+  });
   $$('[data-toggle-pw]').forEach((b) => b.addEventListener('click', () => {
     const i = $('#' + b.dataset.togglePw); i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'แสดง' : 'ซ่อน';
   }));
   $('#sSaveKey').addEventListener('click', () => {
-    save(KEYS.apiKey, $('#sKey').value.trim()); save(KEYS.model, $('#sModel').value.trim() || 'gemini-2.5-flash');
-    syncKeyState(); toast('บันทึก API แล้ว'); closeModal('mSettings');
+    const sel = $('#sModel').value, model = sel === 'custom' ? ($('#sModelCustom').value.trim() || DEFAULT_MODEL) : sel;
+    save(KEYS.apiKey, $('#sKey').value.trim()); save(KEYS.model, model);
+    syncKeyState(); toast('บันทึก API แล้ว · ' + model); closeModal('mSettings');
   });
   $('#sExport').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify({ app: 'nutri-journal', v: 1, profile, meals, burn }, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify({ app: 'nutri-journal', v: 2, profile, meals, burn, weights }, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `nutri-journal-${dayKey()}.json`; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   });
@@ -995,31 +1529,24 @@
     try {
       const d = JSON.parse(await f.text());
       if (!Array.isArray(d.meals)) throw new Error('bad');
-      profile = { ...DEFAULT_PROFILE, ...(d.profile || {}) }; meals = d.meals; burn = d.burn || {};
-      save(KEYS.profile, profile); save(KEYS.meals, meals); save(KEYS.burn, burn);
-      renderAll(); closeModal('mSettings'); toast(`นำเข้า ${meals.length} รายการ`);
-    } catch { toast('ไฟล์ไม่ถูกต้อง', 'bear'); }
+      profile = { ...DEFAULT_PROFILE, ...(d.profile || {}) }; meals = d.meals; burn = d.burn || {}; weights = d.weights || {};
+      save(KEYS.profile, profile); save(KEYS.meals, meals); save(KEYS.burn, burn); save(KEYS.weights, weights);
+      heroF = null; heroSig = ''; renderAll(); closeModal('mSettings'); toast(`นำเข้า ${meals.length} มื้อ · ${Object.keys(weights).length} น้ำหนัก`);
+    } catch { toast('ไฟล์ไม่ถูกต้อง', 'bad'); }
     e.target.value = '';
   });
   $('#sReset').addEventListener('click', () => {
-    if (!confirm('ลบประวัติมื้ออาหารและโปรไฟล์ทั้งหมด? (API Key จะยังอยู่)')) return;
-    meals = []; burn = {}; profile = { ...DEFAULT_PROFILE };
-    [KEYS.meals, KEYS.burn, KEYS.profile].forEach((k) => localStorage.removeItem(k));
-    renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bear');
+    if (!confirm('ลบประวัติมื้ออาหาร น้ำหนัก และโปรไฟล์ทั้งหมด? (API Key และธีมจะยังอยู่)')) return;
+    meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE };
+    [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW].forEach((k) => localStorage.removeItem(k));
+    heroF = null; heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bad');
   });
   $('#sSample').addEventListener('click', () => {
-    const c = calc(profile);
-    const pool = DEMO_DISHES;
-    const out = [];
+    const c = calc(profile), out = [];
     for (let i = 30; i >= 1; i--) {
-      const d = addDays(new Date(), -i);
-      const dayTarget = c.target * (0.82 + Math.random() * 0.3);
-      const slots = [8, 12.5, 16, 19.5];
-      const n = Math.random() > 0.3 ? 4 : 3;
+      const d = addDays(new Date(), -i), dayTarget = c.target * (0.82 + Math.random() * 0.3), slots = [8, 12.5, 16, 19.5], n = Math.random() > 0.3 ? 4 : 3;
       for (let j = 0; j < n; j++) {
-        const dish = pool[Math.floor(Math.random() * pool.length)];
-        const nb = dish.nutritional_breakdown;
-        const scale = (dayTarget / n) / nb.calories;
+        const dish = DEMO_DISHES[Math.floor(Math.random() * DEMO_DISHES.length)], nb = dish.nutritional_breakdown, scale = (dayTarget / n) / nb.calories;
         const t = new Date(d); t.setHours(Math.floor(slots[j]), (slots[j] % 1) * 60 + Math.floor(Math.random() * 20), 0, 0);
         out.push({
           id: uid(), ts: t.getTime(), name: dish.dish_name, source: 'sample',
@@ -1031,71 +1558,66 @@
       }
     }
     meals = meals.filter((m) => m.source !== 'sample').concat(out);
-    save(KEYS.meals, meals); range = '1M'; save(KEYS.range, range); renderAll(); closeModal('mSettings');
-    toast(`โหลดข้อมูลตัวอย่าง ${out.length} มื้อ`, 'violet');
+    // sample weigh-ins: ~0.7%/wk downward trend with daily water noise (only fills empty days)
+    load(KEYS.sampleW, []).forEach((d) => delete weights[d]);
+    const base = currentWeight(), added = [];
+    for (let i = 30; i >= 1; i--) {
+      const d = dayKey(addDays(new Date(), -i));
+      if (weights[d] || Math.random() < 0.2) continue;
+      weights[d] = Math.round((base + 2.6 * (i / 30) + (Math.random() - 0.5) * 0.8) * 10) / 10; added.push(d);
+    }
+    save(KEYS.sampleW, added); save(KEYS.weights, weights); save(KEYS.meals, meals);
+    profile.weight = currentWeight(); profile.startWeight = wEntries()[0]?.kg ?? null; save(KEYS.profile, profile);
+    range = '1M'; save(KEYS.range, range); heroF = null; heroSig = ''; renderAll(); closeModal('mSettings');
+    toast(`โหลดตัวอย่าง ${out.length} มื้อ · ${added.length} น้ำหนัก`, 'acc');
   });
 
   // =========================================================================
   // BURN
   // =========================================================================
   $('#btnBurn').addEventListener('click', () => { $('#burnInput').value = num(burn[dayKey()]) || ''; openModal('mBurn'); setTimeout(() => $('#burnInput').focus(), 300); });
-  $('#burnQuick').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-b]'); if (!b) return;
-    const v = Number(b.dataset.b); $('#burnInput').value = v === 0 ? 0 : num($('#burnInput').value) + v;
-  });
+  $('#burnQuick').addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; const v = Number(b.dataset.b); $('#burnInput').value = v === 0 ? 0 : num($('#burnInput').value) + v; });
   $('#burnSave').addEventListener('click', () => {
     burn[dayKey()] = clamp(Math.round(num($('#burnInput').value)), 0, 5000); save(KEYS.burn, burn);
-    closeModal('mBurn'); renderAll(); toast(`บันทึกการเผาผลาญ +${fmt(burn[dayKey()])} kcal`, 'sky');
+    closeModal('mBurn'); renderAll(); toast(`บันทึกการเผาผลาญ +${fmt(burn[dayKey()])} kcal`, 'info');
   });
 
   // =========================================================================
   // MEAL DETAIL
   // =========================================================================
   function nutritionBlock(m) {
-    const oilKcal = num(m.oil) * 120;
-    const satColor = { High: '#10b981', Moderate: '#f5b544', Low: '#ef4444' }[m.satiety] || '#a9a9c2';
+    const oilKcal = num(m.oil) * 120, satCol = { High: 'good', Moderate: 'warm', Low: 'bad' }[m.satiety] || 'soft';
     const mps = m.mps ?? num(m.p) >= MPS_PROTEIN_G;
+    const cell = (l, v, u, col, big = true) => `<div class="rounded-xl border border-line p-2.5"><div class="text-[9px] text-mute tracking-wider">${l}</div><div class="${big ? 'text-[16px]' : 'text-[14px]'} font-bold mt-0.5" style="color:${C(col)}">${v}<span class="text-[10px] text-mute">${u}</span></div></div>`;
     return `
       <div class="flex items-start gap-3">
         ${m.thumb ? `<img src="${m.thumb}" class="h-16 w-16 rounded-2xl object-cover border border-line" alt="" />` : ''}
         <div class="min-w-0 flex-1">
           <div class="text-[17px] font-semibold leading-snug">${esc(m.name)}</div>
-          <div class="num text-[11px] text-mute mt-1">~${fmt(m.weight)} g · น้ำมันแฝง ${fmt(m.oil, 1)} tbsp <span class="text-amber2">(+${fmt(oilKcal)} kcal)</span></div>
+          <div class="num text-[11px] text-mute mt-1">~${fmt(m.weight)} g · น้ำมันแฝง ${fmt(m.oil, 1)} tbsp <span class="text-warm">(+${fmt(oilKcal)} kcal)</span></div>
         </div>
       </div>
       <div class="mt-4 rounded-2xl border border-line bg-ink/40 p-4">
         <div class="flex items-end justify-between">
-          <div><div class="eyebrow !text-[9px]">Energy</div><div class="num text-[32px] font-bold leading-none mt-1">${fmt(m.kcal)} <span class="text-[13px] text-mute font-medium">kcal</span></div></div>
-          <span class="chip num" style="color:${mps ? '#10b981' : '#a9a9c2'};border-color:${mps ? 'rgba(16,185,129,.4)' : '#252538'};background:${mps ? 'rgba(16,185,129,.1)' : 'transparent'}">MPS ${mps ? 'REACHED ✓' : 'BELOW 25g'}</span>
+          <div><div class="eyebrow !text-[9px]">Energy</div><div class="disp text-[36px] leading-none mt-1">${fmt(m.kcal)} <span class="num text-[13px] text-mute font-medium">kcal</span></div></div>
+          <span class="chip num" style="color:${mps ? C('good') : C('soft')};border-color:${mps ? C('good', 0.4) : C('line')};background:${mps ? C('good', 0.1) : 'transparent'}">MPS ${mps ? 'REACHED ✓' : 'BELOW 25g'}</span>
         </div>
-        <div class="mt-4 grid grid-cols-3 gap-2 num">
-          ${[['PROTEIN', m.p, 'g', '#8b5cf6'], ['CARBS', m.c, 'g', '#38bdf8'], ['FAT', m.f, 'g', '#f5b544']].map(([l, v, u, col]) => `
-            <div class="rounded-xl border border-line p-2.5"><div class="text-[9px] text-mute tracking-wider">${l}</div><div class="text-[16px] font-semibold mt-0.5" style="color:${col}">${fmt(v)}<span class="text-[10px] text-mute">${u}</span></div></div>`).join('')}
-        </div>
-        <div class="mt-2 grid grid-cols-3 gap-2 num">
-          <div class="rounded-xl border border-line p-2.5"><div class="text-[9px] text-mute tracking-wider">FIBER</div><div class="text-[14px] font-semibold mt-0.5 text-bull">${fmt(m.fiber)}<span class="text-[10px] text-mute">g</span></div></div>
-          <div class="rounded-xl border border-line p-2.5"><div class="text-[9px] text-mute tracking-wider">SODIUM</div><div class="text-[14px] font-semibold mt-0.5" style="color:${num(m.sodium) > 1000 ? '#ef4444' : '#e8e8f2'}">${fmt(m.sodium)}<span class="text-[10px] text-mute">mg</span></div></div>
-          <div class="rounded-xl border border-line p-2.5"><div class="text-[9px] text-mute tracking-wider">SATIETY</div><div class="text-[13px] font-semibold mt-0.5" style="color:${satColor}">${esc(m.satiety || '—')}</div></div>
-        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2 num">${cell('PROTEIN', fmt(m.p), 'g', 'acc2')}${cell('CARBS', fmt(m.c), 'g', 'info')}${cell('FAT', fmt(m.f), 'g', 'warm')}</div>
+        <div class="mt-2 grid grid-cols-3 gap-2 num">${cell('FIBER', fmt(m.fiber), 'g', 'good', false)}${cell('SODIUM', fmt(m.sodium), 'mg', num(m.sodium) > 1000 ? 'bad' : 'txt', false)}${cell('SATIETY', esc(m.satiety || '—'), '', satCol, false)}</div>
       </div>
-      ${m.tip ? `<div class="mt-3 rounded-2xl border border-violet/30 bg-violet/[.07] p-3 flex gap-2.5"><span class="text-violet mt-0.5">✦</span><p class="text-[12.5px] leading-relaxed text-[#ddd6fe]">${esc(m.tip)}</p></div>` : ''}`;
+      ${m.tip ? `<div class="mt-3 rounded-2xl border border-acc/40 bg-acc/[.08] p-3 flex gap-2.5"><span class="text-acc2 mt-0.5">✦</span><p class="text-[12.5px] leading-relaxed text-acc2">${esc(m.tip)}</p></div>` : ''}`;
   }
   function openMeal(id) {
     const m = meals.find((x) => x.id === id); if (!m) return;
     $('#mealDetail').innerHTML = `
-      <div class="num text-[10.5px] text-mute mb-3">${esc(dateStr(m.ts))} · ${timeStr(m.ts)} · ${esc((m.source || 'manual').toUpperCase())}</div>
+      <div class="num text-[10.5px] text-mute mb-3">${esc(dateStr(m.ts))} · ${timeStr(m.ts)} · ${esc((m.source || 'manual').toUpperCase())}${m.model ? ' · ' + esc(m.model) : ''}</div>
       ${nutritionBlock(m)}
-      <button data-del="${esc(m.id)}" class="mt-4 w-full rounded-2xl border border-bear/40 py-3 text-[13px] text-bear hover:bg-bear/10">ลบรายการนี้ (Close Position)</button>`;
+      <button data-del="${esc(m.id)}" class="mt-4 w-full rounded-2xl border border-bad/50 py-3 text-[13px] text-bad hover:bg-bad/10">ลบรายการนี้</button>`;
     openModal('mMeal');
   }
   $('#mealList').addEventListener('click', (e) => { const b = e.target.closest('[data-meal]'); if (b) openMeal(b.dataset.meal); });
-  $('#mealDetail').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-del]'); if (!b) return;
-    removeMeal(b.dataset.del); closeModal('mMeal');
-  });
-  function removeMeal(id) {
-    meals = meals.filter((m) => m.id !== id); save(KEYS.meals, meals); renderAll(); toast('ลบรายการแล้ว', 'bear');
-  }
+  $('#mealDetail').addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (!b) return; removeMeal(b.dataset.del); closeModal('mMeal'); });
+  function removeMeal(id) { meals = meals.filter((m) => m.id !== id); save(KEYS.meals, meals); renderAll(); toast('ลบรายการแล้ว', 'bad'); }
 
   // =========================================================================
   // SCAN — GEMINI VISION
@@ -1119,9 +1641,7 @@ ANALYSIS RULES:
   const RESPONSE_SCHEMA = {
     type: 'OBJECT',
     properties: {
-      dish_name: { type: 'STRING' },
-      estimated_weight_g: { type: 'NUMBER' },
-      hidden_oil_tbsp: { type: 'NUMBER' },
+      dish_name: { type: 'STRING' }, estimated_weight_g: { type: 'NUMBER' }, hidden_oil_tbsp: { type: 'NUMBER' },
       nutritional_breakdown: {
         type: 'OBJECT',
         properties: {
@@ -1133,11 +1653,7 @@ ANALYSIS RULES:
       },
       scientific_evaluation: {
         type: 'OBJECT',
-        properties: {
-          mps_threshold_reached: { type: 'BOOLEAN' },
-          satiety_index: { type: 'STRING', enum: ['Low', 'Moderate', 'High'] },
-          actionable_tip: { type: 'STRING' },
-        },
+        properties: { mps_threshold_reached: { type: 'BOOLEAN' }, satiety_index: { type: 'STRING', enum: ['Low', 'Moderate', 'High'] }, actionable_tip: { type: 'STRING' } },
         required: ['mps_threshold_reached', 'satiety_index', 'actionable_tip'],
       },
     },
@@ -1165,32 +1681,23 @@ ANALYSIS RULES:
       scientific_evaluation: { mps_threshold_reached: false, satiety_index: 'High', actionable_tip: 'เติมเวย์ครึ่งสกู๊ปเพื่อดันโปรตีนเกิน 25g และช่วย Recovery หลังซ้อม' } },
   ];
 
-  let imgData = null; // { b64, mime, thumb }
-  let lastAddedId = null;
-
+  let imgData = null, lastAddedId = null;
   function syncKeyState() {
-    const k = getKey();
-    const el = $('#keyState');
+    const k = getKey(), el = $('#keyState');
     el.textContent = k ? '● CONNECTED' : '○ NOT SET';
-    el.style.color = k ? '#10b981' : '#f5b544';
-    el.style.borderColor = k ? 'rgba(16,185,129,.4)' : 'rgba(245,181,68,.4)';
-    $('#scKey').value = k;
+    el.style.color = k ? C('good') : C('warm'); el.style.borderColor = k ? C('good', 0.4) : C('warm', 0.4);
+    $('#scKey').value = k; $('#modelLbl').textContent = getModel();
     $('#keyBox').open = !k;
   }
   function resetScan() {
     imgData = null; lastAddedId = null;
     $('#scImg').classList.add('hidden'); $('#scImg').removeAttribute('src');
-    $('#scPlaceholder').classList.remove('hidden');
-    $('#scScanning').classList.add('hidden');
+    $('#scPlaceholder').classList.remove('hidden'); $('#scScanning').classList.add('hidden');
     $('#scResult').classList.add('hidden'); $('#scResult').innerHTML = '';
-    $('#scError').classList.add('hidden');
-    $('#scNote').value = '';
-    $('#scAnalyze').disabled = true;
+    $('#scError').classList.add('hidden'); $('#scNote').value = ''; $('#scAnalyze').disabled = true;
   }
   $('#btnScan').addEventListener('click', () => { resetScan(); syncKeyState(); openModal('mScan'); });
-  $('#scKeySave').addEventListener('click', () => {
-    save(KEYS.apiKey, $('#scKey').value.trim()); syncKeyState(); toast($('#scKey').value.trim() ? 'บันทึก API Key แล้ว' : 'ลบ API Key แล้ว');
-  });
+  $('#scKeySave').addEventListener('click', () => { save(KEYS.apiKey, $('#scKey').value.trim()); syncKeyState(); toast($('#scKey').value.trim() ? 'บันทึก API Key แล้ว' : 'ลบ API Key แล้ว'); });
 
   function readImage(file) {
     return new Promise((resolve, reject) => {
@@ -1201,8 +1708,7 @@ ANALYSIS RULES:
         img.onerror = reject;
         img.onload = () => {
           const draw = (max, q) => {
-            const s = Math.min(1, max / Math.max(img.width, img.height));
-            const cv = document.createElement('canvas');
+            const s = Math.min(1, max / Math.max(img.width, img.height)), cv = document.createElement('canvas');
             cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
             cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
             return cv.toDataURL('image/jpeg', q);
@@ -1218,27 +1724,23 @@ ANALYSIS RULES:
   async function onFile(e) {
     const f = e.target.files[0]; e.target.value = '';
     if (!f) return;
-    if (!f.type.startsWith('image/')) return toast('รองรับเฉพาะไฟล์รูปภาพ', 'bear');
+    if (!f.type.startsWith('image/')) return toast('รองรับเฉพาะไฟล์รูปภาพ', 'bad');
     try {
       imgData = await readImage(f);
-      $('#scImg').src = imgData.preview; $('#scImg').classList.remove('hidden');
-      $('#scPlaceholder').classList.add('hidden');
-      $('#scResult').classList.add('hidden'); $('#scError').classList.add('hidden');
-      $('#scAnalyze').disabled = false;
-    } catch { toast('ไม่สามารถอ่านรูปภาพได้ (ลองใช้ JPG/PNG)', 'bear'); }
+      $('#scImg').src = imgData.preview; $('#scImg').classList.remove('hidden'); $('#scPlaceholder').classList.add('hidden');
+      $('#scResult').classList.add('hidden'); $('#scError').classList.add('hidden'); $('#scAnalyze').disabled = false;
+    } catch { toast('ไม่สามารถอ่านรูปภาพได้ (ลองใช้ JPG/PNG)', 'bad'); }
   }
   $('#scCamera').addEventListener('change', onFile);
   $('#scFile').addEventListener('change', onFile);
 
-  function showError(msg) { const el = $('#scError'); el.textContent = msg; el.classList.remove('hidden'); }
-  function setBusy(b) {
-    $('#scScanning').classList.toggle('hidden', !b);
-    $('#scAnalyze').disabled = b || !imgData; $('#scDemo').disabled = b;
+  const showError = (msg) => { const el = $('#scError'); el.textContent = msg; el.classList.remove('hidden'); };
+  function setBusy(b, lbl = 'ANALYZING…') {
+    $('#scScanLbl').textContent = lbl;
+    $('#scScanning').classList.toggle('hidden', !b); $('#scAnalyze').disabled = b || !imgData; $('#scDemo').disabled = b;
   }
-
   function parseModelJSON(text) {
-    let t = String(text || '').trim();
-    t = t.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    const t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
     const a = t.indexOf('{'), b = t.lastIndexOf('}');
     if (a === -1 || b === -1) throw new Error('โมเดลไม่ได้ตอบกลับเป็น JSON');
     return JSON.parse(t.slice(a, b + 1));
@@ -1248,113 +1750,118 @@ ANALYSIS RULES:
     const p = Math.max(0, Math.round(num(mc.protein_g))), f = Math.max(0, Math.round(num(mc.fat_g))), c = Math.max(0, Math.round(num(mc.carbs_g)));
     let kcal = Math.max(0, Math.round(num(nb.calories)));
     if (!kcal) kcal = p * 4 + c * 4 + f * 9;
-    const sat = ['Low', 'Moderate', 'High'].includes(ev.satiety_index) ? ev.satiety_index : 'Moderate';
     return {
       dish_name: String(r.dish_name || 'อาหารไม่ทราบชื่อ').slice(0, 80),
       estimated_weight_g: Math.max(0, Math.round(num(r.estimated_weight_g))),
       hidden_oil_tbsp: Math.max(0, Math.round(num(r.hidden_oil_tbsp) * 10) / 10),
       nutritional_breakdown: { calories: kcal, macros: { protein_g: p, fat_g: f, carbs_g: c }, micros: { fiber_g: Math.max(0, Math.round(num(mi.fiber_g))), sodium_mg: Math.max(0, Math.round(num(mi.sodium_mg))) } },
-      scientific_evaluation: { mps_threshold_reached: typeof ev.mps_threshold_reached === 'boolean' ? ev.mps_threshold_reached : p >= MPS_PROTEIN_G, satiety_index: sat, actionable_tip: String(ev.actionable_tip || '').slice(0, 240) },
+      scientific_evaluation: {
+        mps_threshold_reached: typeof ev.mps_threshold_reached === 'boolean' ? ev.mps_threshold_reached : p >= MPS_PROTEIN_G,
+        satiety_index: ['Low', 'Moderate', 'High'].includes(ev.satiety_index) ? ev.satiety_index : 'Moderate',
+        actionable_tip: String(ev.actionable_tip || '').slice(0, 240),
+      },
     };
   }
-
+  async function requestGemini(model, key, body) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { const err = new Error(data?.error?.message || `HTTP ${res.status}`); err.status = res.status; throw err; }
+    return data;
+  }
   async function callGemini() {
     const key = getKey();
     if (!key) { $('#keyBox').open = true; $('#scKey').focus(); return showError('กรุณาใส่ Gemini API Key ก่อน หรือกด "ทดสอบด้วยข้อมูล Demo"'); }
     if (!imgData) return showError('กรุณาเลือกรูปอาหารก่อน');
     $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden');
-    setBusy(true);
-    const c = calc(profile), t = totals(mealsOn(dayKey()));
-    const ctx = `User context: goal=${profile.goal}, bodyweight=${profile.weight}kg, remaining_calories_today=${Math.round(c.target + num(burn[dayKey()]) - t.kcal)} kcal, remaining_protein_today=${Math.max(0, Math.round(c.protein - t.p))} g, sodium_so_far=${Math.round(t.sodium)} mg.`;
-    const note = $('#scNote').value.trim();
-    const body = {
-      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-      contents: [{ role: 'user', parts: [
-        { inlineData: { mimeType: imgData.mime, data: imgData.b64 } },
-        { text: `Analyze this meal and return the JSON object only.\n${ctx}${note ? `\nUser note about the dish: "${note}"` : ''}` },
-      ] }],
-      generationConfig: { temperature: 0.2, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
-    };
+    const c = calc(profile), t = totals(mealsOn(dayKey())), note = $('#scNote').value.trim();
+    const ctx = `User context: goal=${profile.goal}, bodyweight=${currentWeight()}kg, remaining_calories_today=${Math.round(c.target + num(burn[dayKey()]) - t.kcal)} kcal, remaining_protein_today=${Math.max(0, Math.round(c.protein - t.p))} g, sodium_so_far=${Math.round(t.sodium)} mg.`;
+    const chain = [...new Set([getModel(), ...FALLBACK_MODELS])];
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(getModel())}:generateContent`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+      let data = null, used = null, lastErr = null;
+      for (const model of chain) {
+        setBusy(true, `ANALYZING · ${model}`);
+        const gen = { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA };
+        if (model.startsWith('gemini-2')) gen.temperature = 0.2; // Gemini 3+ recommends default temperature
+        const body = {
+          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+          contents: [{ role: 'user', parts: [{ inlineData: { mimeType: imgData.mime, data: imgData.b64 } }, { text: `Analyze this meal and return the JSON object only.\n${ctx}${note ? `\nUser note about the dish: "${note}"` : ''}` }] }],
+          generationConfig: gen,
+        };
+        try { data = await requestGemini(model, key, body); used = model; break; }
+        catch (err) {
+          lastErr = err;
+          const unavailable = err.status === 404 || /not found|not supported|is not available|unknown model|deprecated/i.test(err.message);
+          if (!unavailable) throw err;
+        }
+      }
+      if (!data) throw lastErr || new Error('ไม่มีโมเดลที่ใช้งานได้');
+      if (used !== getModel()) toast(`โมเดล ${getModel()} ใช้ไม่ได้ · สลับไปใช้ ${used}`, 'warm');
       if (data?.promptFeedback?.blockReason) throw new Error('คำขอถูกบล็อก: ' + data.promptFeedback.blockReason);
-      const text = (data?.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
+      const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
       if (!text) throw new Error('ไม่ได้รับผลลัพธ์จากโมเดล (' + (data?.candidates?.[0]?.finishReason || 'EMPTY') + ')');
       const result = normalize(parseModelJSON(text));
-      if (!result.nutritional_breakdown.calories) { setBusy(false); return showError('ไม่พบอาหารในภาพ ลองถ่ายใหม่ให้เห็นจานชัดขึ้น'); }
-      commitResult(result, 'gemini');
+      if (!result.nutritional_breakdown.calories) return showError('ไม่พบอาหารในภาพ ลองถ่ายใหม่ให้เห็นจานชัดขึ้น');
+      commitResult(result, 'gemini', used);
     } catch (err) {
       showError('Gemini Error: ' + (err.message || err));
     } finally { setBusy(false); }
   }
   $('#scAnalyze').addEventListener('click', callGemini);
-
   $('#scDemo').addEventListener('click', () => {
-    $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden');
-    setBusy(true);
+    $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden'); setBusy(true, 'DEMO MODE…');
     const pick = DEMO_DISHES[Math.floor(Math.random() * DEMO_DISHES.length)];
     setTimeout(() => { setBusy(false); commitResult(normalize(JSON.parse(JSON.stringify(pick))), 'demo'); }, 1100);
   });
 
-  function commitResult(r, source) {
+  function commitResult(r, source, model) {
     const nb = r.nutritional_breakdown;
     const meal = {
-      id: uid(), ts: Date.now(), name: r.dish_name, source,
-      kcal: nb.calories, p: nb.macros.protein_g, f: nb.macros.fat_g, c: nb.macros.carbs_g,
-      fiber: nb.micros.fiber_g, sodium: nb.micros.sodium_mg,
+      id: uid(), ts: Date.now(), name: r.dish_name, source, model: model || null,
+      kcal: nb.calories, p: nb.macros.protein_g, f: nb.macros.fat_g, c: nb.macros.carbs_g, fiber: nb.micros.fiber_g, sodium: nb.micros.sodium_mg,
       weight: r.estimated_weight_g, oil: r.hidden_oil_tbsp,
       mps: r.scientific_evaluation.mps_threshold_reached, satiety: r.scientific_evaluation.satiety_index, tip: r.scientific_evaluation.actionable_tip,
       thumb: source === 'gemini' && imgData ? imgData.thumb : null,
     };
     meals.push(meal); lastAddedId = meal.id;
     if (!save(KEYS.meals, meals)) { meal.thumb = null; save(KEYS.meals, meals); }
-    range = '1D'; save(KEYS.range, range);
-    renderAll();
-
-    const c = calc(profile), t = totals(mealsOn(dayKey()));
-    const remaining = c.target + num(burn[dayKey()]) - t.kcal;
-    const box = $('#scResult');
+    range = '1D'; save(KEYS.range, range); renderAll();
+    const c = calc(profile), t = totals(mealsOn(dayKey())), remaining = c.target + num(burn[dayKey()]) - t.kcal, box = $('#scResult');
     box.innerHTML = `
       <div class="fade-in rounded-2xl border border-line bg-card2 p-4">
         <div class="flex items-center justify-between mb-3">
-          <span class="eyebrow flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-bull"></span>Logged to Daily Journal</span>
-          <span class="chip num ${source === 'demo' ? 'text-mute' : 'text-sky2 border-sky2/30'}">${source === 'demo' ? 'DEMO DATA' : 'GEMINI VISION'}</span>
+          <span class="eyebrow flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-good"></span>Logged to Journal</span>
+          <span class="chip num" style="color:${source === 'demo' ? C('mute') : C('info')}">${source === 'demo' ? 'DEMO DATA' : esc(model || 'GEMINI')}</span>
         </div>
         ${nutritionBlock(meal)}
         <div class="mt-3 flex items-center justify-between rounded-xl border border-line px-3 py-2 num text-[11px]">
           <span class="text-mute">REMAINING AFTER</span>
-          <span class="font-semibold" style="color:${remaining < 0 ? '#ef4444' : '#10b981'}">${remaining < 0 ? '−' : ''}${fmt(Math.abs(remaining))} kcal</span>
+          <span class="font-bold" style="color:${remaining < 0 ? C('bad') : C('good')}">${remaining < 0 ? '−' : ''}${fmt(Math.abs(remaining))} kcal</span>
         </div>
         <details class="mt-3 rounded-xl border border-line">
           <summary class="cursor-pointer px-3 py-2 text-[11px] text-mute num">RAW JSON RESPONSE</summary>
           <pre class="px-3 pb-3 text-[10px] leading-relaxed text-soft overflow-x-auto num">${esc(JSON.stringify(r, null, 2))}</pre>
         </details>
         <div class="mt-3 grid grid-cols-2 gap-2">
-          <button id="scUndo" class="rounded-xl border border-line py-3 text-[12px] text-soft hover:border-bear hover:text-bear">ยกเลิก (Undo)</button>
-          <button data-close class="rounded-xl bg-violet py-3 text-[12px] font-semibold text-white">เสร็จสิ้น</button>
+          <button id="scUndo" class="rounded-xl border border-line py-3 text-[12px] text-soft hover:border-bad hover:text-bad">ยกเลิก (Undo)</button>
+          <button data-close class="btn-p rounded-xl py-3 text-[12px]">เสร็จสิ้น</button>
         </div>
       </div>`;
     box.classList.remove('hidden');
-    $('#scUndo').addEventListener('click', () => {
-      if (lastAddedId) removeMeal(lastAddedId);
-      lastAddedId = null; box.classList.add('hidden');
-    });
+    $('#scUndo').addEventListener('click', () => { if (lastAddedId) removeMeal(lastAddedId); lastAddedId = null; box.classList.add('hidden'); });
     setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-    toast(`+ ${r.dish_name} · ${fmt(nb.calories)} kcal`, 'violet');
+    toast(`+ ${r.dish_name} · ${fmt(nb.calories)} kcal`, 'acc');
   }
 
   // =========================================================================
   // EVENTS — nav, ranges, quotes
   // =========================================================================
-  $$('.rng [data-range]').forEach((b) => b.addEventListener('click', () => { range = b.dataset.range; save(KEYS.range, range); renderChart(); }));
+  $('#calRange').addEventListener('click', (e) => { const b = e.target.closest('[data-range]'); if (!b) return; range = b.dataset.range; save(KEYS.range, range); renderCalChart(); });
+  $('#wRange').addEventListener('click', (e) => { const b = e.target.closest('[data-wr]'); if (!b) return; wRange = b.dataset.wr; save(KEYS.wRange, wRange); renderWeight(); });
   $('#logFilter').addEventListener('click', (e) => { const b = e.target.closest('[data-lf]'); if (!b) return; logFilter = b.dataset.lf; save(KEYS.logFilter, logFilter); renderMeals(); });
-
   $('#quoteNext').addEventListener('click', () => { quoteIdx = (quoteIdx + 1) % QUOTES.length; renderQuote(1); });
-  $('#quoteDots').addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (!b) return; const n = Number(b.dataset.q); const dir = n > quoteIdx ? 1 : -1; quoteIdx = n; renderQuote(dir); });
+  $('#quoteDots').addEventListener('click', (e) => { const b = e.target.closest('[data-q]'); if (!b) return; const n = Number(b.dataset.q), dir = n > quoteIdx ? 1 : -1; quoteIdx = n; renderQuote(dir); });
   (() => {
     let x0 = null; const el = $('#quoteBox');
     el.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
@@ -1366,29 +1873,30 @@ ANALYSIS RULES:
   })();
 
   const navBtns = $$('.nav-btn');
-  const setNav = (id) => navBtns.forEach((b) => { const on = b.dataset.nav === id; b.style.color = on ? '#c4b5fd' : ''; });
+  const setNav = (id) => navBtns.forEach((b) => { b.style.color = b.dataset.nav === id ? C('acc2') : ''; });
   navBtns.forEach((b) => b.addEventListener('click', () => {
-    const el = $('#' + b.dataset.nav);
-    const y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + window.scrollY - 70;
+    const el = $('#' + b.dataset.nav), y = b.dataset.nav === 'secHome' ? 0 : el.getBoundingClientRect().top + window.scrollY - 70;
     window.scrollTo({ top: y, behavior: 'smooth' }); setNav(b.dataset.nav);
   }));
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach((en) => { if (en.isIntersecting) setNav(en.target.id); });
-  }, { rootMargin: '-45% 0px -50% 0px' });
-  ['secHome', 'secStats', 'secAlloc', 'secLog'].forEach((id) => io.observe($('#' + id)));
+  const navMap = { secHome: 'secHome', secHero: 'secHome', secStats: 'secStats', secWeight: 'secWeight', secAlloc: 'secStats', secLog: 'secLog' };
+  const io = new IntersectionObserver((entries) => entries.forEach((en) => { if (en.isIntersecting) setNav(navMap[en.target.id]); }), { rootMargin: '-45% 0px -50% 0px' });
+  Object.keys(navMap).forEach((id) => io.observe($('#' + id)));
   setNav('secHome');
 
-  // Refresh at midnight / when app becomes visible again
   let lastDay = dayKey();
-  const tick = () => { if (dayKey() !== lastDay) { lastDay = dayKey(); } renderAll(); };
+  const tick = () => { lastDay = dayKey(); renderAll(); };
   document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
   setInterval(() => { if (range === '1D' || dayKey() !== lastDay) tick(); }, 60_000);
 
   // ---------- Boot ----------
+  // migrate: seed first weigh-in from profile for existing users
+  if (!firstRun && !wEntries().length && num(profile.weight) > 0) setWeight(dayKey(), num(profile.weight));
+  document.documentElement.dataset.theme = theme;
+  buildScenes();
   renderQuote();
   renderAll();
   syncKeyState();
-  if (firstRun) setTimeout(() => { openProfile(); toast('ตั้งค่าโปรไฟล์เพื่อคำนวณเป้าหมายของคุณ', 'violet'); }, 450);
+  if (firstRun) setTimeout(() => { openProfile(); toast('ตั้งค่าโปรไฟล์เพื่อสร้างตัวละครและเป้าหมายของคุณ', 'acc'); }, 450);
 })();
 </script>
 </body>
