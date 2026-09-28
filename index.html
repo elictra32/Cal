@@ -874,7 +874,8 @@
           เลือกจากคลัง<input id="scFile" type="file" accept="image/*" class="hidden" />
         </label>
       </div>
-      <input id="scNote" class="field text-[12px]" maxlength="200" placeholder="ชื่อเมนู/รายละเอียด เช่น ข้าวมันไก่ 1 จาน, ไม่ใส่น้ำมัน — ไม่มีรูปก็วิเคราะห์ได้" />
+      <p id="scNoImg" class="hidden rounded-xl border border-warm/40 bg-warm/10 px-3 py-2 text-[12px] text-warm leading-relaxed">📱 แอปที่เปิดอยู่ส่งรูปให้ระบบวิเคราะห์ไม่ได้ — พิมพ์ชื่อเมนูในช่องนี้แล้วกด “วิเคราะห์อาหาร” ได้เลย</p>
+      <input id="scNote" class="field text-[12px]" maxlength="200" placeholder="ชื่อเมนู เช่น ข้าวมันไก่ 1 จาน ไม่เอาหนัง" />
       <div class="grid grid-cols-1 gap-2">
         <button id="scAnalyze" class="btn-p w-full rounded-2xl py-3.5 disabled:opacity-40 active:scale-[.99] transition flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
@@ -2410,7 +2411,15 @@ ANALYSIS RULES:
     $('#scResult').classList.add('hidden'); $('#scResult').innerHTML = '';
     $('#scError').classList.add('hidden'); $('#scNote').value = ''; $('#scAnalyze').disabled = true;
   }
-  $('#btnScan').addEventListener('click', () => { resetScan(); setScanTab('ai'); openModal('mScan'); });
+  let noImgView = false;
+  $('#btnScan').addEventListener('click', () => {
+    resetScan(); setScanTab('ai'); openModal('mScan');
+    // some Claude viewers (e.g. the mobile app) cannot send photos: switch to "type the dish" up front
+    getSampler().then((sp) => (sp ? sp.limits().catch(() => null) : undefined)).then((lim) => {
+      noImgView = lim !== undefined && !(lim && lim.images);
+      $('#scNoImg').classList.toggle('hidden', !noImgView);
+    });
+  });
   function setScanTab(t) {
     $$('#scTabs [data-tab]').forEach((x) => x.classList.toggle('on', x.dataset.tab === t));
     $('#paneAI').classList.toggle('hidden', t !== 'ai'); $('#paneManual').classList.toggle('hidden', t !== 'manual');
@@ -2562,7 +2571,7 @@ ANALYSIS RULES:
   async function analyzeViaSampler(sampler, prompt) {
     const lim = await sampler.limits().catch(() => null);
     const withImg = !!(imgData && lim && lim.images);
-    if (imgData && !withImg && !$('#scNote').value.trim()) throw new Error(SAMPLE_ERR.images_unavailable);
+    if (imgData && !withImg && !$('#scNote').value.trim()) { $('#scNoImg').classList.remove('hidden'); setTimeout(() => $('#scNote').focus(), 50); throw new Error(SAMPLE_ERR.images_unavailable); }
     const opts = { cache: false };
     if (withImg) {
       const bin = atob(imgData.b64), bytes = new Uint8Array(bin.length);
