@@ -115,6 +115,9 @@
   [data-theme="campfire"] .seg button.on { background: rgb(var(--acc) / .18); color: rgb(var(--acc2)); border-color: rgb(var(--acc) / .4); font-weight: 600; }
   [data-theme="campfire"] .ringbtn { background: rgb(var(--acc) / .82); }
   [data-theme="campfire"] #btnSettings { background: rgb(var(--acc) / .2); color: rgb(var(--acc2)); border: 1px solid rgb(var(--acc) / .34); }
+  .info-btn { display: inline-grid; place-items: center; height: 17px; width: 17px; border-radius: 999px; border: 1px solid rgb(var(--line)); color: rgb(var(--mute)); font: italic 700 10.5px/1 Georgia, 'Times New Roman', serif; vertical-align: middle; margin-left: 5px; flex-shrink: 0; transition: color .2s, border-color .2s; }
+  .info-btn:hover, .info-btn:active { color: rgb(var(--acc2)); border-color: rgb(var(--acc) / .5); }
+  .info-body p + p { margin-top: .6rem; }
   #scroller { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   #scroller.locked { overflow: hidden; }
   .seg button.on { background: rgb(var(--acc)); color: rgb(var(--onacc)); border-color: rgb(var(--acc)); font-weight: 700; }
@@ -422,7 +425,7 @@
   <!-- ===================== QUEST (STREAK · POINTS · CHALLENGES) ===================== -->
   <section id="secQuest" class="card mt-5 fade-in p-4 th">
     <div class="flex items-start justify-between gap-3">
-      <div><div class="eyebrow !tracking-normal">Campfire Quest</div><div class="h-title mt-0.5">ภารกิจ &amp; แต้มสะสม</div></div>
+      <div><div class="eyebrow !tracking-normal">Campfire Quest</div><div class="h-title mt-0.5 flex items-center">ภารกิจ &amp; แต้มสะสม<button type="button" class="info-btn" data-info="quest" aria-label="วิธีเก็บแต้ม">i</button></div></div>
       <button id="btnRewards" class="shrink-0 rounded-full border border-acc/35 bg-acc/15 px-3 py-1.5 text-[12px] text-acc2 flex items-center gap-1.5 active:scale-95 transition"><span>🪵</span><span id="qPoints" class="num font-bold">0</span><span class="text-[11px]">แต้ม</span></button>
     </div>
     <div class="mt-3 grid grid-cols-[auto_1fr] gap-4 items-center">
@@ -513,7 +516,7 @@
   <section id="secWeight" class="card mt-5 overflow-hidden fade-in">
     <div class="p-5 pb-0">
       <div class="flex items-center justify-between gap-2">
-        <div class="h-title">น้ำหนัก</div>
+        <div class="h-title flex items-center">น้ำหนัก<button type="button" class="info-btn" data-info="weight" aria-label="ข้อมูลเพิ่มเติม">i</button></div>
         <span id="rateBadge" class="chip num">—</span>
       </div>
       <div class="mt-4 grid grid-cols-3 gap-3">
@@ -521,7 +524,7 @@
         <div><div class="lbl">ต่อสัปดาห์</div><div id="wRate" class="num val">—</div><div id="wRatePct" class="num text-[11px] text-mute"></div></div>
         <div><div class="lbl">ถึงเป้าอีก</div><div id="wToGoal" class="num val">—</div><div id="wEta" class="th text-[11px] text-mute"></div></div>
       </div>
-      <p id="wHint" class="th text-[12.5px] text-mute mt-4 leading-relaxed"></p>
+      <p id="wHint" class="hidden"></p>
     </div>
     <div id="wChart" class="relative mt-3 h-[120px] select-none" style="touch-action: pan-y;"></div>
     <div class="rng flex items-center gap-1 px-4 pt-2 pb-4" id="wRange">
@@ -625,7 +628,7 @@
         </select>
       </div>
       <div>
-        <label class="text-mute text-[11px]">การออกกำลังกายหลัก (Training)</label>
+        <label class="text-mute text-[11px] flex items-center">การออกกำลังกายหลัก (Training)<button type="button" class="info-btn" data-info="train" aria-label="ข้อมูลเพิ่มเติม">i</button></label>
         <div class="seg mt-1 grid grid-cols-4 gap-1.5" id="pTrain">
           <button data-v="none" class="rounded-xl border border-line py-2 text-[12px]">ไม่ได้ฝึก</button>
           <button data-v="strength" class="rounded-xl border border-line py-2 text-[12px]">เวท</button>
@@ -634,7 +637,7 @@
         </div>
       </div>
       <div>
-        <label class="text-mute text-[11px]">เป้าหมาย &amp; ความเร็ว (Goal pace)</label>
+        <label class="text-mute text-[11px] flex items-center">เป้าหมาย &amp; ความเร็ว (Goal pace)<button type="button" class="info-btn" data-info="goal" aria-label="ข้อมูลเพิ่มเติม">i</button></label>
         <div class="seg mt-1 grid grid-cols-3 gap-1.5" id="pGoal">
           <button data-v="cut_slow" class="rounded-xl border border-line py-2 text-[12px] leading-tight">ลดช้า<br><span class="num text-[10.5px] opacity-80">0.5%/wk</span></button>
           <button data-v="cut" class="rounded-xl border border-line py-2 text-[12px] leading-tight">ลดปกติ<br><span class="num text-[10.5px] opacity-80">0.75%/wk</span></button>
@@ -642,10 +645,10 @@
           <button data-v="maintain" class="rounded-xl border border-line py-2 text-[12px]">รักษาน้ำหนัก</button>
           <button data-v="bulk" class="col-span-2 rounded-xl border border-line py-2 text-[12px]">เพิ่มกล้าม <span class="num text-[10.5px] opacity-80">+0.35%/wk</span></button>
         </div>
-        <p id="pGoalNote" class="text-[11px] text-mute mt-1.5 leading-relaxed"></p>
+        <p id="pGoalNote" class="num text-[11px] text-mute mt-1.5"></p>
       </div>
       <div>
-        <label class="text-mute text-[11px]">รูปแบบการกิน (Diet style)</label>
+        <label class="text-mute text-[11px] flex items-center">รูปแบบการกิน (Diet style)<button type="button" class="info-btn" data-info="diet" aria-label="ข้อมูลเพิ่มเติม">i</button></label>
         <div class="seg mt-1 grid grid-cols-3 gap-1.5" id="pDiet">
           <button data-v="balanced" class="rounded-xl border border-line py-2 text-[12px]">สมดุล</button>
           <button data-v="highcarb" class="rounded-xl border border-line py-2 text-[12px]">High-carb</button>
@@ -653,11 +656,11 @@
           <button data-v="lowcarb" class="rounded-xl border border-line py-2 text-[12px]">Low-carb</button>
           <button data-v="keto" class="rounded-xl border border-line py-2 text-[12px]">คีโต</button>
         </div>
-        <p id="pDietNote" class="text-[11px] text-mute mt-1.5 leading-relaxed"></p>
+        <p id="pDietNote" class="text-[11px] text-mute mt-1.5"></p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-mute text-[11px]">โปรตีน (g/kg)</label>
+          <label class="text-mute text-[11px] flex items-center">โปรตีน (g/kg)<button type="button" class="info-btn" data-info="protein" aria-label="ข้อมูลเพิ่มเติม">i</button></label>
           <div class="seg mt-1 grid grid-cols-4 gap-1" id="pProt">
             <button data-v="1.6" class="rounded-lg border border-line py-2 text-[12px] num">1.6</button>
             <button data-v="2.0" class="rounded-lg border border-line py-2 text-[12px] num">2.0</button>
@@ -671,7 +674,7 @@
         </div>
       </div>
       <div class="rounded-2xl border border-acc/40 bg-acc/[.08] p-3">
-        <div class="eyebrow">Live Calculation · Mifflin-St Jeor</div>
+        <div class="eyebrow flex items-center">Live Calculation · Mifflin-St Jeor<button type="button" class="info-btn" data-info="calc" aria-label="ข้อมูลเพิ่มเติม">i</button></div>
         <div class="mt-2 grid grid-cols-3 gap-2 num">
           <div><div class="text-[9px] text-mute">BMR</div><div id="cvBmr" class="text-[15px] font-bold"></div></div>
           <div><div class="text-[9px] text-mute">TDEE</div><div id="cvTdee" class="text-[15px] font-bold"></div></div>
@@ -688,15 +691,10 @@
       </div>
       <div class="rounded-2xl border border-line bg-ink/40 p-3">
         <div class="flex items-center justify-between gap-2">
-          <div class="eyebrow">Evidence-based · คำแนะนำ</div>
+          <div class="eyebrow flex items-center">คำแนะนำ<button type="button" class="info-btn" data-info="rec" aria-label="เหตุผลและงานวิจัย">i</button></div>
           <button id="pApplyRec" class="shrink-0 rounded-full border border-acc/40 bg-acc/15 px-3 py-1 text-[11px] text-acc2 active:scale-95 transition">ใช้ค่าแนะนำ</button>
         </div>
         <div id="pRecSummary" class="mt-2 text-[12px] text-txt leading-relaxed"></div>
-        <ul id="pRecTips" class="mt-2 space-y-2 text-[11.5px] text-soft leading-relaxed"></ul>
-        <details class="mt-3">
-          <summary class="text-[11px] text-mute cursor-pointer select-none">แหล่งอ้างอิงงานวิจัย (<span id="pRefN"></span>)</summary>
-          <ol id="pRefs" class="mt-2 space-y-1.5 text-[10.5px] text-mute list-decimal pl-4 leading-relaxed"></ol>
-        </details>
       </div>
       <button id="pSave" class="btn-p w-full rounded-2xl py-3.5 active:scale-[.99] transition">บันทึกโปรไฟล์</button>
     </div>
@@ -735,6 +733,17 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: INFO ===================== -->
+<div id="mInfo" class="sheet-wrap hidden-sheet fixed inset-0 z-[58] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div class="sheet border border-line w-full max-w-md max-h-[80vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
+    <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
+      <div><div class="eyebrow">Information</div><div id="infoTitle" class="th text-[15px] font-semibold mt-0.5"></div></div>
+      <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
+    </div>
+    <div id="infoBody" class="info-body px-5 py-4 th text-[12.5px] text-soft leading-relaxed"></div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: WEEKLY SUMMARY ===================== -->
 <div id="mWeek" class="sheet-wrap hidden-sheet fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
   <div class="sheet border border-line w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar rounded-t-[26px] sm:rounded-[26px] safe-bottom">
@@ -759,7 +768,7 @@
     <div class="sheet-head sticky top-0 z-10 backdrop-blur px-5 pt-4 pb-3 border-b border-line/60 flex items-center justify-between">
       <div>
         <div class="eyebrow">Rewards</div>
-        <div class="th text-[15px] font-semibold mt-0.5">แลกรางวัลที่ตั้งเอง</div>
+        <div class="th text-[15px] font-semibold mt-0.5 flex items-center">แลกรางวัลที่ตั้งเอง<button type="button" class="info-btn" data-info="quest" aria-label="วิธีเก็บแต้ม">i</button></div>
       </div>
       <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
@@ -780,17 +789,10 @@
           <input id="rwCost" type="number" inputmode="numeric" min="10" max="100000" class="field num" placeholder="แต้ม" aria-label="แต้มที่ใช้" />
         </div>
         <button id="rwAdd" class="btn-p w-full rounded-xl py-2.5 text-[13px]">เพิ่มรางวัล</button>
-        <div class="text-[10.5px] text-mute pt-1">ไอเดีย แตะเพื่อเพิ่ม</div>
+        <div class="text-[10.5px] text-mute pt-1">ไอเดีย</div>
         <div id="rwIdeas" class="flex flex-wrap gap-1.5"></div>
       </div>
-      <div class="rounded-2xl border border-line p-3">
-        <div class="text-[12.5px] font-semibold mb-1.5">วิธีเก็บแต้ม</div>
-        <ul id="rwHow" class="text-[11.5px] text-soft space-y-1"></ul>
-      </div>
-      <div>
-        <div class="eyebrow mb-1">ประวัติการแลก</div>
-        <div id="rwHist" class="text-[11.5px] text-soft space-y-1.5"></div>
-      </div>
+      <ul id="rwHow" class="hidden"></ul>
     </div>
   </div>
 </div>
@@ -819,7 +821,7 @@
         <input id="wDate" type="date" class="field num text-[13px]" />
       </div>
       <p id="wPrevInfo" class="text-[11.5px] text-soft"></p>
-      <p class="text-[11px] text-mute">💡 ชั่งตอนเช้าหลังเข้าห้องน้ำ ก่อนกิน/ดื่ม เพื่อให้ค่าสม่ำเสมอ · น้ำหนักรายวันแกว่ง ±1 kg ได้จากน้ำและโซเดียม ให้ดูเส้นเฉลี่ย 7 วันเป็นหลัก</p>
+      <p class="text-[11px] text-mute flex items-center">ชั่งตอนเช้า ก่อนกิน/ดื่ม<button type="button" class="info-btn" data-info="weigh" aria-label="ข้อมูลเพิ่มเติม">i</button></p>
       <button id="wSave" class="btn-p w-full rounded-2xl py-3.5">บันทึกน้ำหนัก</button>
       <div class="pt-2">
         <div class="eyebrow mb-1">History</div>
@@ -978,11 +980,11 @@
   const KCAL_PER_KG = 7700; // static rule of thumb; real loss slows as expenditure adapts (Hall 2011)
   // Diet styles. Carb caps: keto < 50 g, low-carb < 130 g (below the carb RDA); high-carb uses ACSM g/kg bands
   const DIETS = {
-    balanced: { th: 'สมดุล', note: 'ไขมัน 20–35% ตามช่วง AMDR คาร์บเป็นส่วนที่เหลือ — เหมาะกับคนส่วนใหญ่' },
-    highcarb: { th: 'High-carb', note: 'คาร์บตามปริมาณการซ้อม 5–7 g/kg (ACSM) ไขมันขั้นต่ำ 20% — เหมาะกับคาร์ดิโอ/กีฬาความทนทาน' },
-    lowfat:   { th: 'Low-fat', note: 'ไขมัน 20% คาร์บสูงขึ้น — DIETFITS 12 เดือน ลดได้ไม่ต่างจาก Low-carb' },
-    lowcarb:  { th: 'Low-carb', carbG: 100, note: 'คาร์บ ~100 g/วัน (ต่ำกว่า 130 g) ไขมันเป็นส่วนที่เหลือ — ได้ผลพอๆ กับ Low-fat ถ้ากินได้ต่อเนื่อง' },
-    keto:     { th: 'คีโต', carbG: 30, note: 'คาร์บ < 50 g/วัน อาจลดเพิ่ม ~1.5 kg (หลักฐานความมั่นใจต่ำ) · ควรเช็ก LDL และไม่เหมาะกับการซ้อมหนักความเข้มสูง' },
+    balanced: { th: 'สมดุล', short: 'ไขมัน 20–35% · คาร์บส่วนที่เหลือ', note: 'ไขมัน 20–35% ตามช่วง AMDR คาร์บเป็นส่วนที่เหลือ — เหมาะกับคนส่วนใหญ่' },
+    highcarb: { th: 'High-carb', short: 'คาร์บ 5–7 g/kg · ไขมันขั้นต่ำ 20%', note: 'คาร์บตามปริมาณการซ้อม 5–7 g/kg (ACSM) ไขมันขั้นต่ำ 20% — เหมาะกับคาร์ดิโอ/กีฬาความทนทาน' },
+    lowfat:   { th: 'Low-fat', short: 'ไขมัน 20% · คาร์บสูงขึ้น', note: 'ไขมัน 20% คาร์บสูงขึ้น — DIETFITS 12 เดือน ลดได้ไม่ต่างจาก Low-carb' },
+    lowcarb:  { th: 'Low-carb', carbG: 100, short: 'คาร์บ ~100 g/วัน · ไขมันส่วนที่เหลือ', note: 'คาร์บ ~100 g/วัน (ต่ำกว่า 130 g) ไขมันเป็นส่วนที่เหลือ — ได้ผลพอๆ กับ Low-fat ถ้ากินได้ต่อเนื่อง' },
+    keto:     { th: 'คีโต', carbG: 30, short: 'คาร์บ < 50 g/วัน · ไขมันส่วนที่เหลือ', note: 'คาร์บ < 50 g/วัน อาจลดเพิ่ม ~1.5 kg (หลักฐานความมั่นใจต่ำ) · ควรเช็ก LDL และไม่เหมาะกับการซ้อมหนักความเข้มสูง' },
   };
   const TRAIN = { none: 'ไม่ได้ฝึก', strength: 'เวทเทรนนิ่ง', endurance: 'คาร์ดิโอ/ความทนทาน', mixed: 'เวท + คาร์ดิโอ' };
   // Research the recommendations are built from (Profile → แหล่งอ้างอิง)
@@ -1809,15 +1811,12 @@
     const freeFat = c.diet === 'balanced';
     $('#pFat').disabled = !freeFat; $('#pFatBox').style.opacity = freeFat ? '' : '.45';
     if (!freeFat) $('#pFatLbl').textContent = fmt((c.fat * 9 / Math.max(1, c.target)) * 100) + '%';
-    $('#pDietNote').innerHTML = esc(DIETS[c.diet].note) + ' ' + cite(...({ balanced: ['dietfits'], highcarb: ['acsm2016'], lowfat: ['dietfits'], lowcarb: ['dietfits'], keto: ['keto2025', 'ketoLdl'] })[c.diet]);
+    $('#pDietNote').textContent = DIETS[c.diet].short;
     const gg = GOALS[draft.goal] || GOALS.cut;
-    $('#pGoalNote').innerHTML = gg.rate < 0
-      ? `≈ ${fmt(Math.abs(gg.rate) * num(draft.weight), 2)} kg/สัปดาห์ · โซนที่งานวิจัยแนะนำคือ 0.5–1%/สัปดาห์ ${cite('garthe')}`
-      : gg.rate > 0 ? `≈ +${fmt(gg.rate * num(draft.weight), 2)} kg/สัปดาห์ · ส่วนเกินเล็กน้อยช่วยให้ได้กล้ามโดยไขมันไม่พอกเกิน` : 'กิน = TDEE';
+    $('#pGoalNote').textContent = gg.rate ? `≈ ${gg.rate > 0 ? '+' : '−'}${fmt(Math.abs(gg.rate) * num(draft.weight), 2)} kg/สัปดาห์` : 'กิน = TDEE';
     $('#cvDelta').textContent = `${c.delta < 0 ? 'Deficit' : c.delta > 0 ? 'Surplus' : 'Balance'} ${c.delta < 0 ? '−' : '+'}${fmt(Math.abs(c.delta))} kcal/วัน (${fmt(Math.abs(c.pct) * 100)}% TDEE)`;
     const rec = recommend(draft);
-    $('#pRecSummary').innerHTML = `BMI <b class="num">${fmt(rec.bmi, 1)}</b> · แนะนำ <b>${GOALS[rec.goal].badge}</b> · โปรตีน <b class="num">${rec.protein}</b> g/kg · กินแบบ<b>${DIETS[rec.diet].th}</b>`;
-    $('#pRecTips').innerHTML = rec.tips.map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t}</span></li>`).join('');
+    $('#pRecSummary').innerHTML = `${GOALS[rec.goal].badge} · โปรตีน <b class="num">${rec.protein}</b> g/kg · ${DIETS[rec.diet].th}`;
     const same = draft.goal === rec.goal && Number(draft.proteinPerKg) === rec.protein && draft.diet === rec.diet;
     $('#pApplyRec').textContent = same ? '✓ ใช้ค่าแนะนำอยู่' : 'ใช้ค่าแนะนำ';
     $('#cvBmr').textContent = fmt(c.bmr); $('#cvTdee').textContent = fmt(c.tdee); $('#cvTarget').textContent = fmt(c.target);
@@ -1839,8 +1838,6 @@
       syncProfileForm();
     });
   });
-  $('#pRefN').textContent = REF_ORDER.length;
-  $('#pRefs').innerHTML = REF_ORDER.map((id) => `<li><a href="${REFS[id].u}" target="_blank" rel="noopener" class="text-soft hover:text-acc2 underline decoration-line underline-offset-2">${esc(REFS[id].s)}</a> — ${esc(REFS[id].t)}</li>`).join('');
   $('#pApplyRec').addEventListener('click', () => {
     const rec = recommend(draft);
     Object.assign(draft, { goal: rec.goal, proteinPerKg: rec.protein, diet: rec.diet });
@@ -1868,11 +1865,11 @@
   // Points and streaks are derived from the log itself, so editing a meal re-scores the day.
   // =========================================================================
   const DAY_CHECKS = [
-    { k: 'logged', label: 'บันทึกอาหาร', pts: 10 },
-    { k: 'weighed', label: 'ชั่งน้ำหนัก', pts: 5 },
-    { k: 'protein', label: 'โปรตีนถึงเป้า', pts: 15 },
-    { k: 'inRange', label: 'แคลในกรอบ ±10%', pts: 15 },
-    { k: 'fiber', label: 'ไฟเบอร์ถึงเป้า', pts: 5 },
+    { k: 'logged', label: 'บันทึกอาหาร', short: 'บันทึก', pts: 10 },
+    { k: 'weighed', label: 'ชั่งน้ำหนัก', short: 'ชั่ง', pts: 5 },
+    { k: 'protein', label: 'โปรตีนถึงเป้า', short: 'โปรตีน', pts: 15 },
+    { k: 'inRange', label: 'แคลในกรอบ ±10%', short: 'กรอบแคล', pts: 15 },
+    { k: 'fiber', label: 'ไฟเบอร์ถึงเป้า', short: 'ไฟเบอร์', pts: 5 },
   ];
   const DAY_MAX = DAY_CHECKS.reduce((a, d) => a + d.pts, 0);
   const STREAK_BONUS = 50; // every 7 consecutive logged days
@@ -1934,7 +1931,7 @@
     lastQuest = { c, idx, earned, spent, balance: earned - spent, streak, best, todayLogged, dayPts, bonus, chPts };
     return lastQuest;
   }
-  const pill = (on, label, pts) => `<span class="rounded-full border px-2 py-0.5 text-[10.5px] ${on ? 'border-good/40 bg-good/10 text-good' : 'border-line text-mute'}">${on ? '✓' : '○'} ${label} <span class="num opacity-70">+${pts}</span></span>`;
+  const pill = (on, label) => `<span class="rounded-full border px-2 py-0.5 text-[10.5px] ${on ? 'border-good/40 bg-good/10 text-good' : 'border-line text-mute'}">${on ? '✓' : '○'} ${label}</span>`;
   function challengeRow(ch, n) {
     const done = n >= ch.need, pct = clamp((n / ch.need) * 100, 0, 100);
     return `<div><div class="flex items-center justify-between gap-2 text-[12px]"><span class="${done ? 'text-good' : 'text-soft'}">${done ? '✓ ' : ''}${ch.t}</span><span class="num text-[11px] shrink-0 ${done ? 'text-good' : 'text-acc2'}">${Math.min(n, ch.need)}/${ch.need} · +${ch.pts}</span></div>
@@ -1945,9 +1942,9 @@
     tween($('#qPoints'), q.balance);
     $('#qStreak').textContent = q.streak;
     $('#qFlame').style.filter = q.streak ? '' : 'grayscale(1) opacity(.45)';
-    $('#qBest').textContent = `สถิติดีสุด ${q.best} วัน · ครบทุก 7 วันติด +${STREAK_BONUS}` + (q.streak && !q.todayLogged ? ' · บันทึกวันนี้เพื่อต่อไฟ 🔥' : '');
+    $('#qBest').textContent = `ดีสุด ${q.best} วัน` + (q.streak && !q.todayLogged ? ' · บันทึกวันนี้เพื่อต่อไฟ 🔥' : '');
     $('#qTodayPts').textContent = `+${today.pts}/${DAY_MAX}`;
-    $('#qToday').innerHTML = DAY_CHECKS.map((d) => pill(today[d.k], d.label, d.pts)).join('');
+    $('#qToday').innerHTML = DAY_CHECKS.map((d) => pill(today[d.k], d.short)).join('');
     const left = 6 - ((new Date().getDay() + 6) % 7);
     $('#qWeekLeft').textContent = left ? `เหลือ ${left} วัน` : 'วันสุดท้าย!';
     $('#qChallenges').innerHTML = weekChallenges(wk).map((ch) => challengeRow(ch, weekCount(wk, ch.k, q.idx, q.c))).join('');
@@ -1955,24 +1952,24 @@
   }
 
   // ---------- Weekly review ----------
-  let wkView = dayKey(weekStart());
+  let wkView = dayKey(weekStart()), wkTips = [];
   function weekInsights(stats, elapsed, wRate, c) {
     const out = [], logged = stats.filter((s) => s.logged), n = logged.length;
     const cutting = (GOALS[profile.goal] || GOALS.cut).rate < 0;
-    if (!n) return [`ยังไม่มีบันทึกในสัปดาห์นี้ — เริ่มจากถ่ายรูปมื้อเดียวก็นับแล้ว ${cite('selfmon')}`];
-    if (n < Math.min(5, elapsed)) out.push(`บันทึกได้ ${n}/${elapsed} วัน — การบันทึก ≥5 วัน/สัปดาห์สัมพันธ์กับการคุมน้ำหนักระยะยาวที่ดีกว่า ${cite('selfmon')}`);
+    if (!n) return [{ s: 'ยังไม่มีบันทึก — เริ่มจากมื้อเดียวก็นับ', d: `การบันทึกอาหารสม่ำเสมอเป็นพฤติกรรมที่สัมพันธ์กับการคุมน้ำหนักสำเร็จมากที่สุด ${cite('selfmon')}` }];
+    if (n < Math.min(5, elapsed)) out.push({ s: `บันทึกให้ถึง 5 วัน (ตอนนี้ ${n}/${elapsed})`, d: `การบันทึกอาหาร ≥3 วัน/สัปดาห์ช่วยคุมน้ำหนัก และได้ผลมากขึ้นเมื่อ ≥5 วัน/สัปดาห์ ${cite('selfmon')}` });
     const pDays = logged.filter((s) => s.protein).length;
-    if (pDays < Math.ceil(n * 0.6)) out.push(`โปรตีนถึงเป้า ${pDays}/${n} วันที่บันทึก — เพิ่มโปรตีนทุกมื้อช่วยรักษากล้ามระหว่างลดแคล ${cite('prot2025', 'espen2024')}`);
+    if (pDays < Math.ceil(n * 0.6)) out.push({ s: `เพิ่มโปรตีนทุกมื้อ (ถึงเป้า ${pDays}/${n} วัน)`, d: `ช่วงลดแคล โปรตีนที่สูงขึ้นช่วยรักษามวลกล้ามเนื้อและความแข็งแรง ${cite('prot2025', 'espen2024')}` });
     if (wRate != null) {
-      if (cutting && wRate < -1) out.push(`น้ำหนักเฉลี่ยลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ — เร็วเกิน 1% เสี่ยงเสียกล้าม ลองเพิ่ม 100–200 kcal ${cite('garthe')}`);
-      else if (cutting && wRate <= -0.5) out.push(`ลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ — อยู่ในโซน 0.5–1% ที่งานวิจัยแนะนำ 👍 ${cite('garthe')}`);
-      else if (cutting && wRate > 0.1) out.push(`น้ำหนักเฉลี่ยขึ้น ${fmt(wRate, 2)}% — น้ำ/โซเดียม/ไกลโคเจนทำให้แกว่งได้ ดูแนวโน้ม 2 สัปดาห์ก่อนปรับ และเช็กน้ำมันแฝง`);
-      else if (cutting && logged.filter((s) => s.inRange).length >= 5) out.push(`น้ำหนักนิ่งทั้งที่คุมได้ — ร่างกายใช้พลังงานน้อยลงเมื่อตัวเบาลง ถ้านิ่งต่อ 2 สัปดาห์ ลด 100–150 kcal ${cite('hall')}`);
-      else if (profile.goal === 'bulk' && wRate > 0.5) out.push(`ขึ้น ${fmt(wRate, 2)}%/สัปดาห์ — เร็วกว่า 0.5% ส่วนเกินมักเป็นไขมัน ${cite('morton')}`);
+      if (cutting && wRate < -1) out.push({ s: 'ลดเร็วเกิน — เพิ่ม 100–200 kcal', d: `ลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ เกินโซน 0.5–1% งานวิจัยในนักกีฬาพบว่าลดช้า (0.7%) เก็บกล้ามและพลังได้ดีกว่าลดเร็ว (1.4%) ${cite('garthe')}` });
+      else if (cutting && wRate <= -0.5) out.push({ s: `ลด ${fmt(Math.abs(wRate), 2)}%/สัปดาห์ — กำลังดี 👍`, d: `อยู่ในโซน 0.5–1% ต่อสัปดาห์ที่รักษากล้ามได้ดี ${cite('garthe')}` });
+      else if (cutting && wRate > 0.1) out.push({ s: 'น้ำหนักเฉลี่ยขึ้น — ดูแนวโน้ม 2 สัปดาห์', d: 'น้ำ โซเดียม และไกลโคเจนทำให้น้ำหนักแกว่งได้ ±1 kg ดูแนวโน้ม 2 สัปดาห์ก่อนปรับ และเช็กน้ำมัน/ซอสที่อาจไม่ได้บันทึก' });
+      else if (cutting && logged.filter((s) => s.inRange).length >= 5) out.push({ s: 'น้ำหนักนิ่ง — ถ้านิ่งต่อ ลด 100–150 kcal', d: `เมื่อตัวเบาลง ร่างกายใช้พลังงานน้อยลง Deficit เดิมจึงได้ผลช้าลง ${cite('hall')}` });
+      else if (profile.goal === 'bulk' && wRate > 0.5) out.push({ s: 'ขึ้นเร็วเกิน — ลด ~150 kcal', d: `เพิ่มเกิน 0.5%/สัปดาห์ ส่วนเกินมักเป็นไขมัน โปรตีน ~1.6 g/kg ก็พอสำหรับสร้างกล้าม ${cite('morton')}` });
     }
     const hiNa = logged.filter((s) => !s.sodium).length;
-    if (hiNa >= 3) out.push(`โซเดียมเกิน 2,000 mg ${hiNa} วัน — ลดน้ำจิ้ม/ซุป/ของหมักดอง น้ำหนักจะแกว่งน้อยลงด้วย`);
-    if (!out.length) out.push('สัปดาห์นี้ทำได้ดีมาก รักษาจังหวะนี้ไว้ 🔥');
+    if (hiNa >= 3) out.push({ s: `โซเดียมเกิน ${hiNa} วัน — ลดน้ำจิ้ม/ซุป`, d: 'โซเดียมเกิน 2,000 mg/วัน ทำให้ร่างกายเก็บน้ำ น้ำหนักแกว่งและอ่านแนวโน้มยากขึ้น' });
+    if (!out.length) out.push({ s: 'ทำได้ดีมาก รักษาจังหวะนี้ไว้ 🔥', d: 'ทุกตัวชี้วัดอยู่ในเกณฑ์ ความสม่ำเสมอสำคัญกว่าความเป๊ะ' });
     return out;
   }
   function renderWeek() {
@@ -1988,6 +1985,7 @@
     const w1 = wAvg(days), w0 = wAvg(weekDays(dayKey(addDays(new Date(wkView + 'T00:00:00'), -7))));
     const wRate = w1 && w0 ? ((w1 - w0) / w0) * 100 : null;
     const pts = stats.reduce((a, s) => a + s.pts, 0) + challengePts(wkView, q.idx, c);
+    wkTips = weekInsights(stats, elapsed, wRate, c);
     const score = elapsed ? (n / elapsed) * 0.4 + (pDays / elapsed) * 0.3 + (rDays / elapsed) * 0.3 : 0;
     const grade = score >= 0.8 ? ['A', 'good'] : score >= 0.6 ? ['B', 'acc2'] : score >= 0.4 ? ['C', 'warm'] : ['D', 'bad'];
     const bars = stats.map((s, i) => {
@@ -2014,8 +2012,8 @@
         ${tile('น้ำหนักเฉลี่ย', w1 ? fmt(w1, 1) + ' kg' : '—', wRate != null ? `${wRate > 0 ? '+' : ''}${fmt(wRate, 2)}% จากสัปดาห์ก่อน` : 'ชั่ง 2 สัปดาห์เพื่อเทียบ')}
       </div>
       <div><div class="text-[12.5px] font-semibold mb-2">ภารกิจ</div><div class="space-y-2.5">${weekChallenges(wkView).map((ch) => challengeRow(ch, weekCount(wkView, ch.k, q.idx, c))).join('')}</div></div>
-      <div class="rounded-2xl border border-acc/25 bg-acc/[.06] p-3"><div class="text-[12.5px] font-semibold mb-1.5">คำแนะนำสัปดาห์นี้</div>
-        <ul class="space-y-1.5 text-[11.5px] text-soft leading-relaxed">${weekInsights(stats, elapsed, wRate, c).map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t}</span></li>`).join('')}</ul></div>`;
+      <div class="rounded-2xl border border-acc/25 bg-acc/[.06] p-3"><div class="text-[12.5px] font-semibold mb-1.5 flex items-center">คำแนะนำสัปดาห์นี้<button type="button" class="info-btn" data-info="week" aria-label="เหตุผลและงานวิจัย">i</button></div>
+        <ul class="space-y-1.5 text-[12px] text-soft">${wkTips.map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t.s}</span></li>`).join('')}</ul></div>`;
   }
   function openWeek(wk = dayKey(weekStart())) { wkView = wk; renderWeek(); openModal('mWeek'); }
   $('#btnWeekSum').addEventListener('click', () => openWeek());
@@ -2073,6 +2071,51 @@
     renderQuest(); renderRewards(); burst(); buzz([10, 40, 10]);
     toast(`แลก “${r.name}” แล้ว! ให้รางวัลตัวเองได้เลย 🎉`, 'good');
   });
+
+
+  // ---------- ⓘ information sheets (long explanations live here, not on screen) ----------
+  const refList = (...ids) => `<ol class="mt-3 space-y-1.5 text-[11px] text-mute list-decimal pl-4">${ids.map((id) => `<li value="${REF_ORDER.indexOf(id) + 1}"><a href="${REFS[id].u}" target="_blank" rel="noopener" class="text-soft underline decoration-line underline-offset-2 hover:text-acc2">${esc(REFS[id].s)}</a> — ${esc(REFS[id].t)}</li>`).join('')}</ol>`;
+  const bullets = (arr) => `<ul class="space-y-2">${arr.map((t) => `<li class="flex gap-2"><span class="text-acc2">•</span><span>${t}</span></li>`).join('')}</ul>`;
+  const INFO = {
+    train: () => ['การออกกำลังกายหลัก', `<p>ใช้ประกอบคำแนะนำ: ฝึก <b>คาร์ดิโอ/ผสม</b> จะแนะนำ High-carb ตามปริมาณการซ้อม ${cite('acsm2016')} · ฝึก <b>เวท</b> ขณะลดแคลจะแนะนำโปรตีนสูงขึ้นเพื่อเก็บกล้าม ${cite('prot2025')}</p><p>ระดับกิจกรรม (×1.2–1.9) เป็นตัวคูณ TDEE แยกต่างหาก</p>` + refList('acsm2016', 'prot2025')],
+    goal: () => ['ความเร็วในการลด/เพิ่ม', bullets([
+      `ตั้งเป็น % น้ำหนักตัวต่อสัปดาห์ แล้วแปลงเป็นแคลอรี่ด้วย ~7,700 kcal ต่อ 1 kg (กฎคร่าวๆ — ของจริงจะช้าลงเมื่อร่างกายปรับตัว) ${cite('hall')}`,
+      `ลด 0.5–1%/สัปดาห์ คือโซนที่แนะนำ นักกีฬาที่ลด 0.7% เก็บกล้ามและพลังได้ดีกว่าลด 1.4% ${cite('garthe')}`,
+      `แคลอรี่จะไม่ต่ำกว่า 1,200 (หญิง) / 1,500 (ชาย) kcal ตามแนวทาง AHA/ACC/TOS ${cite('jensen')}`,
+      `ลดยาวเกิน 8–12 สัปดาห์ พัก Diet break 1 สัปดาห์ที่แคลคงที่ได้ ${cite('icecap')}`,
+      'เพิ่มกล้าม: ส่วนเกินเล็กน้อย ~0.25–0.5%/สัปดาห์ เพื่อไม่ให้ไขมันพอกเกิน',
+    ]) + refList('hall', 'garthe', 'jensen', 'icecap')],
+    diet: () => ['รูปแบบการกิน', bullets(Object.values(DIETS).map((d) => `<b>${d.th}</b> — ${esc(d.note)}`)) + `<p class="mt-3">ข้อสรุปหลัก: Low-fat กับ Low-carb ลดได้ไม่ต่างกันใน 12 เดือน ${cite('dietfits')} · คีโตอาจลดเพิ่ม ~1.5 kg แต่หลักฐานความมั่นใจต่ำ ${cite('keto2025')} และ LDL อาจสูงขึ้น ${cite('ketoLdl')} · จำกัดช่วงเวลากิน (IF) ไม่จำเป็นถ้าคุมแคลอยู่แล้ว ${cite('liu2022')} → เลือกแบบที่ทำได้นาน</p>` + refList('dietfits', 'keto2025', 'ketoLdl', 'acsm2016', 'liu2022')],
+    protein: () => ['โปรตีน', bullets([
+      `<b>1.6 g/kg</b> — เกินนี้ไม่เพิ่มกล้ามเพิ่มเมื่อไม่ได้ลดแคล ${cite('morton')}`,
+      `<b>2.0–2.4 g/kg</b> — ช่วงลดแคล + ฝึกเวท ยิ่งสูงยิ่งเก็บมวลไร้ไขมันได้มาก ${cite('prot2025')}`,
+      `คนน้ำหนักเกิน โปรตีนสูงขึ้นช่วยรักษากล้ามและความแข็งแรงระหว่างลด ${cite('espen2024')}`,
+      `แต่ละมื้อควรได้ ≥${MPS_PROTEIN_G} g เพื่อกระตุ้นการสร้างกล้าม`,
+    ]) + refList('morton', 'prot2025', 'espen2024')],
+    calc: () => ['วิธีคำนวณ', bullets([
+      `BMR ด้วย Mifflin-St Jeor — แม่นที่สุดในบรรดาสูตรที่นิยม (±10% ในคนส่วนใหญ่) ${cite('mifflin')}`,
+      'TDEE = BMR × ระดับกิจกรรม',
+      'Target = TDEE ± แคลอรี่จากความเร็วที่เลือก',
+      'โปรตีน = น้ำหนัก × g/kg · ไขมัน/คาร์บตามรูปแบบการกิน · ไฟเบอร์ 14 g ต่อ 1,000 kcal · โซเดียม ≤ 2,000 mg',
+    ]) + refList('mifflin')],
+    rec: () => { const rec = recommend(draft); return ['คำแนะนำสำหรับคุณ', `<p>BMI <b class="num">${fmt(rec.bmi, 1)}</b> · ${esc(TRAIN[draft.training] || '')}</p>` + bullets(rec.tips) + `<p class="mt-3 text-[11px] text-mute">เกณฑ์ BMI ที่ใช้เลือกความเร็ว (≥30 / 25–30 / <25) เป็นการแปลงหลัก “ยิ่งไขมันน้อยยิ่งลดช้า” มาเป็นตัวเลข</p>` + refList(...REF_ORDER.filter((id) => rec.tips.some((t) => t.includes(`>[${REF_ORDER.indexOf(id) + 1}]<`)))) + `<details class="mt-3"><summary class="text-[11px] text-mute cursor-pointer">งานวิจัยทั้งหมดในแอป (${REF_ORDER.length})</summary>${refList(...REF_ORDER)}</details>`]; },
+    quest: () => ['วิธีเก็บแต้ม', `<ul class="space-y-1">${DAY_CHECKS.map((d) => `<li class="flex justify-between"><span>${d.label}</span><span class="num text-acc2">+${d.pts}/วัน</span></li>`).join('')}<li class="flex justify-between"><span>ไฟติดต่อกันครบทุก 7 วัน</span><span class="num text-acc2">+${STREAK_BONUS}</span></li><li class="flex justify-between"><span>ภารกิจประจำสัปดาห์ (3 อย่าง)</span><span class="num text-acc2">+40–60</span></li></ul>
+      <p class="mt-3">สตรีคนับวันที่บันทึกอาหารต่อเนื่อง แต้มคำนวณจากบันทึกจริง แก้/ลบมื้อแล้วแต้มปรับตาม · นำแต้มไปแลกรางวัลที่ตั้งเองได้</p>
+      <p>ทำไมต้องมีเกม: แต้ม/สตรีค/ภารกิจช่วยให้ใช้แอปต่อเนื่องขึ้น ${cite('gamify', 'mlife')} และการบันทึกสม่ำเสมอคือพฤติกรรมที่สัมพันธ์กับผลลัพธ์มากที่สุด ${cite('selfmon')} · ตัวเลขแต้มแต่ละข้อเป็นค่าที่แอปกำหนด</p>` + refList('gamify', 'mlife', 'selfmon')],
+    week: () => ['คำแนะนำสัปดาห์นี้', bullets(wkTips.map((t) => `<b>${t.s}</b><br><span class="text-mute">${t.d}</span>`))],
+    weight: () => ['อ่านกราฟน้ำหนัก', `<p>${esc($('#wHint').textContent || '')}</p>` + bullets([
+      'เส้นเฉลี่ย 7 วันคือแนวโน้มจริง น้ำหนักรายวันแกว่ง ±1 kg จากน้ำและโซเดียม',
+      `โซนที่แนะนำตอนลด: 0.5–1% ต่อสัปดาห์ ${cite('garthe')}`,
+      `ถ้านิ่ง 2 สัปดาห์ทั้งที่คุมได้ ลด 100–150 kcal — ร่างกายใช้พลังงานน้อยลงเมื่อตัวเบาลง ${cite('hall')}`,
+    ]) + refList('garthe', 'hall')],
+    weigh: () => ['วิธีชั่งให้แม่น', bullets(['ชั่งตอนเช้าหลังเข้าห้องน้ำ ก่อนกิน/ดื่ม', 'ใช้เครื่องชั่งเดิม บนพื้นแข็งจุดเดิม', 'น้ำหนักรายวันแกว่ง ±1 kg ได้จากน้ำ โซเดียม และคาร์บ ให้ดูเส้นเฉลี่ย 7 วันเป็นหลัก'])],
+  };
+  function openInfo(key) {
+    const f = INFO[key]; if (!f) return;
+    const [t, h] = f(); $('#infoTitle').textContent = t; $('#infoBody').innerHTML = h;
+    $('#mInfo .sheet').scrollTop = 0; openModal('mInfo');
+  }
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-info]'); if (!b) return; e.preventDefault(); e.stopPropagation(); openInfo(b.dataset.info); }, true);
 
   // =========================================================================
   // WEIGHT MODAL
