@@ -874,7 +874,7 @@
           เลือกจากคลัง<input id="scFile" type="file" accept="image/*" class="hidden" />
         </label>
       </div>
-      <input id="scNote" class="field text-[12px]" maxlength="200" placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ) เช่น ข้าวครึ่งจาน, ไม่ใส่น้ำมัน" />
+      <input id="scNote" class="field text-[12px]" maxlength="200" placeholder="ชื่อเมนู/รายละเอียด เช่น ข้าวมันไก่ 1 จาน, ไม่ใส่น้ำมัน — ไม่มีรูปก็วิเคราะห์ได้" />
       <div class="grid grid-cols-1 gap-2">
         <button id="scAnalyze" class="btn-p w-full rounded-2xl py-3.5 disabled:opacity-40 active:scale-[.99] transition flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>
@@ -2476,13 +2476,15 @@ ANALYSIS RULES:
       $('#scResult').classList.add('hidden'); $('#scError').classList.add('hidden'); $('#scAnalyze').disabled = false;
     } catch { toast('ไม่สามารถอ่านรูปภาพได้ (ลองใช้ JPG/PNG)', 'bad'); }
   }
+  const canAnalyze = () => !!(imgData || $('#scNote').value.trim().length >= 2);
+  $('#scNote').addEventListener('input', () => { if ($('#scScanning').classList.contains('hidden')) $('#scAnalyze').disabled = !canAnalyze(); });
   $('#scCamera').addEventListener('change', onFile);
   $('#scFile').addEventListener('change', onFile);
 
   const showError = (msg) => { const el = $('#scError'); el.textContent = msg; el.classList.remove('hidden'); };
   function setBusy(b, lbl = 'กำลังวิเคราะห์…') {
     $('#scScanLbl').textContent = lbl;
-    $('#scScanning').classList.toggle('hidden', !b); $('#scAnalyze').disabled = b || !imgData; $('#scDemo').disabled = b;
+    $('#scScanning').classList.toggle('hidden', !b); $('#scAnalyze').disabled = b || !canAnalyze(); $('#scDemo').disabled = b;
   }
   function parseModelJSON(text) {
     const t = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
@@ -2526,7 +2528,7 @@ ANALYSIS RULES:
       if (model.startsWith('gemini-2')) gen.temperature = 0.2;
       const body = {
         systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-        contents: [{ role: 'user', parts: [{ inlineData: { mimeType: imgData.mime, data: imgData.b64 } }, { text: prompt }] }],
+        contents: [{ role: 'user', parts: [...(imgData ? [{ inlineData: { mimeType: imgData.mime, data: imgData.b64 } }] : []), { text: prompt }] }],
         generationConfig: gen,
       };
       try {
@@ -2542,25 +2544,49 @@ ANALYSIS RULES:
     }
     throw lastErr || new Error('ระบบวิเคราะห์ยังไม่พร้อม');
   }
+  const SAMPLE_ERR = {
+    not_granted: 'ยังไม่ได้อนุญาตให้วิเคราะห์ — เปิดหน้านี้ใหม่แล้วกด “อนุญาต” ตอนที่ถาม',
+    sampling_disabled: 'บัญชีนี้ใช้การวิเคราะห์ไม่ได้ — กรอกเองได้ในแท็บ “กรอกเอง”',
+    capability_disabled: 'หน้านี้ยังใช้การวิเคราะห์ไม่ได้ — ลองเปิดใหม่อีกครั้ง',
+    not_declared: 'หน้านี้ยังใช้การวิเคราะห์ไม่ได้ — ลองเปิดใหม่อีกครั้ง',
+    images_unavailable: 'แอปที่เปิดอยู่ส่งรูปไม่ได้ — พิมพ์ชื่อเมนูในช่องด้านบนแล้วกดวิเคราะห์ หรือเปิดลิงก์ในเบราว์เซอร์',
+    image_rejected: 'รูปนี้ใช้ไม่ได้ ลองรูปอื่น (JPG/PNG ไม่เกิน 20 MB)',
+    rate_limited: 'ใช้งานถี่เกินไป รอสักครู่แล้วลองใหม่',
+    session_expired: 'ต้องเข้าสู่ระบบใหม่ แล้วเปิดหน้านี้อีกครั้ง',
+    refused: 'วิเคราะห์รูปนี้ไม่ได้ ลองรูปอื่นหรือพิมพ์ชื่อเมนู',
+    empty_completion: 'ไม่ได้รับผลการวิเคราะห์ ลองใหม่อีกครั้ง',
+    invalid_json: 'อ่านผลการวิเคราะห์ไม่ได้ ลองกดวิเคราะห์อีกครั้ง',
+    upstream_error: 'เชื่อมต่อไม่สำเร็จ ลองอีกครั้ง',
+    prompt_too_large: 'ข้อความยาวเกินไป ลองย่อรายละเอียด',
+  };
   async function analyzeViaSampler(sampler, prompt) {
-    const bin = atob(imgData.b64), bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const blob = new Blob([bytes], { type: imgData.mime });
+    const lim = await sampler.limits().catch(() => null);
+    const withImg = !!(imgData && lim && lim.images);
+    if (imgData && !withImg && !$('#scNote').value.trim()) throw new Error(SAMPLE_ERR.images_unavailable);
+    const opts = { cache: false };
+    if (withImg) {
+      const bin = atob(imgData.b64), bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      opts.images = new Blob([bytes], { type: imgData.mime });
+    }
+    const input = SYSTEM_INSTRUCTION + '\n\n' + (withImg ? prompt : prompt + '\nNo photo is available: estimate from the dish description above using a typical Thai portion.');
     try {
-      return await sampler.json(SYSTEM_INSTRUCTION + '\n\n' + prompt, { images: blob, cache: false });
+      return await sampler.json(input, opts);
     } catch (e) {
-      throw new Error(e && e.code === 'not_granted' ? 'ต้องกดอนุญาตก่อนจึงจะวิเคราะห์รูปได้' : e && e.code === 'rate_limited' ? 'ใช้งานถี่เกินไป รอสักครู่แล้วลองใหม่' : 'วิเคราะห์ไม่สำเร็จ ลองใหม่อีกครั้ง');
+      const code = e && e.code;
+      throw new Error(SAMPLE_ERR[code] || `วิเคราะห์ไม่สำเร็จ${code ? ` (${code})` : ''} ลองใหม่อีกครั้ง`);
     }
   }
   async function callGemini() {
-    if (!imgData) return showError('กรุณาเลือกรูปอาหารก่อน');
+    if (!canAnalyze()) return showError('ถ่าย/เลือกรูปอาหาร หรือพิมพ์ชื่อเมนูก่อน');
     $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden');
     const c = calc(profile), t = totals(mealsOn(dayKey())), note = $('#scNote').value.trim();
     const ctx = `User context: goal=${profile.goal}, bodyweight=${currentWeight()}kg, remaining_calories_today=${Math.round(c.target + num(burn[dayKey()]) - t.kcal)} kcal, remaining_protein_today=${Math.max(0, Math.round(c.protein - t.p))} g, sodium_so_far=${Math.round(t.sodium)} mg.`;
     const prompt = `Analyze this meal and return the JSON object only.\n${ctx}${note ? `\nUser note about the dish: "${note}"` : ''}`;
-    setBusy(true);
+    setBusy(true, imgData ? 'กำลังวิเคราะห์รูป… อาจใช้ 10–60 วินาที' : 'กำลังวิเคราะห์เมนู…');
     try {
       const sampler = await getSampler();
+      if (!sampler && window.claude) throw new Error('หน้านี้ยังเชื่อมระบบวิเคราะห์ไม่ได้ — ปิดแล้วเปิดลิงก์ใหม่ หรือกรอกเองได้');
       const raw = sampler ? await analyzeViaSampler(sampler, prompt) : await analyzeViaServer(prompt);
       const result = normalize(raw || {});
       if (!result.nutritional_breakdown.calories) return showError('ไม่พบอาหารในภาพ ลองถ่ายใหม่ให้เห็นจานชัดขึ้น');
