@@ -118,6 +118,14 @@
   .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { scrollbar-width: none; }
   .ringbtn { background: rgb(var(--acc)); color: rgb(var(--onacc)); box-shadow: 0 0 0 5px var(--ring1), 0 0 0 11px var(--ring2), 0 14px 34px -10px rgb(0 0 0 / .7); }
   .btn-p { background: rgb(var(--acc)); color: rgb(var(--onacc)); font-weight: 700; }
+  .sw-row { position: relative; overflow: hidden; }
+  .sw-fg { position: relative; touch-action: pan-y; transition: transform .22s ease; }
+  .sw-fg.moved { background: rgb(var(--card)); }
+  .sw-fg.dragging { transition: none; user-select: none; -webkit-user-select: none; }
+  .sw-act { position: absolute; top: 0; bottom: 0; width: 88px; display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+  .sw-row.show-l .sw-edit, .sw-row.show-r .sw-del { display: flex; }
+  .sw-edit { left: 0; background: rgb(var(--acc)); color: rgb(var(--onacc)); }
+  .sw-del { right: 0; background: rgb(var(--bad)); color: #fff; }
   .chip { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 2px 7px; border-radius: 8px; border: 1px solid rgb(var(--line)); }
   .seg button { transition: all .2s; }
   [data-theme="campfire"] .btn-p { background: rgb(var(--acc) / .18); color: rgb(var(--acc2)); border: 1px solid rgb(var(--acc) / .34); font-weight: 600; }
@@ -1401,6 +1409,7 @@ if (!window.claude) try {
   })();
   function openModal(id) { $('#' + id).classList.remove('hidden-sheet'); $('#scroller').classList.add('locked'); buzz(6); }
   function closeModal(id) {
+    if (id === 'mScan' && draftMeal) { draftMeal = null; $('#scResult').classList.add('hidden'); $('#scResult').innerHTML = ''; }
     $('#' + id).classList.add('hidden-sheet');
     if (!$$('.sheet-wrap').some((x) => !x.classList.contains('hidden-sheet'))) $('#scroller').classList.remove('locked');
   }
@@ -1948,6 +1957,9 @@ if (!window.claude) try {
       const tag = (txt, col) => `<span class="chip !text-[8.5px] !px-1.5 !py-0" style="color:${C(col)};border-color:${C(col, 0.35)}">${txt}</span>`;
       const src = m.source === 'gemini' ? tag('สแกน', 'info') : m.source === 'demo' || m.source === 'sample' ? tag('ตัวอย่าง', 'mute') : m.source === 'manual' ? tag('กรอกเอง', 'soft') : '';
       return `${head}
+        <div class="sw-row" data-swrow="${esc(m.id)}">
+        <div class="sw-act sw-edit">✏️ แก้ไข</div><div class="sw-act sw-del">🗑 ลบ</div>
+        <div class="sw-fg">
         <button data-meal="${esc(m.id)}" class="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-white/[.03] active:bg-white/[.05] transition">
           ${mealIcon(m)}
           <div class="min-w-0 flex-1">
@@ -1962,7 +1974,8 @@ if (!window.claude) try {
             <div class="num text-[14px] font-semibold">${fmt(m.kcal)} <span class="text-[11px] font-normal text-mute">kcal</span></div>
             <div class="num text-[10px] text-mute mt-0.5">C ${fmt(m.c)} · F ${fmt(m.f)}</div>
           </div>
-        </button>`;
+        </button>
+        </div></div>`;
     }).join('');
   }
 
@@ -2538,6 +2551,9 @@ if (!window.claude) try {
       ${m.tip ? `<div class="mt-3 rounded-2xl border border-acc/40 bg-acc/[.08] p-3 flex gap-2.5"><span class="text-acc2 mt-0.5">✦</span><p class="text-[12.5px] leading-relaxed text-acc2">${esc(m.tip)}</p></div>` : ''}
       <button data-edit="${esc(m.id)}" class="mt-3 w-full rounded-xl border border-line py-2.5 text-[12.5px] text-soft hover:border-acc/50 hover:text-txt transition">✏️ แก้ไขรายละเอียด${m.edited ? ' <span class="text-acc2">· แก้ไขแล้ว</span>' : ''}</button>`;
   }
+  // a scanned meal stays a draft (not in `meals`) until the user presses save
+  let draftMeal = null;
+  const findMeal = (id) => (draftMeal && draftMeal.id === id ? draftMeal : meals.find((x) => x.id === id));
   // ---------- edit a logged meal (name, weight, oil, kcal, macros) ----------
   function editorHTML(m) {
     const f = (key, label, val, extra = '') => `<label class="block"><span class="text-mute text-[11px]">${label}</span><input data-ef="${key}" type="number" inputmode="decimal" min="0" ${extra} value="${val}" class="field num mt-1" /></label>`;
@@ -2567,10 +2583,10 @@ if (!window.claude) try {
   document.addEventListener('click', (e) => {
     const box = e.target.closest('#scNB, #mealDetail'); if (!box) return;
     const ed = e.target.closest('[data-edit]'), sv = e.target.closest('[data-esave]'), cn = e.target.closest('[data-ecancel]');
-    if (ed) { const m = meals.find((x) => x.id === ed.dataset.edit); if (!m) return; box.dataset.ebox = '1'; box.innerHTML = editorHTML(m); return; }
-    if (cn) { const m = meals.find((x) => x.id === cn.dataset.ecancel); delete box.dataset.ebox; if (m) refreshMealView(box, m); return; }
+    if (ed) { const m = findMeal(ed.dataset.edit); if (!m) return; box.dataset.ebox = '1'; box.innerHTML = editorHTML(m); return; }
+    if (cn) { const m = findMeal(cn.dataset.ecancel); delete box.dataset.ebox; if (m) refreshMealView(box, m); return; }
     if (sv) {
-      const m = meals.find((x) => x.id === sv.dataset.esave); if (!m) return;
+      const m = findMeal(sv.dataset.esave); if (!m) return;
       const v = (n) => box.querySelector(`[data-ef="${n}"]`).value, name = v('name').trim();
       if (!name) return toast('ใส่ชื่อเมนูก่อน', 'bad');
       const nums = { kcal: v('kcal'), p: v('p'), c: v('c'), f: v('f'), fiber: v('fiber'), sodium: v('sodium'), weight: v('weight'), oil: v('oil') };
@@ -2595,7 +2611,56 @@ if (!window.claude) try {
       </div>`;
     openModal('mMeal');
   }
-  $('#mealList').addEventListener('click', (e) => { const b = e.target.closest('[data-meal]'); if (b) openMeal(b.dataset.meal); });
+  // swipe a meal row: left reveals "delete", right reveals "edit"; tap the revealed button to confirm
+  (() => {
+    const list = $('#mealList'), W = 88;
+    let row = null, x0 = 0, y0 = 0, base = 0, drag = false, swiped = 0;
+    const setPos = (r, x) => {
+      const f = r.querySelector('.sw-fg');
+      f.style.transform = x ? `translateX(${x}px)` : ''; f.classList.toggle('moved', x !== 0);
+      r.classList.toggle('show-l', x > 0); r.classList.toggle('show-r', x < 0); r._x = x;
+      if (!x) setTimeout(() => { if (!r._x) { r.classList.remove('show-l', 'show-r'); f.classList.remove('moved'); } }, 240);
+    };
+    const closeOthers = (keep) => $$('.sw-row', list).forEach((r) => { if (r !== keep && r._x) setPos(r, 0); });
+    list.addEventListener('pointerdown', (e) => {
+      const fg = e.target.closest('.sw-fg'); if (!fg) return;
+      row = fg.parentElement; x0 = e.clientX; y0 = e.clientY; base = row._x || 0; drag = false; closeOthers(row);
+    });
+    list.addEventListener('pointermove', (e) => {
+      if (!row) return;
+      const dx = e.clientX - x0, dy = e.clientY - y0, fg = row.querySelector('.sw-fg');
+      if (!drag) {
+        if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) { row = null; return; }
+        if (Math.abs(dx) < 8) return;
+        drag = true; fg.classList.add('dragging'); try { fg.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      }
+      const x = Math.max(-W, Math.min(W, base + dx));
+      fg.style.transform = `translateX(${x}px)`; fg.classList.add('moved');
+      row.classList.toggle('show-l', x > 0); row.classList.toggle('show-r', x < 0); row._x = x;
+    });
+    const end = () => {
+      if (!row) return;
+      if (drag) {
+        const fg = row.querySelector('.sw-fg'), x = row._x || 0;
+        fg.classList.remove('dragging'); setPos(row, x > W / 2 ? W : x < -W / 2 ? -W : 0); swiped = Date.now(); buzz(4);
+      }
+      row = null; drag = false;
+    };
+    list.addEventListener('pointerup', end); list.addEventListener('pointercancel', end);
+    function editMeal(id) {
+      const m = meals.find((x) => x.id === id); if (!m) return;
+      openMeal(id); const box = $('#mealDetail'); box.dataset.ebox = '1'; box.innerHTML = editorHTML(m);
+    }
+    list.addEventListener('click', (e) => {
+      if (Date.now() - swiped < 350) return;
+      const r = e.target.closest('.sw-row'); if (!r) return;
+      const id = r.dataset.swrow;
+      if (e.target.closest('.sw-del')) { removeMeal(id); return; }
+      if (e.target.closest('.sw-edit')) { setPos(r, 0); editMeal(id); return; }
+      if (r._x) { setPos(r, 0); return; }
+      if (e.target.closest('[data-meal]')) openMeal(id);
+    });
+  })();
   $('#mealDetail').addEventListener('change', (e) => {
     const t = e.target.closest('[data-mtime]'); if (!t) return;
     const m = meals.find((x) => x.id === t.dataset.mtime), mm = /^(\d{1,2}):(\d{2})$/.exec(t.value); if (!m || !mm) return;
@@ -2609,7 +2674,7 @@ if (!window.claude) try {
   });
   const PORTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
   function resultView(m) {
-    const c = calc(profile), t = totals(mealsOn(dayKey())), rem = c.target + num(burn[dayKey()]) - t.kcal;
+    const c = calc(profile), t = totals(mealsOn(dayKey())), rem = c.target + num(burn[dayKey()]) - t.kcal - (draftMeal && draftMeal.id === m.id ? num(m.kcal) : 0);
     return `${nutritionBlock(m)}${portionChips(m)}
       <div class="mt-3 flex items-center justify-between rounded-xl border border-line px-3 py-2 num text-[11px]">
         <span class="text-mute">REMAINING AFTER</span>
@@ -2621,7 +2686,7 @@ if (!window.claude) try {
     return `<div class="mt-3"><div class="eyebrow !tracking-normal !text-[10px] mb-1.5">ปรับปริมาณ · Portion</div><div class="seg grid grid-cols-6 gap-1">${PORTIONS.map((x) => `<button data-portion="${x}" data-id="${esc(m.id)}" class="rounded-lg border border-line py-1.5 text-[11.5px] num ${Math.abs(x - cur) < 1e-6 ? 'on' : ''}">${x}×</button>`).join('')}</div></div>`;
   }
   function setPortion(id, x) {
-    const m = meals.find((q) => q.id === id); if (!m) return null;
+    const m = findMeal(id); if (!m) return null;
     const keys = ['kcal', 'p', 'f', 'c', 'fiber', 'sodium', 'weight'];
     if (!m.base) { const p0 = m.portion || 1; m.base = {}; keys.forEach((k) => { m.base[k] = num(m[k]) / p0; }); }
     m.portion = x; keys.forEach((k) => { m[k] = Math.round(m.base[k] * x); });
@@ -2709,7 +2774,7 @@ ANALYSIS RULES:
 
   let imgData = null, lastAddedId = null;
   function resetScan() {
-    imgData = null; lastAddedId = null;
+    imgData = null; lastAddedId = null; draftMeal = null;
     $('#scImg').classList.add('hidden'); $('#scImg').removeAttribute('src');
     $('#scPlaceholder').classList.remove('hidden'); $('#scScanning').classList.add('hidden');
     $('#scResult').classList.add('hidden'); $('#scResult').innerHTML = '';
@@ -2922,7 +2987,7 @@ ANALYSIS RULES:
       const raw = sampler ? await analyzeViaSampler(sampler, prompt) : await analyzeViaServer(prompt);
       const result = normalize(raw || {});
       if (!result.nutritional_breakdown.calories) return showError('ไม่พบอาหารในภาพ ลองถ่ายใหม่ให้เห็นจานชัดขึ้น');
-      commitResult(result, 'gemini');
+      commitResult(result, 'gemini', undefined, true);
     } catch (err) {
       showError(err.message || String(err));
     } finally { setBusy(false); }
@@ -2931,10 +2996,10 @@ ANALYSIS RULES:
   $('#scDemo').addEventListener('click', () => {
     $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden'); setBusy(true, 'DEMO MODE…');
     const pick = DEMO_DISHES[Math.floor(Math.random() * DEMO_DISHES.length)];
-    setTimeout(() => { setBusy(false); commitResult(normalize(JSON.parse(JSON.stringify(pick))), 'demo'); }, 1100);
+    setTimeout(() => { setBusy(false); commitResult(normalize(JSON.parse(JSON.stringify(pick))), 'demo', undefined, true); }, 1100);
   });
 
-  function commitResult(r, source, model) {
+  function commitResult(r, source, model, asDraft = false) {
     const nb = r.nutritional_breakdown;
     const meal = {
       id: uid(), ts: tsFromTime($('#mtTime').value), type: curMealType, name: r.dish_name, source, model: model || null,
@@ -2943,14 +3008,17 @@ ANALYSIS RULES:
       mps: r.scientific_evaluation.mps_threshold_reached, satiety: r.scientific_evaluation.satiety_index, tip: r.scientific_evaluation.actionable_tip,
       thumb: source === 'gemini' && imgData ? imgData.thumb : null,
     };
-    meals.push(meal); lastAddedId = meal.id;
-    if (!save(KEYS.meals, meals)) { meal.thumb = null; save(KEYS.meals, meals); }
-    range = '1D'; save(KEYS.range, range); renderAll();
     const box = $('#scResult');
+    if (asDraft) draftMeal = meal;
+    else {
+      meals.push(meal); lastAddedId = meal.id;
+      if (!save(KEYS.meals, meals)) { meal.thumb = null; save(KEYS.meals, meals); }
+      range = '1D'; save(KEYS.range, range); renderAll();
+    }
     box.innerHTML = `
       <div class="fade-in rounded-2xl border border-line bg-card2 p-4">
         <div class="flex items-center justify-between mb-3">
-          <span class="eyebrow flex items-center gap-2"><svg viewBox="0 0 52 52" class="h-6 w-6" aria-hidden="true"><circle class="check-c" cx="26" cy="26" r="24" fill="none" stroke-width="3.5" style="stroke:rgb(var(--good))"/><path class="check-p" d="M15 27l7 7 15-16" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="stroke:rgb(var(--good))"/></svg>Logged to Journal</span>
+          <span class="eyebrow flex items-center gap-2">${asDraft ? '<span class="th !tracking-normal">ผลวิเคราะห์ · ยังไม่ได้บันทึก</span>' : '<svg viewBox="0 0 52 52" class="h-6 w-6" aria-hidden="true"><circle class="check-c" cx="26" cy="26" r="24" fill="none" stroke-width="3.5" style="stroke:rgb(var(--good))"/><path class="check-p" d="M15 27l7 7 15-16" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="stroke:rgb(var(--good))"/></svg>Logged to Journal'}</span>
           <span class="chip th !tracking-normal" style="color:${source === 'gemini' ? C('info') : C('mute')}">${source === 'demo' ? 'เมนูตัวอย่าง' : source === 'manual' ? 'กรอกเอง' : 'สแกนจากรูป'}</span>
         </div>
         <div id="scNB">${resultView(meal)}</div>
@@ -2959,15 +3027,27 @@ ANALYSIS RULES:
           <pre class="px-3 pb-3 text-[10px] leading-relaxed text-soft overflow-x-auto num">${esc(JSON.stringify(r, null, 2))}</pre>
         </details>
         <div class="mt-3 grid grid-cols-2 gap-2">
-          <button id="scUndo" class="rounded-xl border border-line py-3 text-[12px] text-soft hover:border-bad hover:text-bad">ยกเลิก (Undo)</button>
-          <button data-close class="btn-p rounded-xl py-3 text-[12px]">เสร็จสิ้น</button>
+          ${asDraft
+            ? '<button id="scUndo" class="rounded-xl border border-line py-3 text-[12px] text-soft hover:border-bad hover:text-bad">ไม่บันทึก</button><button id="scSave" class="btn-p rounded-xl py-3 text-[12px]">บันทึก</button>'
+            : '<button id="scUndo" class="rounded-xl border border-line py-3 text-[12px] text-soft hover:border-bad hover:text-bad">ยกเลิก (Undo)</button><button data-close class="btn-p rounded-xl py-3 text-[12px]">เสร็จสิ้น</button>'}
         </div>
       </div>`;
     box.classList.remove('hidden');
-    $('#scUndo').addEventListener('click', () => { if (lastAddedId) removeMeal(lastAddedId); lastAddedId = null; box.classList.add('hidden'); });
+    $('#scUndo').addEventListener('click', () => {
+      if (asDraft) { draftMeal = null; box.classList.add('hidden'); box.innerHTML = ''; return; }
+      if (lastAddedId) removeMeal(lastAddedId); lastAddedId = null; box.classList.add('hidden');
+    });
+    if (asDraft) $('#scSave').addEventListener('click', () => {
+      const m = draftMeal; if (!m) return;
+      m.ts = tsFromTime($('#mtTime').value); m.type = curMealType; draftMeal = null; lastAddedId = m.id;
+      meals.push(m);
+      if (!save(KEYS.meals, meals)) { m.thumb = null; save(KEYS.meals, meals); }
+      range = '1D'; save(KEYS.range, range); renderAll();
+      box.classList.add('hidden'); box.innerHTML = ''; closeModal('mScan');
+      replay($('#remainingNum'), 'bump'); buzz(12); toast(`+ ${m.name} · ${fmt(m.kcal)} kcal`, 'acc');
+    });
     setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-    replay($('#remainingNum'), 'bump'); buzz(12);
-    toast(`+ ${r.dish_name} · ${fmt(nb.calories)} kcal`, 'acc');
+    if (!asDraft) { replay($('#remainingNum'), 'bump'); buzz(12); toast(`+ ${r.dish_name} · ${fmt(nb.calories)} kcal`, 'acc'); }
   }
 
   // =========================================================================
