@@ -1,26 +1,9 @@
 {
-  "name": "thushouse-backend",
-  "version": "1.0.0",
-  "description": "ThusHouse Academy - Backend API Server",
-  "main": "server-demo.js",
-  "scripts": {
-    "start": "node server-demo.js",
-    "dev": "node server-demo.js",
-    "test": "node server-demo.js"
-  },
-  "keywords": [
-    "thushouse",
-    "academy",
-    "api",
-    "backend",
-    "express"
-  ],
-  "author": "",
-  "license": "ISC",
+  "name": "cal",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Cal — calorie & macro journal (static page + Gemini proxy at /api/gemini)",
   "engines": {
-    "node": "18.x",
-    "npm": "9.x"
-  },
-  "dependencies": {},
-  "devDependencies": {}
+    "node": ">=20"
+  }
 }
