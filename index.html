@@ -2845,8 +2845,11 @@ ANALYSIS RULES:
     if (!res.ok) { const err = new Error(data?.error?.message || `HTTP ${res.status}`); err.status = res.status; throw err; }
     return data;
   }
+  const BUSY = (e) => [429, 500, 502, 503, 504].includes(e.status) || /high demand|overloaded|unavailable|try again later|quota|rate/i.test(e.message || '');
+  const NOTFOUND = (e) => e.status === 404 || /not found|not supported|is not available|unknown model|deprecated/i.test(e.message || '');
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function analyzeViaServer(prompt) {
-    let lastErr = null;
+    let lastErr = null, busy = false;
     for (const model of FALLBACK_MODELS) {
       const gen = { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA };
       if (model.startsWith('gemini-2')) gen.temperature = 0.2;
@@ -2855,17 +2858,22 @@ ANALYSIS RULES:
         contents: [{ role: 'user', parts: [...(imgData ? [{ inlineData: { mimeType: imgData.mime, data: imgData.b64 } }] : []), { text: prompt }] }],
         generationConfig: gen,
       };
-      try {
-        const data = await requestServer(model, body);
-        if (data?.promptFeedback?.blockReason) throw new Error('ไม่สามารถวิเคราะห์รูปนี้ได้');
-        const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
-        if (!text) throw new Error('ไม่ได้รับผลการวิเคราะห์ ลองใหม่อีกครั้ง');
-        return parseModelJSON(text);
-      } catch (err) {
-        lastErr = err;
-        if (!(err.status === 404 || /not found|not supported|is not available|unknown model|deprecated/i.test(err.message))) throw err;
+      for (let attempt = 0; attempt < 2; attempt++) {           // a busy model gets one retry, then we move on to the next model
+        try {
+          const data = await requestServer(model, body);
+          if (data?.promptFeedback?.blockReason) throw new Error('ไม่สามารถวิเคราะห์รูปนี้ได้');
+          const text = (data?.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought).map((p) => p.text || '').join('');
+          if (!text) throw new Error('ไม่ได้รับผลการวิเคราะห์ ลองใหม่อีกครั้ง');
+          return parseModelJSON(text);
+        } catch (err) {
+          lastErr = err;
+          if (NOTFOUND(err)) break;                              // wrong model name → next model
+          if (BUSY(err)) { busy = true; if (attempt === 0) { setBusy(true, 'ระบบคนใช้เยอะ กำลังลองอีกครั้ง…'); await sleep(1500); continue; } break; }
+          throw err;
+        }
       }
     }
+    if (busy) throw new Error('ระบบวิเคราะห์คนใช้เยอะชั่วคราว (ไม่ใช่ที่รูปหรือแอป) รอสัก 1 นาทีแล้วกด “วิเคราะห์อาหาร” อีกครั้ง หรือกรอกเองได้เลย');
     throw lastErr || new Error('ระบบวิเคราะห์ยังไม่พร้อม');
   }
   const SAMPLE_ERR = {
