@@ -246,6 +246,97 @@
 </head>
 <body class="h-full overflow-hidden">
 
+<!-- ===================== LOGIN ===================== -->
+<div id="loginOverlay" class="fixed inset-0 z-[90] hidden flex-col items-center justify-center px-6 text-center th" style="background: linear-gradient(180deg, var(--sky1) 0%, rgb(var(--ink)) 70%);">
+  <div class="h-16 w-16 rounded-2xl border border-acc/30 bg-acc/15 grid place-items-center mb-5">
+    <svg viewBox="0 0 40 40" class="h-9 w-9 text-acc2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 34 L15 15 L21 25 L26 18 L35 34 Z"/><path d="M13 7 l2 3 M20 4 v4 M27 7 l-2 3"/></svg>
+  </div>
+  <h1 class="disp text-[30px]">Cal</h1>
+  <p class="text-mute text-[13px] mt-2 mb-9 max-w-[250px] leading-relaxed">บันทึกอาหาร น้ำหนัก และภารกิจ<br>เข้าสู่ระบบเพื่อซิงก์ข้อมูลทุกเครื่อง</p>
+  <button id="loginGoogle" class="btn-p w-full max-w-[290px] rounded-2xl py-3.5 flex items-center justify-center gap-3 active:scale-[.99] transition">
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+    <span>เข้าสู่ระบบด้วย Google</span>
+  </button>
+  <p id="loginErr" class="hidden mt-4 max-w-[290px] text-[12px] text-bad leading-relaxed"></p>
+  <button id="loginSkip" class="mt-6 text-[12px] text-mute underline decoration-line underline-offset-4 hover:text-txt">ข้ามไปก่อน · เก็บข้อมูลในเครื่องนี้</button>
+</div>
+<script type="module">
+// Google sign-in + cloud sync (Firebase). Optional: if anything fails to load, the app keeps working locally.
+const $ = (s) => document.querySelector(s);
+const SKIP = 'cal.guest', isDataKey = (k) => k.startsWith('nj.') && k !== 'nj.updatedAt';
+const overlay = $('#loginOverlay'), showOverlay = (on) => { overlay.classList.toggle('hidden', !on); overlay.classList.toggle('flex', on); };
+const errText = { 'auth/popup-closed-by-user': 'ปิดหน้าต่างล็อกอินก่อนเสร็จ ลองอีกครั้ง', 'auth/unauthorized-domain': 'โดเมนนี้ยังไม่ได้อนุญาตใน Firebase (Authentication → Settings → Authorized domains)', 'auth/network-request-failed': 'เชื่อมต่อไม่ได้ ตรวจอินเทอร์เน็ตแล้วลองใหม่' };
+const say = (t) => { const e = $('#loginErr'); e.textContent = t || ''; e.classList.toggle('hidden', !t); };
+window.calCloud = null;
+if (!window.claude) try {
+  const V = '10.8.1', base = `https://www.gstatic.com/firebasejs/${V}/`;
+  const [{ initializeApp }, { getFirestore, doc, setDoc, getDoc }, A] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-firestore.js'), import(base + 'firebase-auth.js')]);
+  const app = initializeApp({ apiKey: 'AIzaSyDt8NzM09TKV809ns665qyuhfotB1eLywE', authDomain: 'cal-app-71068.firebaseapp.com', projectId: 'cal-app-71068' });
+  const auth = A.getAuth(app), db = getFirestore(app), provider = new A.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const ref = () => doc(db, 'users', auth.currentUser.uid);
+  let timer = null, lastErr = false;
+  const setSync = (t) => { const e = $('#acctSync'); if (e) e.textContent = t; };
+  const collect = () => { const d = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (isDataKey(k)) d[k] = localStorage.getItem(k); } return d; };
+  const pushNow = async () => {
+    if (!auth.currentUser) return;
+    try { setSync('กำลังซิงก์…'); await setDoc(ref(), { ...collect(), _updated: Number(localStorage.getItem('nj.updatedAt') || Date.now()) }); lastErr = false; setSync('☁️ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })); }
+    catch (e) { lastErr = true; setSync('ซิงก์ไม่สำเร็จ — จะลองใหม่เมื่อมีการบันทึก'); console.warn('sync', e); }
+  };
+  window.__calSync = () => { if (!auth.currentUser) return; clearTimeout(timer); timer = setTimeout(pushNow, 1500); };
+  const pullOrPush = async () => {
+    try {
+      const snap = await getDoc(ref()), local = Number(localStorage.getItem('nj.updatedAt') || 0), hasLocal = !!localStorage.getItem('nj.profile.v1');
+      if (snap.exists()) {
+        const d = snap.data(), t = Number(d._updated || 0);
+        if (!hasLocal || t > local) {
+          Object.keys(d).filter(isDataKey).forEach((k) => localStorage.setItem(k, d[k]));
+          localStorage.setItem('nj.updatedAt', String(t)); location.reload(); return;
+        }
+      }
+      await pushNow();
+    } catch (e) { setSync('ซิงก์ไม่สำเร็จ'); console.warn('sync', e); }
+  };
+  const login = async () => {
+    say('');
+    try { await A.signInWithPopup(auth, provider); }
+    catch (e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') return A.signInWithRedirect(auth, provider);
+      if (e.code !== 'auth/cancelled-popup-request') say(errText[e.code] || 'เข้าสู่ระบบไม่สำเร็จ ลองอีกครั้ง');
+    }
+  };
+  const logout = async () => {
+    clearTimeout(timer); await pushNow();
+    await A.signOut(auth);
+    Object.keys(localStorage).filter((k) => isDataKey(k) || k === 'nj.updatedAt').forEach((k) => localStorage.removeItem(k));
+    localStorage.removeItem(SKIP); location.reload();
+  };
+  let armed = 0;
+  $('#acctBtn').addEventListener('click', () => {
+    if (!auth.currentUser) { showOverlay(true); return; }
+    if (Date.now() - armed > 3500) { armed = Date.now(); $('#acctBtn').textContent = 'แตะอีกครั้งเพื่อออก'; setTimeout(() => { if (auth.currentUser) $('#acctBtn').textContent = 'ออกจากระบบ'; }, 3600); return; }
+    logout();
+  });
+  $('#loginGoogle').addEventListener('click', login);
+  $('#loginSkip').addEventListener('click', () => { localStorage.setItem(SKIP, '1'); showOverlay(false); });
+  window.calCloud = { login, logout, pushNow };
+  $('#acctBox').classList.remove('hidden');
+  A.getRedirectResult(auth).catch((e) => { if (e.code !== 'auth/redirect-cancelled-by-user') say(errText[e.code] || 'เข้าสู่ระบบไม่สำเร็จ'); });
+  A.onAuthStateChanged(auth, (u) => {
+    const av = $('#acctAv');
+    if (u) {
+      showOverlay(false);
+      $('#acctName').textContent = u.displayName || u.email || 'บัญชี Google'; $('#acctBtn').textContent = 'ออกจากระบบ';
+      av.innerHTML = u.photoURL ? `<img src="${u.photoURL}" alt="" referrerpolicy="no-referrer" class="h-full w-full object-cover">` : '☁️';
+      pullOrPush();
+    } else {
+      $('#acctName').textContent = 'ยังไม่ได้เข้าสู่ระบบ'; $('#acctBtn').textContent = 'เข้าสู่ระบบ'; av.textContent = '☁️'; setSync('ข้อมูลอยู่ในเครื่องนี้เท่านั้น');
+      showOverlay(!localStorage.getItem(SKIP));
+    }
+  });
+} catch (e) { console.warn('cloud sync unavailable', e); showOverlay(false); }
+</script>
+
 <!-- ===================== BACKGROUND SCENERY ===================== -->
 <div id="bgScene" class="fixed inset-0 z-0 pointer-events-none overflow-hidden" aria-hidden="true">
   <div class="trav absolute inset-0" style="background: linear-gradient(180deg, var(--sky1) 0%, rgb(var(--ink)) 55%);"></div>
@@ -720,6 +811,14 @@
           <button data-v="traveller" class="rounded-xl border border-line py-3 text-[12px]">🏕️ Traveller (Blue)</button>
         </div>
       </div>
+      <div id="acctBox" class="hidden border-t border-line/60 pt-4">
+        <div class="eyebrow mb-2">Account</div>
+        <div class="rounded-2xl border border-line p-3 flex items-center gap-3">
+          <div id="acctAv" class="h-10 w-10 shrink-0 rounded-full bg-card2 border border-line grid place-items-center text-[16px] overflow-hidden">☁️</div>
+          <div class="min-w-0 flex-1"><div id="acctName" class="text-[13px] truncate"></div><div id="acctSync" class="text-[11px] text-mute truncate"></div></div>
+          <button id="acctBtn" class="shrink-0 rounded-full border border-acc/40 bg-acc/15 px-3 py-1.5 text-[12px] text-acc2 active:scale-95 transition"></button>
+        </div>
+      </div>
       <div class="border-t border-line/60 pt-4">
         <div class="eyebrow mb-2">Data</div>
         <div class="grid grid-cols-2 gap-2">
@@ -966,7 +1065,7 @@
     theme: 'nj.theme', ghost: 'nj.ghost', rewards: 'nj.rewards.v1', redeems: 'nj.redeems.v1', weekSeen: 'nj.weekSeen',
   };
   const load = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } };
-  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { toast('พื้นที่จัดเก็บเต็ม ลองลบประวัติเก่า', 'bad'); return false; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); localStorage.setItem('nj.updatedAt', String(Date.now())); if (window.__calSync) window.__calSync(); return true; } catch { toast('พื้นที่จัดเก็บเต็ม ลองลบประวัติเก่า', 'bad'); return false; } };
 
   // ---------- Constants ----------
   // Goal = target rate of change in % bodyweight per week (Garthe 2011; Helms 2014; Iraki 2019)
