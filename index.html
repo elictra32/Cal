@@ -792,6 +792,11 @@ if (!window.claude) try {
           <input id="pFat" type="range" min="20" max="35" step="1" class="w-full mt-3" />
         </div>
       </div>
+      <div>
+        <label class="text-mute text-[11px] flex items-center">สัดส่วนแคลอรี่ต่อมื้อ<button type="button" class="info-btn" data-info="split" aria-label="ข้อมูลเพิ่มเติม">i</button></label>
+        <div class="seg mt-1 grid grid-cols-4 gap-1.5" id="pSplitPreset"></div>
+        <div id="pSplit" class="mt-3 space-y-2.5"></div>
+      </div>
       <div class="rounded-2xl border border-acc/40 bg-acc/[.08] p-3">
         <div class="eyebrow flex items-center">Live Calculation · Mifflin-St Jeor<button type="button" class="info-btn" data-info="calc" aria-label="ข้อมูลเพิ่มเติม">i</button></div>
         <div class="mt-2 grid grid-cols-3 gap-2 num">
@@ -983,6 +988,7 @@ if (!window.claude) try {
       <div>
         <div class="text-mute text-[11px] mb-1.5">มื้อไหน</div>
         <div class="seg grid grid-cols-4 gap-1.5" id="mtPick"></div>
+        <div class="mt-2 flex items-center gap-2"><label for="mtTime" class="text-mute text-[11px]">เวลาที่กิน</label><input id="mtTime" type="time" class="field num !w-auto !py-1.5 text-[13px]" /><span class="text-[10.5px] text-mute">บันทึกย้อนหลังวันนี้ได้</span></div>
       </div>
       <div class="seg grid grid-cols-2 gap-1 rounded-2xl border border-line bg-ink/40 p-1" id="scTabs">
         <button data-tab="ai" class="on rounded-xl py-2 text-[12.5px]">📷 ถ่ายรูปอาหาร</button>
@@ -1159,11 +1165,26 @@ if (!window.claude) try {
   const MT = Object.fromEntries(MEAL_TYPES.map((t) => [t.k, t]));
   const typeByHour = (h) => (h >= 5 && h < 10.5 ? 'breakfast' : h >= 10.5 && h < 14.5 ? 'lunch' : h >= 17 && h < 21.5 ? 'dinner' : 'snack');
   const defaultType = (d = new Date()) => typeByHour(d.getHours() + d.getMinutes() / 60);
+  const SPLIT_PRESETS = [
+    { id: 'bal', th: 'สมดุล', v: { breakfast: 25, lunch: 35, dinner: 30, snack: 10 } },
+    { id: 'am', th: 'เน้นเช้า', v: { breakfast: 35, lunch: 30, dinner: 25, snack: 10 } },
+    { id: 'pm', th: 'เน้นเย็น', v: { breakfast: 20, lunch: 30, dinner: 40, snack: 10 } },
+    { id: 'three', th: '3 มื้อ', v: { breakfast: 30, lunch: 35, dinner: 35, snack: 0 } },
+  ];
+  const splitOf = (p) => { const base = SPLIT_PRESETS[0].v, o = (p && p.mealSplit) || {}, v = {}; MEAL_TYPES.forEach((t) => { v[t.k] = Number.isFinite(Number(o[t.k])) ? Number(o[t.k]) : base[t.k]; }); const sum = Object.values(v).reduce((a, b) => a + b, 0); return sum === 100 ? v : { ...base }; };
+  // move one share, spread the rest over the others in proportion so the total stays 100
+  function setSplit(sp, key, val) {
+    const v = clamp(Math.round(val), 0, 100), others = MEAL_TYPES.map((t) => t.k).filter((k) => k !== key), rest = 100 - v, cur = others.reduce((a, k) => a + sp[k], 0);
+    sp[key] = v; let used = 0;
+    others.forEach((k) => { sp[k] = cur > 0 ? Math.round((sp[k] / cur) * rest) : Math.round(rest / others.length); used += sp[k]; });
+    const big = others.reduce((a, k) => (sp[k] > sp[a] ? k : a), others[0]); sp[big] += rest - used;
+    return sp;
+  }
   const typeOf = (m) => (MT[m.type] ? m.type : defaultType(new Date(m.ts))); // older entries: guess from the time they were logged
   const MPS_PROTEIN_G = 25;
   const DEFAULT_MODEL = 'gemini-3.8-flash';
   const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
-  const DEFAULT_PROFILE = { name: '', sex: 'male', age: 28, height: 175, weight: 75, startWeight: null, goalWeight: null, activity: 1.55, goal: 'cut', proteinPerKg: 2.2, fatPct: 25, diet: 'balanced', training: 'strength' };
+  const DEFAULT_PROFILE = { mealSplit: { breakfast: 25, lunch: 35, dinner: 30, snack: 10 }, name: '', sex: 'male', age: 28, height: 175, weight: 75, startWeight: null, goalWeight: null, activity: 1.55, goal: 'cut', proteinPerKg: 2.2, fatPct: 25, diet: 'balanced', training: 'strength' };
   const TIERS = [
     { en: 'Rookie Camper', th: 'นักตั้งแคมป์มือใหม่ · เริ่มต้นการเดินทาง' },
     { en: 'Trail Walker', th: 'นักเดินป่า · ปลดล็อกไม้เท้าเดินป่า' },
@@ -1212,7 +1233,7 @@ if (!window.claude) try {
   const replay = (el, cls) => { if (!el || reduceMotion) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 
   // ---------- State ----------
-  let profile = { ...DEFAULT_PROFILE, ...load(KEYS.profile, {}) };
+  let profile = { ...DEFAULT_PROFILE, ...load(KEYS.profile, {}) }; profile.mealSplit = splitOf(profile);
   if (LEGACY_GOAL[profile.goal]) profile.goal = LEGACY_GOAL[profile.goal];
   if (!GOALS[profile.goal]) profile.goal = 'cut';
   let rewards = load(KEYS.rewards, []);
@@ -1736,8 +1757,9 @@ if (!window.claude) try {
     rp.style.color = remaining < 0 ? C('bad') : C('good');
     const g = GOALS[profile.goal] || GOALS.cut, db = $('#deficitBadge');
     db.textContent = g.badge; db.style.color = C(g.tone); db.style.background = C(g.tone, 0.1); db.style.borderColor = C(g.tone, 0.4);
-    const split = MEAL_TYPES.map((t) => ({ ...t, v: totals(mealsOn(dayKey()).filter((m) => typeOf(m) === t.k)) })), mx = Math.max(1, ...split.map((x) => x.v.kcal));
-    $('#mealSplit').innerHTML = split.map((x) => `<div class="rounded-xl border border-line bg-ink/30 px-2 py-1.5 text-center"><div class="text-[13px] leading-none">${x.e}</div><div class="num text-[12px] font-semibold mt-1">${x.v.kcal ? fmt(x.v.kcal) : '–'}</div><div class="track mt-1"><div class="fill" style="width:${(x.v.kcal / mx) * 100}%;background:${C('acc', 0.75)}"></div></div></div>`).join('');
+    const sp = splitOf(profile), split = MEAL_TYPES.map((t) => ({ ...t, tg: c.target * sp[t.k] / 100, v: totals(mealsOn(dayKey()).filter((m) => typeOf(m) === t.k)) }));
+    $('#mealSplit').innerHTML = split.map((x) => { const over = x.tg > 0 && x.v.kcal > x.tg * 1.1, pct = x.tg > 0 ? clamp((x.v.kcal / x.tg) * 100, 0, 100) : (x.v.kcal ? 100 : 0);
+      return `<div class="rounded-xl border border-line bg-ink/30 px-1.5 py-1.5 text-center"><div class="text-[13px] leading-none">${x.e}</div><div class="num text-[12px] font-semibold mt-1" style="${over ? 'color:' + C('bad') : ''}">${x.v.kcal ? fmt(x.v.kcal) : '–'}</div><div class="num text-[9.5px] text-mute">/ ${fmt(x.tg)}</div><div class="track mt-1"><div class="fill" style="width:${pct}%;background:${over ? C('bad', 0.8) : C('acc', 0.75)}"></div></div></div>`; }).join('');
     $('#tdeeLine').textContent = `BMR ${fmt(c.bmr)} · TDEE ${fmt(c.tdee)} kcal`;
     const bf = $('#budgetFill');
     bf.style.width = clamp(budget > 0 ? (t.kcal / budget) * 100 : 0, 0, 100) + '%';
@@ -1917,7 +1939,7 @@ if (!window.claude) try {
       const k = dayKey(m.ts), ty = typeOf(m); let head = '';
       if (grouped && ty !== lastType) {
         lastType = ty; const gt = totals(list.filter((q) => typeOf(q) === ty));
-        head = `<div class="flex items-center justify-between px-5 pt-4 pb-1 th text-[12px]"><span class="font-semibold">${MT[ty].e} ${MT[ty].th}</span><span class="num text-[11px] text-mute">${fmt(gt.kcal)} kcal · P ${fmt(gt.p)}g</span></div>`;
+        head = `<div class="flex items-center justify-between px-5 pt-4 pb-1 th text-[12px]"><span class="font-semibold">${MT[ty].e} ${MT[ty].th}</span><span class="num text-[11px] text-mute">${fmt(gt.kcal)}${splitOf(profile)[ty] ? ' / ' + fmt(calc(profile).target * splitOf(profile)[ty] / 100) : ''} kcal · P ${fmt(gt.p)}g</span></div>`;
       } else if (!grouped && k !== lastDay) {
         lastDay = k; const dt = totals(mealsOn(k));
         head = `<div class="flex items-center justify-between px-5 pt-4 pb-1 num text-[11px] text-mute"><span>${k === today ? 'TODAY' : esc(dateStr(m.ts))}</span><span>${fmt(dt.kcal)} kcal · P ${fmt(dt.p)}g</span></div>`;
@@ -1998,6 +2020,7 @@ if (!window.claude) try {
     $$('#pTrain [data-v]').forEach((b) => b.classList.toggle('on', b.dataset.v === draft.training));
     $('#pFatLbl').textContent = draft.fatPct + '%';
     const c = calc(draft);
+    if ($('#pSplit').children.length) syncSplitLabels();
     const freeFat = c.diet === 'balanced';
     $('#pFat').disabled = !freeFat; $('#pFatBox').style.opacity = freeFat ? '' : '.45';
     if (!freeFat) $('#pFatLbl').textContent = fmt((c.fat * 9 / Math.max(1, c.target)) * 100) + '%';
@@ -2034,13 +2057,25 @@ if (!window.claude) try {
     if (rec.diet === 'balanced') { draft.fatPct = rec.fatPct; $('#pFat').value = rec.fatPct; }
     syncProfileForm(); buzz(6); toast('ใช้ค่าแนะนำแล้ว · กดบันทึกเพื่อยืนยัน', 'acc');
   });
-  function openProfile() { draft = { ...profile, weight: currentWeight() }; syncProfileForm(true); openModal('mProfile'); }
+  function renderSplitRows() {
+    const sp = splitOf(draft);
+    $('#pSplit').innerHTML = MEAL_TYPES.map((t) => `<div class="grid grid-cols-[92px_1fr_88px] items-center gap-2"><span class="text-[12px]">${t.e} ${t.th}</span><input type="range" min="0" max="70" step="1" value="${sp[t.k]}" data-split="${t.k}" class="w-full" aria-label="${t.th}"><span data-splitv="${t.k}" class="num text-[11.5px] text-right"></span></div>`).join('');
+    $('#pSplitPreset').innerHTML = SPLIT_PRESETS.map((x) => `<button data-sp="${x.id}" class="rounded-xl border border-line py-2 text-[12px]">${x.th}</button>`).join('');
+  }
+  function syncSplitLabels() {
+    const sp = splitOf(draft), tgt = calc(draft).target;
+    MEAL_TYPES.forEach((t) => { const inp = $(`#pSplit [data-split="${t.k}"]`); if (inp && Number(inp.value) !== sp[t.k]) inp.value = sp[t.k]; $(`#pSplit [data-splitv="${t.k}"]`).textContent = `${sp[t.k]}% · ${fmt(tgt * sp[t.k] / 100)}`; });
+    $$('#pSplitPreset [data-sp]').forEach((b) => b.classList.toggle('on', MEAL_TYPES.every((t) => SPLIT_PRESETS.find((x) => x.id === b.dataset.sp).v[t.k] === sp[t.k])));
+  }
+  $('#pSplit').addEventListener('input', (e) => { const k = e.target.dataset && e.target.dataset.split; if (!k) return; draft.mealSplit = setSplit({ ...splitOf(draft) }, k, Number(e.target.value)); syncSplitLabels(); });
+  $('#pSplitPreset').addEventListener('click', (e) => { const b = e.target.closest('[data-sp]'); if (!b) return; draft.mealSplit = { ...SPLIT_PRESETS.find((x) => x.id === b.dataset.sp).v }; syncSplitLabels(); buzz(4); });
+  function openProfile() { draft = { ...profile, mealSplit: { ...splitOf(profile) }, weight: currentWeight() }; renderSplitRows(); syncProfileForm(true); openModal('mProfile'); }
   $('#btnProfile').addEventListener('click', openProfile);
   $('#pSave').addEventListener('click', () => {
     const bad = !(draft.age >= 13 && draft.age <= 90) || !(draft.height >= 120 && draft.height <= 230) || !(draft.weight >= 30 && draft.weight <= 250) || (draft.goalWeight != null && !(draft.goalWeight >= 30 && draft.goalWeight <= 250));
     if (bad) return toast('กรุณากรอก อายุ 13–90, ส่วนสูง 120–230 cm, น้ำหนัก 30–250 kg', 'bad');
     const changedW = !wEntries().length || Math.abs(draft.weight - currentWeight()) >= 0.05;
-    profile = { ...draft }; save(KEYS.profile, profile);
+    profile = { ...draft, mealSplit: splitOf(draft) }; save(KEYS.profile, profile);
     if (changedW) setWeight(dayKey(), draft.weight);
     closeModal('mProfile'); renderAll(); toast('บันทึกโปรไฟล์แล้ว · Target ' + fmt(calc(profile).target) + ' kcal');
   });
@@ -2292,6 +2327,10 @@ if (!window.claude) try {
     quest: () => ['วิธีเก็บแต้ม', `<ul class="space-y-1">${DAY_CHECKS.map((d) => `<li class="flex justify-between"><span>${d.label}</span><span class="num text-acc2">+${d.pts}/วัน</span></li>`).join('')}<li class="flex justify-between"><span>ไฟติดต่อกันครบทุก 7 วัน</span><span class="num text-acc2">+${STREAK_BONUS}</span></li><li class="flex justify-between"><span>ภารกิจประจำสัปดาห์ (3 อย่าง)</span><span class="num text-acc2">+40–60</span></li></ul>
       <p class="mt-3">สตรีคนับวันที่บันทึกอาหารต่อเนื่อง แต้มคำนวณจากบันทึกจริง แก้/ลบมื้อแล้วแต้มปรับตาม · นำแต้มไปแลกรางวัลที่ตั้งเองได้</p>
       <p>ทำไมต้องมีเกม: แต้ม/สตรีค/ภารกิจช่วยให้ใช้แอปต่อเนื่องขึ้น ${cite('gamify', 'mlife')} และการบันทึกสม่ำเสมอคือพฤติกรรมที่สัมพันธ์กับผลลัพธ์มากที่สุด ${cite('selfmon')} · ตัวเลขแต้มแต่ละข้อเป็นค่าที่แอปกำหนด</p>` + refList('gamify', 'mlife', 'selfmon')],
+    split: () => ['สัดส่วนแคลอรี่ต่อมื้อ', `<p>แบ่งเป้าแคลอรี่ของวันเป็นงบต่อมื้อ (รวม 100%) เพื่อให้เห็นว่ามื้อไหนใกล้เต็ม ลากแถบไหน แถบอื่นจะปรับให้รวมเป็น 100 เอง</p>`
+      + bullets(['<b>สมดุล</b> 25/35/30/10 — ค่าเริ่มต้น', '<b>เน้นเช้า</b> 35/30/25/10 — คนหิวเช้า/ซ้อมเช้า', '<b>เน้นเย็น</b> 20/30/40/10 — กินเบาตอนกลางวัน หนักมื้อเย็น', '<b>3 มื้อ</b> 30/35/35/0 — ไม่กินของว่าง'])
+      + `<p class="mt-3">ไม่มีงานวิจัยที่ชี้ว่าสัดส่วนไหน “ดีที่สุด” สำหรับการลดน้ำหนัก ผลรวมแคลอรี่ทั้งวันสำคัญกว่า เลือกแบบที่เข้ากับตารางชีวิตแล้วทำได้ต่อเนื่อง สัดส่วนนี้ใช้ดูภาพรวมเท่านั้น ไม่มีผลกับเป้าแคลอรี่รวม</p>
+      <p>เรื่องโปรตีน: ทั้งวันควรถึงเป้า และกระจายทุกมื้อให้ได้ ≥${MPS_PROTEIN_G} g ต่อมื้อ ตามที่แอปใช้เป็นเกณฑ์อยู่แล้ว</p>`],
     week: () => ['คำแนะนำสัปดาห์นี้', bullets(wkTips.map((t) => `<b>${t.s}</b><br><span class="text-mute">${t.d}</span>`))],
     weight: () => ['อ่านกราฟน้ำหนัก', `<p>${esc($('#wHint').textContent || '')}</p>` + bullets([
       'เส้นเฉลี่ย 7 วันคือแนวโน้มจริง น้ำหนักรายวันแกว่ง ±1 kg จากน้ำและโซเดียม',
@@ -2502,6 +2541,7 @@ if (!window.claude) try {
     const m = meals.find((x) => x.id === id); if (!m) return;
     $('#mealDetail').innerHTML = `
       <div class="num text-[10.5px] text-mute mb-3">${esc(dateStr(m.ts))} · ${timeStr(m.ts)} · ${m.source === 'gemini' ? 'สแกนจากรูป' : m.source === 'manual' ? 'กรอกเอง' : 'ตัวอย่าง'}</div>
+      <div class="mb-3 flex items-center gap-2"><label class="text-mute text-[11px]">เวลา</label><input type="time" data-mtime="${esc(m.id)}" value="${hhmm(new Date(m.ts))}" class="field num !w-auto !py-1.5 text-[13px]" /></div>
       <div class="seg grid grid-cols-4 gap-1.5 mb-3" id="mdType">${MEAL_TYPES.map((t) => `<button data-mtype="${t.k}" data-id="${esc(m.id)}" class="${t.k === typeOf(m) ? 'on ' : ''}rounded-xl border border-line py-1.5 text-[11.5px] leading-tight"><span class="block text-[14px]">${t.e}</span>${t.th}</button>`).join('')}</div>
       ${nutritionBlock(m)}
       ${portionChips(m)}
@@ -2512,6 +2552,11 @@ if (!window.claude) try {
     openModal('mMeal');
   }
   $('#mealList').addEventListener('click', (e) => { const b = e.target.closest('[data-meal]'); if (b) openMeal(b.dataset.meal); });
+  $('#mealDetail').addEventListener('change', (e) => {
+    const t = e.target.closest('[data-mtime]'); if (!t) return;
+    const m = meals.find((x) => x.id === t.dataset.mtime), mm = /^(\d{1,2}):(\d{2})$/.exec(t.value); if (!m || !mm) return;
+    const d = new Date(m.ts); d.setHours(+mm[1], +mm[2], 0, 0); m.ts = Math.min(d.getTime(), Date.now()); save(KEYS.meals, meals); renderAll(); toast('แก้เวลาแล้ว', 'acc');
+  });
   $('#mealDetail').addEventListener('click', (e) => {
     const tb = e.target.closest('[data-mtype]');
     if (tb) { const m = meals.find((x) => x.id === tb.dataset.id); if (m) { m.type = tb.dataset.mtype; save(KEYS.meals, meals); renderAll(); $$('#mdType [data-mtype]').forEach((x) => x.classList.toggle('on', x === tb)); buzz(4); } return; }
@@ -2546,9 +2591,9 @@ if (!window.claude) try {
     if (b.closest('#scNB')) $('#scNB').innerHTML = resultView(m);
     if (b.closest('#mealDetail')) openMeal(m.id);
   });
-  function relog(id, type) {
+  function relog(id, type, ts) {
     const m = meals.find((q) => q.id === id); if (!m) return;
-    meals.push({ ...m, id: uid(), ts: Date.now(), type: type || defaultType(), base: m.base ? { ...m.base } : undefined, source: m.source === 'sample' ? 'manual' : m.source });
+    meals.push({ ...m, id: uid(), ts: ts || Date.now(), type: type || defaultType(), base: m.base ? { ...m.base } : undefined, source: m.source === 'sample' ? 'manual' : m.source });
     save(KEYS.meals, meals); range = '1D'; save(KEYS.range, range); renderAll();
     replay($('#remainingNum'), 'bump'); buzz(10); toast(`+ ${m.name} · ${fmt(m.kcal)} kcal`, 'acc');
   }
@@ -2626,18 +2671,24 @@ ANALYSIS RULES:
   }
   let noImgView = false;
   $('#btnScan').addEventListener('click', () => {
-    resetScan(); curMealType = defaultType(); renderMtPick(); setScanTab('ai'); openModal('mScan');
+    resetScan(); curMealType = defaultType(); mtTouched = false; renderMtPick(); $('#mtTime').value = hhmm(new Date()); setScanTab('ai'); openModal('mScan');
     // some Claude viewers (e.g. the mobile app) cannot send photos: switch to "type the dish" up front
     getSampler().then((sp) => (sp ? sp.limits().catch(() => null) : undefined)).then((lim) => {
       noImgView = lim !== undefined && !(lim && lim.images);
       $('#scNoImg').classList.toggle('hidden', !noImgView);
     });
   });
-  let curMealType = defaultType();
+  let curMealType = defaultType(), mtTouched = false;
+  const TYPICAL = { breakfast: 8, lunch: 12.5, dinner: 19, snack: 15.5 };
+  const hhmm = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  const tsFromTime = (str) => { const m = /^(\d{1,2}):(\d{2})$/.exec(str || ''); const d = new Date(); if (!m) return d.getTime(); d.setHours(+m[1], +m[2], 0, 0); return Math.min(d.getTime(), Date.now()); };
+  // default time for the chosen meal: its usual hour, but never in the future
+  function setDefaultTime() { if (mtTouched) return; const now = new Date(), h = TYPICAL[curMealType]; const d = new Date(); d.setHours(Math.floor(h), (h % 1) * 60, 0, 0); $('#mtTime').value = hhmm(d > now ? now : d); }
+  $('#mtTime').addEventListener('input', () => { mtTouched = true; });
   function renderMtPick() {
     $('#mtPick').innerHTML = MEAL_TYPES.map((t) => `<button data-v="${t.k}" class="${t.k === curMealType ? 'on ' : ''}rounded-xl border border-line py-2 text-[12px] leading-tight"><span class="block text-[15px]">${t.e}</span>${t.th}</button>`).join('');
   }
-  $('#mtPick').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (!b) return; curMealType = b.dataset.v; renderMtPick(); buzz(4); });
+  $('#mtPick').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (!b) return; curMealType = b.dataset.v; renderMtPick(); setDefaultTime(); buzz(4); });
   function setScanTab(t) {
     $$('#scTabs [data-tab]').forEach((x) => x.classList.toggle('on', x.dataset.tab === t));
     $('#paneAI').classList.toggle('hidden', t !== 'ai'); $('#paneManual').classList.toggle('hidden', t !== 'manual');
@@ -2651,7 +2702,7 @@ ANALYSIS RULES:
     [...meals].sort((a, b) => b.ts - a.ts).forEach((m) => { if (!seen.has(m.name) && list.length < 8) { seen.add(m.name); list.push(m); } });
     $('#recentChips').innerHTML = list.length ? list.map((m) => `<button data-relog-chip="${esc(m.id)}" class="shrink-0 rounded-xl border border-line bg-ink/40 px-3 py-2 text-left hover:border-acc active:scale-95 transition"><div class="text-[12px] font-medium max-w-[150px] truncate">${esc(m.name)}</div><div class="num text-[10.5px] text-mute">${fmt(m.kcal)} kcal · P ${fmt(m.p)}g</div></button>`).join('') : '<p class="text-[11.5px] text-mute">ยังไม่มีประวัติ — บันทึกมื้อแรกด้านล่าง</p>';
   }
-  $('#recentChips').addEventListener('click', (e) => { const b = e.target.closest('[data-relog-chip]'); if (!b) return; relog(b.dataset.relogChip, curMealType); closeModal('mScan'); });
+  $('#recentChips').addEventListener('click', (e) => { const b = e.target.closest('[data-relog-chip]'); if (!b) return; relog(b.dataset.relogChip, curMealType, tsFromTime($('#mtTime').value)); closeModal('mScan'); });
   function mnCalc() {
     const p = num($('#mnP').value), c = num($('#mnC').value), f = num($('#mnF').value), k = Math.round(p * 4 + c * 4 + f * 9);
     $('#mnCalc').textContent = p || c || f ? `จากมาโคร ≈ ${fmt(k)} kcal (P×4 + C×4 + F×9)` : '';
@@ -2832,7 +2883,7 @@ ANALYSIS RULES:
   function commitResult(r, source, model) {
     const nb = r.nutritional_breakdown;
     const meal = {
-      id: uid(), ts: Date.now(), type: curMealType, name: r.dish_name, source, model: model || null,
+      id: uid(), ts: tsFromTime($('#mtTime').value), type: curMealType, name: r.dish_name, source, model: model || null,
       kcal: nb.calories, p: nb.macros.protein_g, f: nb.macros.fat_g, c: nb.macros.carbs_g, fiber: nb.micros.fiber_g, sodium: nb.micros.sodium_mg,
       weight: r.estimated_weight_g, oil: r.hidden_oil_tbsp,
       mps: r.scientific_evaluation.mps_threshold_reached, satiety: r.scientific_evaluation.satiety_index, tip: r.scientific_evaluation.actionable_tip,
