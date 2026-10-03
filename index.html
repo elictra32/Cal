@@ -2,7 +2,7 @@
 <html lang="th" data-theme="campfire">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#11182A" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -78,7 +78,11 @@
   [data-theme="campfire"] .disp { letter-spacing: -0.03em; font-weight: 900; }
   [data-theme="campfire"] #bgSnow, [data-theme="campfire"] #bgScene .trav, [data-theme="campfire"] #bgScene .obs { display: none; }
   [data-theme="campfire"] .bubble::after { display: none; }
-  html, body { background: rgb(var(--ink)); }
+  html, body { background: rgb(var(--ink)); position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; touch-action: manipulation; }
+  /* mobile: 16px inputs stop iOS from zooming/panning the page on focus; sheets follow the visible area above the keyboard */
+  @media (pointer: coarse) { input, select, textarea { font-size: 16px !important; } }
+  .sheet-wrap { top: var(--vvt, 0px) !important; bottom: auto !important; height: var(--vvh, 100dvh) !important; overflow: hidden; }
+  .sheet-wrap .sheet { max-height: calc(var(--vvh, 100dvh) - 14px) !important; overscroll-behavior: contain; }
   body {
     font-family: var(--font-ui); color: rgb(var(--txt));
     -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none;
@@ -1295,6 +1299,21 @@ if (!window.claude) try {
   }
 
   // ---------- Modals ----------
+  // keep sheets inside the visible area (above the keyboard) and stop iOS from panning the page
+  (() => {
+    const vv = window.visualViewport, root = document.documentElement;
+    const fit = () => {
+      root.style.setProperty('--vvh', (vv ? vv.height : innerHeight) + 'px'); root.style.setProperty('--vvt', (vv ? vv.offsetTop : 0) + 'px');
+      if (scrollX || scrollY) scrollTo(0, 0);
+    };
+    if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+    addEventListener('resize', fit); fit();
+    document.addEventListener('focusin', (e) => {
+      const t = e.target; if (!t.matches || !t.matches('input, select, textarea') || !t.closest('.sheet')) return;
+      setTimeout(() => { fit(); t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, 320);
+    });
+    document.addEventListener('focusout', () => setTimeout(() => { if (!document.activeElement || document.activeElement === document.body) { fit(); scrollTo(0, 0); } }, 60));
+  })();
   function openModal(id) { $('#' + id).classList.remove('hidden-sheet'); $('#scroller').classList.add('locked'); buzz(6); }
   function closeModal(id) {
     $('#' + id).classList.add('hidden-sheet');
