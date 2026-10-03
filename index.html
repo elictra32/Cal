@@ -288,23 +288,35 @@ if (!window.claude) try {
   let timer = null, lastErr = false;
   const setSync = (t) => { const e = $('#acctSync'); if (e) e.textContent = t; };
   const collect = () => { const d = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (isDataKey(k)) d[k] = localStorage.getItem(k); } return d; };
-  const pushNow = async () => {
-    if (!auth.currentUser) return;
-    try { setSync('กำลังซิงก์…'); await setDoc(ref(), { ...collect(), _updated: Number(localStorage.getItem('nj.updatedAt') || Date.now()) }); lastErr = false; setSync('☁️ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })); }
-    catch (e) { lastErr = true; setSync('ซิงก์ไม่สำเร็จ — จะลองใหม่เมื่อมีการบันทึก'); console.warn('sync', e); }
+  const localT = () => Number(localStorage.getItem('nj.updatedAt') || 0);
+  const hasLocalData = () => !!localStorage.getItem('nj.profile.v1');
+  // take the cloud copy as the truth on this device (replace, never merge, so deleted things stay deleted)
+  const adopt = (d) => {
+    Object.keys(localStorage).filter(isDataKey).forEach((k) => localStorage.removeItem(k));
+    if (!d._reset) Object.keys(d).filter(isDataKey).forEach((k) => localStorage.setItem(k, d[k]));
+    localStorage.setItem('nj.updatedAt', String(Number(d._updated || 0)));
+    location.reload();
   };
-  window.__calSync = () => { if (!auth.currentUser) return; clearTimeout(timer); timer = setTimeout(pushNow, 1500); };
+  // force=true: caller already compared with the cloud. Otherwise never overwrite a newer cloud copy with an older local one.
+  const pushNow = async (force) => {
+    if (!auth.currentUser) return;
+    try {
+      setSync('กำลังซิงก์…');
+      if (!force) { const snap = await getDoc(ref()); if (snap.exists() && Number(snap.data()._updated || 0) > localT()) { adopt(snap.data()); return; } }
+      await setDoc(ref(), { ...collect(), _updated: localT() || Date.now() }); lastErr = false;
+      setSync('☁️ ซิงก์แล้ว ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }));
+    } catch (e) { lastErr = true; setSync('ซิงก์ไม่สำเร็จ — ตรวจ Firestore rules / อินเทอร์เน็ต'); console.warn('sync', e); }
+  };
+  window.__calSync = () => { if (!auth.currentUser) return; clearTimeout(timer); timer = setTimeout(() => pushNow(), 1500); };
   const pullOrPush = async () => {
     try {
-      const snap = await getDoc(ref()), local = Number(localStorage.getItem('nj.updatedAt') || 0), hasLocal = !!localStorage.getItem('nj.profile.v1');
+      const snap = await getDoc(ref());
       if (snap.exists()) {
         const d = snap.data(), t = Number(d._updated || 0);
-        if (!d._reset && (!hasLocal || t > local)) {
-          Object.keys(d).filter(isDataKey).forEach((k) => localStorage.setItem(k, d[k]));
-          localStorage.setItem('nj.updatedAt', String(t)); location.reload(); return;
-        }
+        if (d._reset) { if (t > localT() && hasLocalData()) { adopt(d); return; } }       // data was cleared elsewhere: clear here too
+        else if (!hasLocalData() || t > localT()) { adopt(d); return; }
       }
-      await pushNow();
+      await pushNow(true);
     } catch (e) { setSync('ซิงก์ไม่สำเร็จ'); console.warn('sync', e); }
   };
   const login = async () => {
@@ -329,7 +341,11 @@ if (!window.claude) try {
   });
   $('#loginGoogle').addEventListener('click', login);
   $('#loginSkip').addEventListener('click', () => { localStorage.setItem(SKIP, '1'); showOverlay(false); });
-  const wipe = async () => { if (!auth.currentUser) return; clearTimeout(timer); try { await setDoc(ref(), { _updated: Date.now(), _reset: true }); setSync('☁️ ล้างข้อมูลบนคลาวด์แล้ว'); } catch (e) { setSync('ล้างบนคลาวด์ไม่สำเร็จ'); console.warn('wipe', e); } };
+  const wipe = async () => {
+    if (!auth.currentUser) return true; clearTimeout(timer);
+    try { const t = Date.now(); await setDoc(ref(), { _updated: t, _reset: true }); localStorage.setItem('nj.updatedAt', String(t)); setSync('☁️ ล้างข้อมูลบนคลาวด์แล้ว'); return true; }
+    catch (e) { setSync('ล้างบนคลาวด์ไม่สำเร็จ'); console.warn('wipe', e); return false; }
+  };
   window.calCloud = { login, logout, pushNow, wipe };
   $('#acctBox').classList.remove('hidden');
   A.getRedirectResult(auth).catch((e) => { if (e.code !== 'auth/redirect-cancelled-by-user') say(errText[e.code] || 'เข้าสู่ระบบไม่สำเร็จ'); });
@@ -2390,7 +2406,9 @@ if (!window.claude) try {
     meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE }; rewards = []; redeems = [];
     [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW, KEYS.rewards, KEYS.redeems].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
     try { localStorage.removeItem('nj.updatedAt'); } catch {}
-    if (window.calCloud && window.calCloud.wipe) await window.calCloud.wipe(); // otherwise the cloud copy would come straight back
+    let cloudOk = true;
+    if (window.calCloud && window.calCloud.wipe) cloudOk = await window.calCloud.wipe(); // otherwise the cloud copy would come straight back
+    if (!cloudOk) toast('ล้างในเครื่องแล้ว แต่ล้างบนคลาวด์ไม่สำเร็จ — ข้อมูลอาจกลับมาตอนล็อกอิน (ตรวจ Firestore rules)', 'bad');
     heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว — ตั้งค่าโปรไฟล์ใหม่ได้เลย', 'bad');
     setTimeout(() => openProfile(), 350);
   });
