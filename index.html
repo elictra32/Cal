@@ -299,7 +299,7 @@ if (!window.claude) try {
       const snap = await getDoc(ref()), local = Number(localStorage.getItem('nj.updatedAt') || 0), hasLocal = !!localStorage.getItem('nj.profile.v1');
       if (snap.exists()) {
         const d = snap.data(), t = Number(d._updated || 0);
-        if (!hasLocal || t > local) {
+        if (!d._reset && (!hasLocal || t > local)) {
           Object.keys(d).filter(isDataKey).forEach((k) => localStorage.setItem(k, d[k]));
           localStorage.setItem('nj.updatedAt', String(t)); location.reload(); return;
         }
@@ -329,7 +329,8 @@ if (!window.claude) try {
   });
   $('#loginGoogle').addEventListener('click', login);
   $('#loginSkip').addEventListener('click', () => { localStorage.setItem(SKIP, '1'); showOverlay(false); });
-  window.calCloud = { login, logout, pushNow };
+  const wipe = async () => { if (!auth.currentUser) return; clearTimeout(timer); try { await setDoc(ref(), { _updated: Date.now(), _reset: true }); setSync('☁️ ล้างข้อมูลบนคลาวด์แล้ว'); } catch (e) { setSync('ล้างบนคลาวด์ไม่สำเร็จ'); console.warn('wipe', e); } };
+  window.calCloud = { login, logout, pushNow, wipe };
   $('#acctBox').classList.remove('hidden');
   A.getRedirectResult(auth).catch((e) => { if (e.code !== 'auth/redirect-cancelled-by-user') say(errText[e.code] || 'เข้าสู่ระบบไม่สำเร็จ'); });
   A.onAuthStateChanged(auth, (u) => {
@@ -941,7 +942,10 @@ if (!window.claude) try {
       <p class="text-[11px] text-mute flex items-center">ชั่งตอนเช้า ก่อนกิน/ดื่ม<button type="button" class="info-btn" data-info="weigh" aria-label="ข้อมูลเพิ่มเติม">i</button></p>
       <button id="wSave" class="btn-p w-full rounded-2xl py-3.5">บันทึกน้ำหนัก</button>
       <div class="pt-2">
-        <div class="eyebrow mb-1">History</div>
+        <div class="flex items-center justify-between mb-1">
+          <div class="eyebrow">History</div>
+          <button id="wRestart" class="text-[11px] text-mute underline decoration-line underline-offset-4 hover:text-bad">เริ่มน้ำหนักใหม่ (ล้างประวัติ)</button>
+        </div>
         <div id="wList" class="divide-y divide-line/60"></div>
       </div>
     </div>
@@ -2359,7 +2363,23 @@ if (!window.claude) try {
     e.target.value = '';
   });
   let resetArmed = 0;
-  $('#sReset').addEventListener('click', () => {
+  // restart the weight journey: clear every weigh-in and the saved starting point, then ask for the real weight
+  let restartArmed = 0;
+  $('#wRestart').addEventListener('click', () => {
+    const btn = $('#wRestart');
+    if (Date.now() - restartArmed > 4000) {
+      restartArmed = Date.now(); btn.textContent = 'แตะอีกครั้งเพื่อยืนยัน — ล้างน้ำหนักทั้งหมด';
+      setTimeout(() => { if (Date.now() - restartArmed >= 4000) btn.textContent = 'เริ่มน้ำหนักใหม่ (ล้างประวัติ)'; }, 4100);
+      return;
+    }
+    restartArmed = 0; btn.textContent = 'เริ่มน้ำหนักใหม่ (ล้างประวัติ)';
+    weights = {}; profile.startWeight = null; save(KEYS.weights, weights); save(KEYS.profile, profile);
+    try { localStorage.removeItem(KEYS.sampleW); } catch {}
+    heroSig = ''; renderAll();
+    $('#wInput').value = ''; $('#wInput').placeholder = 'น้ำหนักจริง'; setTimeout(() => $('#wInput').focus(), 80);
+    toast('ล้างประวัติน้ำหนักแล้ว — ใส่น้ำหนักจริงวันนี้เพื่อเริ่มต้นใหม่', 'acc');
+  });
+  $('#sReset').addEventListener('click', async () => {
     const btn = $('#sReset');
     if (Date.now() - resetArmed > 4000) { // first tap arms; a second tap within 4 s confirms
       resetArmed = Date.now(); btn.textContent = 'แตะอีกครั้งเพื่อยืนยันการลบ';
@@ -2369,7 +2389,10 @@ if (!window.claude) try {
     resetArmed = 0; btn.textContent = 'ล้างข้อมูลทั้งหมด';
     meals = []; burn = {}; weights = {}; profile = { ...DEFAULT_PROFILE }; rewards = []; redeems = [];
     [KEYS.meals, KEYS.burn, KEYS.profile, KEYS.weights, KEYS.sampleW, KEYS.rewards, KEYS.redeems].forEach((k) => { try { localStorage.removeItem(k); } catch {} });
-    heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว', 'bad');
+    try { localStorage.removeItem('nj.updatedAt'); } catch {}
+    if (window.calCloud && window.calCloud.wipe) await window.calCloud.wipe(); // otherwise the cloud copy would come straight back
+    heroSig = ''; renderAll(); closeModal('mSettings'); toast('ล้างข้อมูลแล้ว — ตั้งค่าโปรไฟล์ใหม่ได้เลย', 'bad');
+    setTimeout(() => openProfile(), 350);
   });
   $('#sSample').addEventListener('click', () => {
     const c = calc(profile), out = [];
