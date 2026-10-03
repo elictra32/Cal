@@ -1020,6 +1020,7 @@ if (!window.claude) try {
           </div>
         </div>
       </div>
+      <div id="scStrip" class="hidden flex gap-2 overflow-x-auto no-scrollbar"></div>
       <div class="grid grid-cols-2 gap-2">
         <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-acc flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg>
@@ -1027,7 +1028,7 @@ if (!window.claude) try {
         </label>
         <label class="cursor-pointer rounded-xl border border-line py-2.5 text-center text-[12px] hover:border-acc flex items-center justify-center gap-2">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
-          เลือกจากคลัง<input id="scFile" type="file" accept="image/*" class="hidden" />
+          เลือกจากคลัง<input id="scFile" type="file" accept="image/*" multiple class="hidden" />
         </label>
       </div>
       <p id="scNoImg" class="hidden rounded-xl border border-warm/40 bg-warm/10 px-3 py-2 text-[12px] text-warm leading-relaxed">📱 แอปที่เปิดอยู่ส่งรูปให้ระบบวิเคราะห์ไม่ได้ — พิมพ์ชื่อเมนูในช่องนี้แล้วกด “วิเคราะห์อาหาร” ได้เลย</p>
@@ -2772,11 +2773,11 @@ ANALYSIS RULES:
       scientific_evaluation: { mps_threshold_reached: false, satiety_index: 'High', actionable_tip: 'เติมเวย์ครึ่งสกู๊ปเพื่อดันโปรตีนเกิน 25g และช่วย Recovery หลังซ้อม' } },
   ];
 
-  let imgData = null, lastAddedId = null;
+  let imgs = [], lastAddedId = null;
+  const MAX_IMGS = 4;
   function resetScan() {
-    imgData = null; lastAddedId = null; draftMeal = null;
-    $('#scImg').classList.add('hidden'); $('#scImg').removeAttribute('src');
-    $('#scPlaceholder').classList.remove('hidden'); $('#scScanning').classList.add('hidden');
+    imgs = []; lastAddedId = null; draftMeal = null; renderImgs();
+    $('#scScanning').classList.add('hidden');
     $('#scResult').classList.add('hidden'); $('#scResult').innerHTML = '';
     $('#scError').classList.add('hidden'); $('#scNote').value = ''; $('#scAnalyze').disabled = true;
   }
@@ -2855,17 +2856,35 @@ ANALYSIS RULES:
       fr.readAsDataURL(file);
     });
   }
-  async function onFile(e) {
-    const f = e.target.files[0]; e.target.value = '';
-    if (!f) return;
-    if (!f.type.startsWith('image/')) return toast('รองรับเฉพาะไฟล์รูปภาพ', 'bad');
-    try {
-      imgData = await readImage(f);
-      $('#scImg').src = imgData.preview; $('#scImg').classList.remove('hidden'); $('#scPlaceholder').classList.add('hidden');
-      $('#scResult').classList.add('hidden'); $('#scError').classList.add('hidden'); $('#scAnalyze').disabled = false;
-    } catch { toast('ไม่สามารถอ่านรูปภาพได้ (ลองใช้ JPG/PNG)', 'bad'); }
+  function renderImgs() {
+    const last = imgs[imgs.length - 1];
+    $('#scImg').classList.toggle('hidden', !last); $('#scPlaceholder').classList.toggle('hidden', !!last);
+    if (last) $('#scImg').src = last.preview; else $('#scImg').removeAttribute('src');
+    const strip = $('#scStrip');
+    strip.classList.toggle('hidden', imgs.length < 1);
+    strip.innerHTML = imgs.map((im, i) => `<div class="relative shrink-0"><img src="${im.preview}" data-showimg="${i}" class="h-14 w-14 rounded-xl object-cover border border-line" alt="" /><button data-rmimg="${i}" aria-label="ลบรูป" class="absolute -right-1.5 -top-1.5 h-5 w-5 rounded-full bg-bad text-[11px] leading-none text-white grid place-items-center">✕</button></div>`).join('')
+      + (imgs.length ? `<div class="shrink-0 self-center text-[11px] text-mute num">${imgs.length}/${MAX_IMGS}</div>` : '');
+    if ($('#scScanning').classList.contains('hidden')) $('#scAnalyze').disabled = !canAnalyze();
   }
-  const canAnalyze = () => !!(imgData || $('#scNote').value.trim().length >= 2);
+  $('#scStrip').addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-rmimg]'), sh = e.target.closest('[data-showimg]');
+    if (rm) { imgs.splice(Number(rm.dataset.rmimg), 1); $('#scResult').classList.add('hidden'); renderImgs(); }
+    else if (sh) { const i = Number(sh.dataset.showimg); imgs.push(imgs.splice(i, 1)[0]); renderImgs(); }
+  });
+  async function onFile(e) {
+    const files = [...e.target.files]; e.target.value = '';
+    if (!files.length) return;
+    const room = MAX_IMGS - imgs.length;
+    if (room <= 0) return toast(`แนบได้สูงสุด ${MAX_IMGS} รูป`, 'bad');
+    const ok = files.filter((f) => f.type.startsWith('image/'));
+    if (!ok.length) return toast('รองรับเฉพาะไฟล์รูปภาพ', 'bad');
+    if (ok.length > room) toast(`แนบได้สูงสุด ${MAX_IMGS} รูป — ใช้ ${room} รูปแรก`, 'bad');
+    try {
+      for (const f of ok.slice(0, room)) imgs.push(await readImage(f));
+      $('#scResult').classList.add('hidden'); $('#scError').classList.add('hidden'); renderImgs();
+    } catch { renderImgs(); toast('ไม่สามารถอ่านรูปภาพได้ (ลองใช้ JPG/PNG)', 'bad'); }
+  }
+  const canAnalyze = () => !!(imgs.length || $('#scNote').value.trim().length >= 2);
   $('#scNote').addEventListener('input', () => { if ($('#scScanning').classList.contains('hidden')) $('#scAnalyze').disabled = !canAnalyze(); });
   $('#scCamera').addEventListener('change', onFile);
   $('#scFile').addEventListener('change', onFile);
@@ -2920,7 +2939,7 @@ ANALYSIS RULES:
       if (model.startsWith('gemini-2')) gen.temperature = 0.2;
       const body = {
         systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-        contents: [{ role: 'user', parts: [...(imgData ? [{ inlineData: { mimeType: imgData.mime, data: imgData.b64 } }] : []), { text: prompt }] }],
+        contents: [{ role: 'user', parts: [...imgs.map((im) => ({ inlineData: { mimeType: im.mime, data: im.b64 } })), { text: prompt }] }],
         generationConfig: gen,
       };
       for (let attempt = 0; attempt < 2; attempt++) {           // a busy model gets one retry, then we move on to the next model
@@ -2958,13 +2977,13 @@ ANALYSIS RULES:
   };
   async function analyzeViaSampler(sampler, prompt) {
     const lim = await sampler.limits().catch(() => null);
-    const withImg = !!(imgData && lim && lim.images);
-    if (imgData && !withImg && !$('#scNote').value.trim()) { $('#scNoImg').classList.remove('hidden'); setTimeout(() => $('#scNote').focus(), 50); throw new Error(SAMPLE_ERR.images_unavailable); }
+    const withImg = !!(imgs.length && lim && lim.images);
+    if (imgs.length && !withImg && !$('#scNote').value.trim()) { $('#scNoImg').classList.remove('hidden'); setTimeout(() => $('#scNote').focus(), 50); throw new Error(SAMPLE_ERR.images_unavailable); }
     const opts = { cache: false };
     if (withImg) {
-      const bin = atob(imgData.b64), bytes = new Uint8Array(bin.length);
+      const bin = atob(imgs[0].b64), bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      opts.images = new Blob([bytes], { type: imgData.mime });
+      opts.images = new Blob([bytes], { type: imgs[0].mime });
     }
     const input = SYSTEM_INSTRUCTION + '\n\n' + (withImg ? prompt : prompt + '\nNo photo is available: estimate from the dish description above using a typical Thai portion.');
     try {
@@ -2979,8 +2998,9 @@ ANALYSIS RULES:
     $('#scError').classList.add('hidden'); $('#scResult').classList.add('hidden');
     const c = calc(profile), t = totals(mealsOn(dayKey())), note = $('#scNote').value.trim();
     const ctx = `User context: goal=${profile.goal}, bodyweight=${currentWeight()}kg, remaining_calories_today=${Math.round(c.target + num(burn[dayKey()]) - t.kcal)} kcal, remaining_protein_today=${Math.max(0, Math.round(c.protein - t.p))} g, sodium_so_far=${Math.round(t.sodium)} mg.`;
-    const prompt = `Analyze this meal and return the JSON object only.\n${ctx}${note ? `\nUser note about the dish: "${note}"` : ''}`;
-    setBusy(true, imgData ? 'กำลังวิเคราะห์รูป… อาจใช้ 10–60 วินาที' : 'กำลังวิเคราะห์เมนู…');
+    const multi = imgs.length > 1 ? `\nThere are ${imgs.length} photos. They show the SAME meal (different dishes or angles): analyze them together as one meal, add up all distinct dishes, and do not count the same dish twice.` : '';
+    const prompt = `Analyze this meal and return the JSON object only.${multi}\n${ctx}${note ? `\nUser note about the dish: "${note}"` : ''}`;
+    setBusy(true, imgs.length ? 'กำลังวิเคราะห์รูป… อาจใช้ 10–60 วินาที' : 'กำลังวิเคราะห์เมนู…');
     try {
       const sampler = await getSampler();
       if (!sampler && window.claude) throw new Error('หน้านี้ยังเชื่อมระบบวิเคราะห์ไม่ได้ — ปิดแล้วเปิดลิงก์ใหม่ หรือกรอกเองได้');
@@ -3006,7 +3026,7 @@ ANALYSIS RULES:
       kcal: nb.calories, p: nb.macros.protein_g, f: nb.macros.fat_g, c: nb.macros.carbs_g, fiber: nb.micros.fiber_g, sodium: nb.micros.sodium_mg,
       weight: r.estimated_weight_g, oil: r.hidden_oil_tbsp,
       mps: r.scientific_evaluation.mps_threshold_reached, satiety: r.scientific_evaluation.satiety_index, tip: r.scientific_evaluation.actionable_tip,
-      thumb: source === 'gemini' && imgData ? imgData.thumb : null,
+      thumb: source === 'gemini' && imgs.length ? imgs[0].thumb : null,
     };
     const box = $('#scResult');
     if (asDraft) draftMeal = meal;
