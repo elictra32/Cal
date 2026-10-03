@@ -590,6 +590,7 @@ if (!window.claude) try {
         </button>
       </div>
       <div id="tdeeLine" class="num text-[11.5px] text-mute mt-4"></div>
+      <div id="mealSplit" class="mt-3 grid grid-cols-4 gap-1.5"></div>
       <div class="mt-6 flex items-end justify-between gap-2">
         <div><div id="chartTitle" class="th text-[13px] font-semibold"></div><div id="chartMeta" class="num text-[11.5px] text-mute mt-0.5"></div></div>
         <div id="chartDelta" class="num text-[11.5px] font-semibold"></div>
@@ -979,6 +980,10 @@ if (!window.claude) try {
       <button data-close class="h-8 w-8 rounded-full border border-line grid place-items-center text-mute hover:text-txt">✕</button>
     </div>
     <div class="px-5 py-4 space-y-4 th text-[13px]">
+      <div>
+        <div class="text-mute text-[11px] mb-1.5">มื้อไหน</div>
+        <div class="seg grid grid-cols-4 gap-1.5" id="mtPick"></div>
+      </div>
       <div class="seg grid grid-cols-2 gap-1 rounded-2xl border border-line bg-ink/40 p-1" id="scTabs">
         <button data-tab="ai" class="on rounded-xl py-2 text-[12.5px]">📷 ถ่ายรูปอาหาร</button>
         <button data-tab="manual" class="rounded-xl py-2 text-[12.5px]">✍️ กรอกเอง / เมนูเดิม</button>
@@ -1147,6 +1152,14 @@ if (!window.claude) try {
   const REF_ORDER = Object.keys(REFS);
   const cite = (...ids) => ids.map((id) => `<a href="${REFS[id].u}" target="_blank" rel="noopener" class="num text-acc2 hover:underline" title="${esc(REFS[id].s)}">[${REF_ORDER.indexOf(id) + 1}]</a>`).join('');
   const SODIUM_LIMIT = 2000;
+  const MEAL_TYPES = [
+    { k: 'breakfast', e: '🌅', th: 'มื้อเช้า' }, { k: 'lunch', e: '☀️', th: 'มื้อเที่ยง' },
+    { k: 'dinner', e: '🌙', th: 'มื้อเย็น' }, { k: 'snack', e: '🍿', th: 'ของว่าง' },
+  ];
+  const MT = Object.fromEntries(MEAL_TYPES.map((t) => [t.k, t]));
+  const typeByHour = (h) => (h >= 5 && h < 10.5 ? 'breakfast' : h >= 10.5 && h < 14.5 ? 'lunch' : h >= 17 && h < 21.5 ? 'dinner' : 'snack');
+  const defaultType = (d = new Date()) => typeByHour(d.getHours() + d.getMinutes() / 60);
+  const typeOf = (m) => (MT[m.type] ? m.type : defaultType(new Date(m.ts))); // older entries: guess from the time they were logged
   const MPS_PROTEIN_G = 25;
   const DEFAULT_MODEL = 'gemini-3.8-flash';
   const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
@@ -1723,6 +1736,8 @@ if (!window.claude) try {
     rp.style.color = remaining < 0 ? C('bad') : C('good');
     const g = GOALS[profile.goal] || GOALS.cut, db = $('#deficitBadge');
     db.textContent = g.badge; db.style.color = C(g.tone); db.style.background = C(g.tone, 0.1); db.style.borderColor = C(g.tone, 0.4);
+    const split = MEAL_TYPES.map((t) => ({ ...t, v: totals(mealsOn(dayKey()).filter((m) => typeOf(m) === t.k)) })), mx = Math.max(1, ...split.map((x) => x.v.kcal));
+    $('#mealSplit').innerHTML = split.map((x) => `<div class="rounded-xl border border-line bg-ink/30 px-2 py-1.5 text-center"><div class="text-[13px] leading-none">${x.e}</div><div class="num text-[12px] font-semibold mt-1">${x.v.kcal ? fmt(x.v.kcal) : '–'}</div><div class="track mt-1"><div class="fill" style="width:${(x.v.kcal / mx) * 100}%;background:${C('acc', 0.75)}"></div></div></div>`).join('');
     $('#tdeeLine').textContent = `BMR ${fmt(c.bmr)} · TDEE ${fmt(c.tdee)} kcal`;
     const bf = $('#budgetFill');
     bf.style.width = clamp(budget > 0 ? (t.kcal / budget) * 100 : 0, 0, 100) + '%';
@@ -1895,10 +1910,15 @@ if (!window.claude) try {
         </div>`;
       return;
     }
-    let lastDay = null;
+    let lastDay = null, lastType = null;
+    const grouped = logFilter === 'today';
+    if (grouped) list.sort((a, b) => MEAL_TYPES.findIndex((t) => t.k === typeOf(a)) - MEAL_TYPES.findIndex((t) => t.k === typeOf(b)) || a.ts - b.ts);
     box.innerHTML = list.slice(0, 200).map((m) => {
-      const k = dayKey(m.ts); let head = '';
-      if (logFilter !== 'today' && k !== lastDay) {
+      const k = dayKey(m.ts), ty = typeOf(m); let head = '';
+      if (grouped && ty !== lastType) {
+        lastType = ty; const gt = totals(list.filter((q) => typeOf(q) === ty));
+        head = `<div class="flex items-center justify-between px-5 pt-4 pb-1 th text-[12px]"><span class="font-semibold">${MT[ty].e} ${MT[ty].th}</span><span class="num text-[11px] text-mute">${fmt(gt.kcal)} kcal · P ${fmt(gt.p)}g</span></div>`;
+      } else if (!grouped && k !== lastDay) {
         lastDay = k; const dt = totals(mealsOn(k));
         head = `<div class="flex items-center justify-between px-5 pt-4 pb-1 num text-[11px] text-mute"><span>${k === today ? 'TODAY' : esc(dateStr(m.ts))}</span><span>${fmt(dt.kcal)} kcal · P ${fmt(dt.p)}g</span></div>`;
       }
@@ -1911,7 +1931,7 @@ if (!window.claude) try {
           <div class="min-w-0 flex-1">
             <div class="th text-[13.5px] font-medium truncate">${esc(m.name)}</div>
             <div class="mt-1 flex items-center gap-1.5 flex-wrap">
-              <span class="num text-[10.5px] text-mute">${timeStr(m.ts)}</span>
+              <span class="num text-[10.5px] text-mute">${timeStr(m.ts)}</span>${grouped ? '' : `<span class="th text-[10.5px] text-mute">${MT[ty].e} ${MT[ty].th}</span>`}
               <span class="chip num !text-[9px] !px-1.5 !py-0" style="color:${mps ? C('good') : C('soft')};border-color:${mps ? C('good', 0.4) : C('line')};background:${mps ? C('good', 0.1) : 'transparent'}">P ${fmt(m.p)}g${mps ? ' ✓' : ''}</span>
               ${src}
             </div>
@@ -2420,7 +2440,7 @@ if (!window.claude) try {
         const dish = DEMO_DISHES[Math.floor(Math.random() * DEMO_DISHES.length)], nb = dish.nutritional_breakdown, scale = (dayTarget / n) / nb.calories;
         const t = new Date(d); t.setHours(Math.floor(slots[j]), (slots[j] % 1) * 60 + Math.floor(Math.random() * 20), 0, 0);
         out.push({
-          id: uid(), ts: t.getTime(), name: dish.dish_name, source: 'sample',
+          id: uid(), ts: t.getTime(), type: ['breakfast', 'lunch', 'snack', 'dinner'][j], name: dish.dish_name, source: 'sample',
           kcal: Math.round(nb.calories * scale), p: Math.round(nb.macros.protein_g * scale), f: Math.round(nb.macros.fat_g * scale), c: Math.round(nb.macros.carbs_g * scale),
           fiber: Math.round(nb.micros.fiber_g * scale), sodium: Math.round(nb.micros.sodium_mg * scale),
           weight: Math.round(dish.estimated_weight_g * scale), oil: dish.hidden_oil_tbsp, mps: nb.macros.protein_g * scale >= MPS_PROTEIN_G,
@@ -2482,6 +2502,7 @@ if (!window.claude) try {
     const m = meals.find((x) => x.id === id); if (!m) return;
     $('#mealDetail').innerHTML = `
       <div class="num text-[10.5px] text-mute mb-3">${esc(dateStr(m.ts))} · ${timeStr(m.ts)} · ${m.source === 'gemini' ? 'สแกนจากรูป' : m.source === 'manual' ? 'กรอกเอง' : 'ตัวอย่าง'}</div>
+      <div class="seg grid grid-cols-4 gap-1.5 mb-3" id="mdType">${MEAL_TYPES.map((t) => `<button data-mtype="${t.k}" data-id="${esc(m.id)}" class="${t.k === typeOf(m) ? 'on ' : ''}rounded-xl border border-line py-1.5 text-[11.5px] leading-tight"><span class="block text-[14px]">${t.e}</span>${t.th}</button>`).join('')}</div>
       ${nutritionBlock(m)}
       ${portionChips(m)}
       <div class="mt-4 grid grid-cols-2 gap-2">
@@ -2492,6 +2513,8 @@ if (!window.claude) try {
   }
   $('#mealList').addEventListener('click', (e) => { const b = e.target.closest('[data-meal]'); if (b) openMeal(b.dataset.meal); });
   $('#mealDetail').addEventListener('click', (e) => {
+    const tb = e.target.closest('[data-mtype]');
+    if (tb) { const m = meals.find((x) => x.id === tb.dataset.id); if (m) { m.type = tb.dataset.mtype; save(KEYS.meals, meals); renderAll(); $$('#mdType [data-mtype]').forEach((x) => x.classList.toggle('on', x === tb)); buzz(4); } return; }
     const r = e.target.closest('[data-relog]'); if (r) { relog(r.dataset.relog); closeModal('mMeal'); return; }
     const b = e.target.closest('[data-del]'); if (!b) return; removeMeal(b.dataset.del); closeModal('mMeal');
   });
@@ -2523,9 +2546,9 @@ if (!window.claude) try {
     if (b.closest('#scNB')) $('#scNB').innerHTML = resultView(m);
     if (b.closest('#mealDetail')) openMeal(m.id);
   });
-  function relog(id) {
+  function relog(id, type) {
     const m = meals.find((q) => q.id === id); if (!m) return;
-    meals.push({ ...m, id: uid(), ts: Date.now(), base: m.base ? { ...m.base } : undefined, source: m.source === 'sample' ? 'manual' : m.source });
+    meals.push({ ...m, id: uid(), ts: Date.now(), type: type || defaultType(), base: m.base ? { ...m.base } : undefined, source: m.source === 'sample' ? 'manual' : m.source });
     save(KEYS.meals, meals); range = '1D'; save(KEYS.range, range); renderAll();
     replay($('#remainingNum'), 'bump'); buzz(10); toast(`+ ${m.name} · ${fmt(m.kcal)} kcal`, 'acc');
   }
@@ -2603,13 +2626,18 @@ ANALYSIS RULES:
   }
   let noImgView = false;
   $('#btnScan').addEventListener('click', () => {
-    resetScan(); setScanTab('ai'); openModal('mScan');
+    resetScan(); curMealType = defaultType(); renderMtPick(); setScanTab('ai'); openModal('mScan');
     // some Claude viewers (e.g. the mobile app) cannot send photos: switch to "type the dish" up front
     getSampler().then((sp) => (sp ? sp.limits().catch(() => null) : undefined)).then((lim) => {
       noImgView = lim !== undefined && !(lim && lim.images);
       $('#scNoImg').classList.toggle('hidden', !noImgView);
     });
   });
+  let curMealType = defaultType();
+  function renderMtPick() {
+    $('#mtPick').innerHTML = MEAL_TYPES.map((t) => `<button data-v="${t.k}" class="${t.k === curMealType ? 'on ' : ''}rounded-xl border border-line py-2 text-[12px] leading-tight"><span class="block text-[15px]">${t.e}</span>${t.th}</button>`).join('');
+  }
+  $('#mtPick').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (!b) return; curMealType = b.dataset.v; renderMtPick(); buzz(4); });
   function setScanTab(t) {
     $$('#scTabs [data-tab]').forEach((x) => x.classList.toggle('on', x.dataset.tab === t));
     $('#paneAI').classList.toggle('hidden', t !== 'ai'); $('#paneManual').classList.toggle('hidden', t !== 'manual');
@@ -2623,7 +2651,7 @@ ANALYSIS RULES:
     [...meals].sort((a, b) => b.ts - a.ts).forEach((m) => { if (!seen.has(m.name) && list.length < 8) { seen.add(m.name); list.push(m); } });
     $('#recentChips').innerHTML = list.length ? list.map((m) => `<button data-relog-chip="${esc(m.id)}" class="shrink-0 rounded-xl border border-line bg-ink/40 px-3 py-2 text-left hover:border-acc active:scale-95 transition"><div class="text-[12px] font-medium max-w-[150px] truncate">${esc(m.name)}</div><div class="num text-[10.5px] text-mute">${fmt(m.kcal)} kcal · P ${fmt(m.p)}g</div></button>`).join('') : '<p class="text-[11.5px] text-mute">ยังไม่มีประวัติ — บันทึกมื้อแรกด้านล่าง</p>';
   }
-  $('#recentChips').addEventListener('click', (e) => { const b = e.target.closest('[data-relog-chip]'); if (!b) return; relog(b.dataset.relogChip); closeModal('mScan'); });
+  $('#recentChips').addEventListener('click', (e) => { const b = e.target.closest('[data-relog-chip]'); if (!b) return; relog(b.dataset.relogChip, curMealType); closeModal('mScan'); });
   function mnCalc() {
     const p = num($('#mnP').value), c = num($('#mnC').value), f = num($('#mnF').value), k = Math.round(p * 4 + c * 4 + f * 9);
     $('#mnCalc').textContent = p || c || f ? `จากมาโคร ≈ ${fmt(k)} kcal (P×4 + C×4 + F×9)` : '';
@@ -2804,7 +2832,7 @@ ANALYSIS RULES:
   function commitResult(r, source, model) {
     const nb = r.nutritional_breakdown;
     const meal = {
-      id: uid(), ts: Date.now(), name: r.dish_name, source, model: model || null,
+      id: uid(), ts: Date.now(), type: curMealType, name: r.dish_name, source, model: model || null,
       kcal: nb.calories, p: nb.macros.protein_g, f: nb.macros.fat_g, c: nb.macros.carbs_g, fiber: nb.micros.fiber_g, sodium: nb.micros.sodium_mg,
       weight: r.estimated_weight_g, oil: r.hidden_oil_tbsp,
       mps: r.scientific_evaluation.mps_threshold_reached, satiety: r.scientific_evaluation.satiety_index, tip: r.scientific_evaluation.actionable_tip,
