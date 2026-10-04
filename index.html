@@ -88,7 +88,7 @@
   /* mobile: 16px inputs stop iOS from zooming/panning the page on focus; sheets follow the visible area above the keyboard */
   @media (pointer: coarse) { input, select, textarea { font-size: 16px !important; } }
   .sheet-wrap { top: var(--vvt, 0px) !important; bottom: auto !important; height: var(--vvh, 100dvh) !important; overflow: hidden; }
-  .sheet-wrap .sheet { max-height: calc(var(--vvh, 100dvh) - 14px) !important; overscroll-behavior: contain; }
+  .sheet-wrap .sheet { max-height: calc(var(--vvh, 100dvh) - 14px - env(safe-area-inset-top, 0px)) !important; overscroll-behavior: contain; }
   body {
     font-family: var(--font-ui); color: rgb(var(--txt));
     -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none;
@@ -381,10 +381,10 @@ if (!window.claude) try {
 </div>
 
 <div id="scroller">
-<div id="app" class="relative z-10 mx-auto w-full max-w-md px-4 pb-36" style="padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right));">
+<div id="app" class="relative z-10 mx-auto w-full max-w-md px-4 pb-36" style="padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right));">
 
   <!-- ===================== HEADER ===================== -->
-  <header id="hdr" class="sticky top-0 z-30 -mx-4 px-4 py-3 bg-ink/75 backdrop-blur-xl">
+  <header id="hdr" class="sticky top-0 z-30 -mx-4 px-4 py-3 bg-ink/75 backdrop-blur-xl" style="padding-top: max(12px, calc(env(safe-area-inset-top) + 6px));">
     <div class="flex items-center gap-1.5">
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <svg viewBox="0 0 40 40" class="h-9 w-9 shrink-0 text-txt" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
@@ -939,6 +939,10 @@ if (!window.claude) try {
         <button id="rwAdd" class="btn-p w-full rounded-xl py-2.5 text-[13px]">เพิ่มรางวัล</button>
         <div class="text-[10.5px] text-mute pt-1">ไอเดีย</div>
         <div id="rwIdeas" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <div>
+        <div class="eyebrow mb-2">ประวัติการแลก</div>
+        <div id="rwHist" class="space-y-1.5 text-[12px]"></div>
       </div>
       <ul id="rwHow" class="hidden"></ul>
     </div>
